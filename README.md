@@ -25,6 +25,7 @@ A modern, FHIR-compliant healthcare backend system built with .NET 8, PostgreSQL
 ## 🚀 Features
 
 ### Core FHIR Features
+
 - ✅ FHIR R4 compliant resource storage
 - ✅ JSONB-based efficient querying
 - ✅ Multi-tenant architecture with Row Level Security
@@ -34,6 +35,7 @@ A modern, FHIR-compliant healthcare backend system built with .NET 8, PostgreSQL
 - ✅ Audit logging for compliance
 
 ### Security & Compliance
+
 - ✅ SMART on FHIR authentication
 - ✅ Row Level Security (RLS) in PostgreSQL
 - ✅ Comprehensive audit trail
@@ -42,6 +44,7 @@ A modern, FHIR-compliant healthcare backend system built with .NET 8, PostgreSQL
 - ✅ Rate limiting and security headers
 
 ### Development Features
+
 - ✅ Clean Architecture implementation
 - ✅ CQRS pattern with MediatR
 - ✅ Comprehensive unit and integration tests
@@ -81,12 +84,14 @@ fhir-ai-backend/
 ### Quick Start with Docker
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-org/fhir-ai-backend.git
    cd fhir-ai-backend
    ```
 
 2. **Start the development environment**
+
    ```bash
    docker-compose up -d
    ```
@@ -99,20 +104,23 @@ fhir-ai-backend/
 ### Local Development
 
 1. **Restore dependencies**
+
    ```bash
    dotnet restore
    ```
 
 2. **Set up the database**
+
    ```bash
                # Using Docker
      docker run --name fhir-ai-postgres -e POSTGRES_DB=fhir-ai -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:14
-   
+
    # Run database initialization
    psql -h localhost -U postgres -d fhir-ai -f scripts/init-db.sql
    ```
 
 3. **Update connection string**
+
    ```json
    // src/HealthTech.API/appsettings.json
    {
@@ -199,11 +207,13 @@ dotnet test --collect:"XPlat Code Coverage"
 ### Production Deployment
 
 1. **Build the Docker image**
+
    ```bash
    docker build -t fhir-ai-backend .
    ```
 
 2. **Set environment variables**
+
    ```bash
    export CONNECTION_STRING="your-production-connection-string"
    export JWT_SECRET="your-super-secret-key"
@@ -221,11 +231,11 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ### Environment Configuration
 
-| Environment | Database | Logging | Authentication |
-|-------------|----------|---------|----------------|
-| Development | Local PostgreSQL | Console + File | Development certificates |
-| Staging | Staging PostgreSQL | Structured logging | Staging certificates |
-| Production | Production PostgreSQL | Centralized logging | Production certificates |
+| Environment | Database              | Logging             | Authentication           |
+| ----------- | --------------------- | ------------------- | ------------------------ |
+| Development | Local PostgreSQL      | Console + File      | Development certificates |
+| Staging     | Staging PostgreSQL    | Structured logging  | Staging certificates     |
+| Production  | Production PostgreSQL | Centralized logging | Production certificates  |
 
 ## 🔒 Security
 
