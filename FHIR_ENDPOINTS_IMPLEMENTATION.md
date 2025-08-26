@@ -60,8 +60,10 @@ POST /fhir/bundle/import
 ```
 - Import nhiều FHIR resources từ Bundle JSON
 - Hỗ trợ Bundle type: transaction, batch, collection
-- Xử lý từng entry trong bundle
-- Báo cáo kết quả chi tiết (success, failed, skipped)
+- **Smart Reference Handling**: Tự động sort theo dependencies (Patient → Encounter → Observation)
+- **Reference Validation**: Kiểm tra references trong bundle trước khi import
+- **Priority-based Import**: Foundation resources (Patient, Organization) được import trước
+- Báo cáo kết quả chi tiết (success, failed, skipped, invalid references)
 
 ### 7. Lấy lịch sử FHIR Resource
 ```
@@ -84,24 +86,6 @@ GET /fhir/{resourceType}/{id}/_history
 - ✅ `SearchFhirResourcesQuery` - Tìm kiếm resources
 - ✅ `GetFhirResourceHistoryQuery` - Lấy lịch sử resource
 
-## Cải tiến Database Schema
-
-### BaseEntity - Soft Delete Support:
-```csharp
-// Soft delete capabilities (inherited by all entities)
-public bool IsDeleted { get; set; }
-public DateTime? DeletedAt { get; set; }
-public string? DeletedBy { get; set; }
-
-// Audit fields
-public string? ModifiedBy { get; set; }  // User who last modified
-public DateTime? ModifiedAt { get; set; } // Last modification time
-```
-
-### Migration đã tạo:
-- `20250826161953_AddFhirResourceAuditFields.cs` - Thêm audit fields cho FhirResource
-- `20250826162605_MoveDeletedFieldsToBaseEntity.cs` - Chuyển DeletedAt/DeletedBy vào BaseEntity
-
 ## Tính năng bảo mật & Audit
 
 ### Audit Trail:
@@ -121,6 +105,65 @@ public DateTime? ModifiedAt { get; set; } // Last modification time
 - Validate FHIR resource format trước khi lưu
 - Extract search parameters từ FHIR resource
 - Parse và validate JSON structure
+
+## Reference Handling trong Bundle Import
+
+### Smart Dependency Resolution:
+```csharp
+// Resource import priority (lower = higher priority)
+{ "Patient", 1 },           // Foundation resource
+{ "Organization", 2 },      // Foundation resource  
+{ "Practitioner", 3 },      // Foundation resource
+{ "Location", 4 },          // Foundation resource
+{ "Encounter", 5 },         // Clinical resource
+{ "Observation", 7 },       // Clinical resource
+{ "Condition", 6 },         // Clinical resource
+```
+
+### Reference Validation:
+- **Bundle References**: Kiểm tra references trong cùng bundle
+- **External References**: Cho phép references đến external systems
+- **Invalid References**: Báo lỗi nếu reference không tồn tại
+
+### Patient-Centric Bundle Processing:
+```json
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-123",
+        "name": [{"family": "Doe", "given": ["John"]}]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "encounter-456",
+        "subject": {"reference": "Patient/patient-123"},  // ✅ Validated
+        "serviceProvider": {"reference": "Organization/org-789"}
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-789",
+        "subject": {"reference": "Patient/patient-123"},  // ✅ Validated
+        "encounter": {"reference": "Encounter/encounter-456"}  // ✅ Validated
+      }
+    }
+  ]
+}
+```
+
+### Processing Flow:
+1. **Parse Bundle** → Extract all resources
+2. **Build Dependency Graph** → Map references between resources
+3. **Sort by Priority** → Foundation resources first
+4. **Validate References** → Check all references exist
+5. **Import Sequentially** → Handle each resource in order
 
 ### Error Responses:
 - Consistent error format với ProblemDetails
