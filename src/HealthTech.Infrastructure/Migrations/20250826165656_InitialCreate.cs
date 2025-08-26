@@ -15,32 +15,32 @@ namespace HealthTech.Infrastructure.Migrations
                 name: "audit_events",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    EventType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    EventSubtype = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    Action = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
-                    Outcome = table.Column<int>(type: "integer", nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    UserId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    UserDisplayName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    UserIpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
-                    ResourceType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    ResourceId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    EventData = table.Column<string>(type: "jsonb", nullable: true),
-                    EventTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    TenantId = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CreatedBy = table.Column<string>(type: "text", nullable: false),
-                    ModifiedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ModifiedBy = table.Column<string>(type: "text", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
-                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    DeletedBy = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    Version = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    event_type = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    event_subtype = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    action = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    outcome = table.Column<int>(type: "integer", nullable: false),
+                    description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    user_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    user_display_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    user_ip_address = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
+                    resource_type = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    resource_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    event_data = table.Column<string>(type: "jsonb", nullable: true),
+                    event_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    tenant_id = table.Column<string>(type: "text", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<string>(type: "text", nullable: false),
+                    modified_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    modified_by = table.Column<string>(type: "text", nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    version = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_audit_events", x => x.Id);
+                    table.PrimaryKey("PK_audit_events", x => x.id);
                 },
                 comment: "Audit events for compliance tracking");
 
@@ -64,8 +64,8 @@ namespace HealthTech.Infrastructure.Migrations
                     modified_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     modified_by = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    DeletedBy = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     version = table.Column<int>(type: "integer", nullable: false, defaultValue: 1)
                 },
                 constraints: table =>
@@ -77,12 +77,12 @@ namespace HealthTech.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_AuditEvents_TenantId_EventTime",
                 table: "audit_events",
-                columns: new[] { "TenantId", "EventTime" });
+                columns: new[] { "tenant_id", "event_time" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AuditEvents_TenantId_UserId_EventTime",
                 table: "audit_events",
-                columns: new[] { "TenantId", "UserId", "EventTime" });
+                columns: new[] { "tenant_id", "user_id", "event_time" });
 
             migrationBuilder.CreateIndex(
                 name: "fhir_resources_tenant_id_resource_type_fhir_id_version_id_key",

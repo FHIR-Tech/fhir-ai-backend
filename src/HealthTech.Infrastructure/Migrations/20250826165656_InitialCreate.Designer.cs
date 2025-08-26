@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HealthTech.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250826164042_InitialCreate")]
+    [Migration("20250826165656_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -48,11 +48,13 @@ namespace HealthTech.Infrastructure.Migrations
                         .HasColumnName("CreatedBy");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
 
                     b.Property<string>("DeletedBy")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("deleted_by");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
@@ -164,11 +166,13 @@ namespace HealthTech.Infrastructure.Migrations
                         .HasColumnName("created_by");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
 
                     b.Property<string>("DeletedBy")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("deleted_by");
 
                     b.Property<string>("FhirId")
                         .IsRequired()

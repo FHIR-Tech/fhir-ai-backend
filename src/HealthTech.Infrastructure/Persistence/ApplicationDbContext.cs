@@ -40,8 +40,34 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     /// <param name="modelBuilder">Model builder</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Configure snake_case naming convention
+        foreach (var entity in modelBuilder.Model.GetEntityTypes())
+        {
+            // Configure table names to snake_case
+            entity.SetTableName(ConvertToSnakeCase(entity.GetTableName()));
+            
+            // Configure column names to snake_case
+            foreach (var property in entity.GetProperties())
+            {
+                property.SetColumnName(ConvertToSnakeCase(property.GetColumnName()));
+            }
+        }
+        
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
+    }
+    
+    /// <summary>
+    /// Convert PascalCase to snake_case
+    /// </summary>
+    /// <param name="name">Name to convert</param>
+    /// <returns>Snake case name</returns>
+    private static string? ConvertToSnakeCase(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return name;
+            
+        return string.Concat(name.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
     }
 
     /// <summary>

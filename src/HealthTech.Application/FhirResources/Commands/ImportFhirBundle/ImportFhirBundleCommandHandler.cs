@@ -148,11 +148,7 @@ public class ImportFhirBundleCommandHandler : IRequestHandler<ImportFhirBundleCo
                             {
                                 ResourceType = resourceType,
                                 FhirId = resourceId,
-                                ResourceJson = JsonSerializer.Serialize(resource, new JsonSerializerOptions
-                                {
-                                    WriteIndented = false,
-                                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                                })
+                                ResourceJson = SerializeFhirResource(resource, resourceType)
                             };
 
                             var updateResult = await _sender.Send(updateCommand, cancellationToken);
@@ -178,11 +174,7 @@ public class ImportFhirBundleCommandHandler : IRequestHandler<ImportFhirBundleCo
                             var createCommand = new CreateFhirResourceCommand
                             {
                                 ResourceType = resourceType,
-                                ResourceJson = JsonSerializer.Serialize(resource, new JsonSerializerOptions
-                                {
-                                    WriteIndented = false,
-                                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                                }),
+                                ResourceJson = SerializeFhirResource(resource, resourceType),
                                 FhirId = resourceId
                             };
 
@@ -360,5 +352,20 @@ public class ImportFhirBundleCommandHandler : IRequestHandler<ImportFhirBundleCo
         }
         
         return invalidReferences;
+    }
+    
+    /// <summary>
+    /// Serialize FHIR resource with proper type information
+    /// </summary>
+    /// <param name="resource">FHIR resource</param>
+    /// <param name="resourceType">Resource type name</param>
+    /// <returns>Serialized JSON</returns>
+    private string SerializeFhirResource(Resource resource, string resourceType)
+    {
+        // Use FHIR serializer with proper settings
+        var serializer = new FhirJsonSerializer();
+        var jsonString = serializer.SerializeToString(resource);
+        
+        return jsonString;
     }
 }

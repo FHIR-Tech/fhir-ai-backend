@@ -15,7 +15,7 @@
  * 3. Check the console output for results
  */
 
-const API_BASE_URL = 'http://localhost:52872'; // Update with your actual API URL
+const API_BASE_URL = 'http://localhost:5000'; // Update with your actual API URL
 const TENANT_ID = 'f66ddff8-fb9a-4d5b-9a44-194c62389842';
 const FHIR_SCOPES = 'user/cc8c304a-9e5e-4115-bc54-791636170890 patient/cc8c304a-9e5e-4115-bc54-791636170890';
 
