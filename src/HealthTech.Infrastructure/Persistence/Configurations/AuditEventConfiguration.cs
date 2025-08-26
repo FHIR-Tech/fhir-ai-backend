@@ -20,92 +20,68 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
         // Configure primary key
         builder.HasKey(e => e.Id);
 
-        // Configure properties
-        builder.Property(e => e.Id)
-            .HasColumnName("Id");
-
+        // Configure properties - Remove explicit column names to use snake_case convention
         builder.Property(e => e.TenantId)
-            .HasColumnName("TenantId")
             .IsRequired();
 
         builder.Property(e => e.EventType)
-            .HasColumnName("EventType")
             .HasMaxLength(100)
             .IsRequired();
 
         builder.Property(e => e.EventSubtype)
-            .HasColumnName("EventSubtype")
             .HasMaxLength(100);
 
         builder.Property(e => e.Action)
-            .HasColumnName("Action")
             .HasMaxLength(10)
             .IsRequired();
 
         builder.Property(e => e.Outcome)
-            .HasColumnName("Outcome")
             .IsRequired();
 
         builder.Property(e => e.Description)
-            .HasColumnName("Description")
             .HasMaxLength(1000);
 
         builder.Property(e => e.UserId)
-            .HasColumnName("UserId")
             .HasMaxLength(255)
             .IsRequired();
 
         builder.Property(e => e.UserDisplayName)
-            .HasColumnName("UserDisplayName")
             .HasMaxLength(255);
 
         builder.Property(e => e.UserIpAddress)
-            .HasColumnName("UserIpAddress")
             .HasMaxLength(45);
 
         builder.Property(e => e.ResourceType)
-            .HasColumnName("ResourceType")
             .HasMaxLength(100);
 
         builder.Property(e => e.ResourceId)
-            .HasColumnName("ResourceId")
             .HasMaxLength(255);
 
         builder.Property(e => e.EventData)
-            .HasColumnName("EventData")
             .HasColumnType("jsonb");
 
         builder.Property(e => e.EventTime)
-            .HasColumnName("EventTime")
             .IsRequired();
 
         builder.Property(e => e.CreatedAt)
-            .HasColumnName("CreatedAt")
             .IsRequired();
 
         builder.Property(e => e.CreatedBy)
-            .HasColumnName("CreatedBy")
             .IsRequired();
 
-        builder.Property(e => e.ModifiedAt)
-            .HasColumnName("ModifiedAt");
+        builder.Property(e => e.ModifiedAt);
 
-        builder.Property(e => e.ModifiedBy)
-            .HasColumnName("ModifiedBy");
+        builder.Property(e => e.ModifiedBy);
 
         builder.Property(e => e.IsDeleted)
-            .HasColumnName("IsDeleted")
             .IsRequired();
 
         builder.Property(e => e.Version)
-            .HasColumnName("Version")
             .IsRequired();
 
         // Configure indexes
-        builder.HasIndex(e => new { e.TenantId, e.EventTime })
-            .HasDatabaseName("IX_AuditEvents_TenantId_EventTime");
+        builder.HasIndex(e => new { e.TenantId, e.EventTime });
 
-        builder.HasIndex(e => new { e.TenantId, e.UserId, e.EventTime })
-            .HasDatabaseName("IX_AuditEvents_TenantId_UserId_EventTime");
+        builder.HasIndex(e => new { e.TenantId, e.UserId, e.EventTime });
     }
 }

@@ -88,6 +88,13 @@ public class FhirResourceConfiguration : IEntityTypeConfiguration<FhirResource>
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);
 
+        builder.Property(e => e.DeletedAt)
+            .HasColumnName("deleted_at");
+
+        builder.Property(e => e.DeletedBy)
+            .HasColumnName("deleted_by")
+            .HasMaxLength(255);
+
         builder.Property(e => e.Version)
             .HasColumnName("version")
             .HasDefaultValue(1);
