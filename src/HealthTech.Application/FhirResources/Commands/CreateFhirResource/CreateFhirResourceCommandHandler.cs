@@ -50,7 +50,7 @@ public class CreateFhirResourceCommandHandler : IRequestHandler<CreateFhirResour
             FhirId = fhirId,
             VersionId = 1,
             ResourceJson = request.ResourceJson,
-            Status = resource.Meta?.Status?.Value ?? "active",
+            Status = "active",
             LastUpdated = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = _currentUserService.UserId ?? "system",
@@ -79,7 +79,7 @@ public class CreateFhirResourceCommandHandler : IRequestHandler<CreateFhirResour
         if (resource is Patient patient)
         {
             if (patient.Identifier?.Any() == true)
-                parameters["identifier"] = patient.Identifier.First().Value?.Value;
+                parameters["identifier"] = patient.Identifier.First().Value;
             if (patient.Name?.Any() == true)
                 parameters["name"] = patient.Name.First().Text ?? patient.Name.First().Given?.FirstOrDefault();
         }

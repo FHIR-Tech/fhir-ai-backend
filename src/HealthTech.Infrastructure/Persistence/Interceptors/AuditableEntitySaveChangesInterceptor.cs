@@ -64,7 +64,7 @@ public class AuditableEntitySaveChangesInterceptor : SaveChangesInterceptor
                 entry.Entity.TenantId = _currentUserService.TenantId ?? string.Empty;
             }
 
-            if (entry.State == EntityState.Added || entry.State == EntityState.Modified || entry.HasChangedOwnedEntities())
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
             {
                 entry.Entity.ModifiedBy = _currentUserService.UserId;
                 entry.Entity.ModifiedAt = _dateTime.Now;

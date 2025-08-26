@@ -1,7 +1,9 @@
 using HealthTech.Application;
 using HealthTech.Infrastructure;
 using HealthTech.API.Middleware;
+using HealthTech.API.Endpoints;
 using Microsoft.OpenApi.Models;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -29,8 +29,8 @@ public static class FhirEndpoints
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            query.ResourceType = resourceType;
-            var result = await sender.Send(query, cancellationToken);
+            var searchQuery = query with { ResourceType = resourceType };
+            var result = await sender.Send(searchQuery, cancellationToken);
             return Results.Ok(result);
         })
         .WithName("SearchFhirResources")
@@ -63,59 +63,58 @@ public static class FhirEndpoints
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            command.ResourceType = resourceType;
-            var result = await sender.Send(command, cancellationToken);
+            var createCommand = command with { ResourceType = resourceType };
+            var result = await sender.Send(createCommand, cancellationToken);
             return Results.Created($"/fhir/{resourceType}/{result.FhirId}", result);
         })
         .WithName("CreateFhirResource")
         .WithSummary("Create FHIR resource")
         .WithDescription("Create a new FHIR resource of the specified type");
 
-        // PUT /fhir/{resourceType}/{id}
-        group.MapPut("/{resourceType}/{id}", async (
-            string resourceType,
-            string id,
-            UpdateFhirResourceCommand command,
-            ISender sender,
-            CancellationToken cancellationToken) =>
-        {
-            command.ResourceType = resourceType;
-            command.FhirId = id;
-            var result = await sender.Send(command, cancellationToken);
-            return Results.Ok(result);
-        })
-        .WithName("UpdateFhirResource")
-        .WithSummary("Update FHIR resource")
-        .WithDescription("Update an existing FHIR resource");
+        // PUT /fhir/{resourceType}/{id} - TODO: Implement UpdateFhirResourceCommand
+        // group.MapPut("/{resourceType}/{id}", async (
+        //     string resourceType,
+        //     string id,
+        //     UpdateFhirResourceCommand command,
+        //     ISender sender,
+        //     CancellationToken cancellationToken) =>
+        // {
+        //     var updateCommand = command with { ResourceType = resourceType, FhirId = id };
+        //     var result = await sender.Send(updateCommand, cancellationToken);
+        //     return Results.Ok(result);
+        // })
+        // .WithName("UpdateFhirResource")
+        // .WithSummary("Update FHIR resource")
+        // .WithDescription("Update an existing FHIR resource");
 
-        // DELETE /fhir/{resourceType}/{id}
-        group.MapDelete("/{resourceType}/{id}", async (
-            string resourceType,
-            string id,
-            ISender sender,
-            CancellationToken cancellationToken) =>
-        {
-            var command = new DeleteFhirResourceCommand { ResourceType = resourceType, FhirId = id };
-            await sender.Send(command, cancellationToken);
-            return Results.NoContent();
-        })
-        .WithName("DeleteFhirResource")
-        .WithSummary("Delete FHIR resource")
-        .WithDescription("Delete a FHIR resource (soft delete)");
+        // DELETE /fhir/{resourceType}/{id} - TODO: Implement DeleteFhirResourceCommand
+        // group.MapDelete("/{resourceType}/{id}", async (
+        //     string resourceType,
+        //     string id,
+        //     ISender sender,
+        //     CancellationToken cancellationToken) =>
+        // {
+        //     var command = new DeleteFhirResourceCommand { ResourceType = resourceType, FhirId = id };
+        //     await sender.Send(command, cancellationToken);
+        //     return Results.NoContent();
+        // })
+        // .WithName("DeleteFhirResource")
+        // .WithSummary("Delete FHIR resource")
+        // .WithDescription("Delete a FHIR resource (soft delete)");
 
-        // GET /fhir/{resourceType}/{id}/_history
-        group.MapGet("/{resourceType}/{id}/_history", async (
-            string resourceType,
-            string id,
-            ISender sender,
-            CancellationToken cancellationToken) =>
-        {
-            var query = new GetFhirResourceHistoryQuery { ResourceType = resourceType, FhirId = id };
-            var result = await sender.Send(query, cancellationToken);
-            return Results.Ok(result);
-        })
-        .WithName("GetFhirResourceHistory")
-        .WithSummary("Get FHIR resource history")
-        .WithDescription("Get the version history of a FHIR resource");
+        // GET /fhir/{resourceType}/{id}/_history - TODO: Implement GetFhirResourceHistoryQuery
+        // group.MapGet("/{resourceType}/{id}/_history", async (
+        //     string resourceType,
+        //     string id,
+        //     ISender sender,
+        //     CancellationToken cancellationToken) =>
+        // {
+        //     var query = new GetFhirResourceHistoryQuery { ResourceType = resourceType, FhirId = id };
+        //     var result = await sender.Send(query, cancellationToken);
+        //     return Results.Ok(result);
+        // })
+        // .WithName("GetFhirResourceHistory")
+        // .WithSummary("Get FHIR resource history")
+        // .WithDescription("Get the version history of a FHIR resource");
     }
 }
