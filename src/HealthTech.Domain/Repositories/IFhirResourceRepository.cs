@@ -55,4 +55,13 @@ public interface IFhirResourceRepository : IRepository<FhirResource>
     /// <param name="tenantId">Tenant ID</param>
     /// <returns>FHIR resource or null if not found</returns>
     Task<FhirResource?> GetByVersionAsync(string resourceType, string fhirId, int versionId, string tenantId);
+
+    /// <summary>
+    /// Get FHIR resource by type and ID (alias for GetByFhirIdAsync)
+    /// </summary>
+    /// <param name="resourceType">FHIR resource type</param>
+    /// <param name="fhirId">FHIR resource ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>FHIR resource or null if not found</returns>
+    Task<FhirResource?> GetByTypeAndIdAsync(string resourceType, string fhirId, CancellationToken cancellationToken);
 }

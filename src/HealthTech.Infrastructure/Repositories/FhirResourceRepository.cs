@@ -177,4 +177,18 @@ public class FhirResourceRepository : IFhirResourceRepository
         return await _context.FhirResources
             .FirstOrDefaultAsync(r => r.ResourceType == resourceType && r.FhirId == fhirId && r.VersionId == versionId && r.TenantId == tenantId && !r.IsDeleted);
     }
+
+    /// <summary>
+    /// Get FHIR resource by type and ID (alias for GetByFhirIdAsync)
+    /// </summary>
+    /// <param name="resourceType">FHIR resource type</param>
+    /// <param name="fhirId">FHIR resource ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>FHIR resource or null if not found</returns>
+    public async Task<FhirResource?> GetByTypeAndIdAsync(string resourceType, string fhirId, CancellationToken cancellationToken)
+    {
+        // For now, we'll use a default tenant ID - this should be enhanced to get tenant from context
+        var tenantId = "default"; // This should be injected or retrieved from context
+        return await GetByFhirIdAsync(resourceType, fhirId, tenantId);
+    }
 }

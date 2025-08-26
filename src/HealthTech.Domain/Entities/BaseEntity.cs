@@ -44,6 +44,17 @@ public abstract class BaseEntity
     public bool IsDeleted { get; set; }
 
     /// <summary>
+    /// Date when the entity was deleted (soft delete)
+    /// </summary>
+    public DateTime? DeletedAt { get; set; }
+
+    /// <summary>
+    /// User who deleted the entity
+    /// </summary>
+    [MaxLength(255)]
+    public string? DeletedBy { get; set; }
+
+    /// <summary>
     /// Version for optimistic concurrency control
     /// </summary>
     public int Version { get; set; }
