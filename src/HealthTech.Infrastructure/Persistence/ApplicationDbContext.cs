@@ -41,10 +41,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
-
-        // Configure Row Level Security
-        ConfigureRowLevelSecurity(modelBuilder);
-
         base.OnModelCreating(modelBuilder);
     }
 
@@ -56,33 +52,5 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         optionsBuilder.AddInterceptors(_auditableEntitySaveChangesInterceptor);
         base.OnConfiguring(optionsBuilder);
-    }
-
-    private static void ConfigureRowLevelSecurity(ModelBuilder modelBuilder)
-    {
-        // Configure RLS for FhirResource
-        modelBuilder.Entity<FhirResource>()
-            .ToTable("fhir_resources", t => t.HasComment("FHIR resources stored as JSONB"))
-            .HasIndex(e => new { e.TenantId, e.ResourceType, e.FhirId })
-            .IsUnique();
-
-        modelBuilder.Entity<FhirResource>()
-            .HasIndex(e => new { e.TenantId, e.ResourceType })
-            .HasDatabaseName("IX_FhirResources_TenantId_ResourceType");
-
-        modelBuilder.Entity<FhirResource>()
-            .HasIndex(e => e.SearchParameters)
-            .HasMethod("gin")
-            .HasDatabaseName("IX_FhirResources_SearchParameters");
-
-        // Configure RLS for AuditEvent
-        modelBuilder.Entity<AuditEvent>()
-            .ToTable("audit_events", t => t.HasComment("Audit events for compliance tracking"))
-            .HasIndex(e => new { e.TenantId, e.EventTime })
-            .HasDatabaseName("IX_AuditEvents_TenantId_EventTime");
-
-        modelBuilder.Entity<AuditEvent>()
-            .HasIndex(e => new { e.TenantId, e.UserId, e.EventTime })
-            .HasDatabaseName("IX_AuditEvents_TenantId_UserId_EventTime");
     }
 }
