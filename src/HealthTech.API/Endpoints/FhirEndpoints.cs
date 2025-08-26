@@ -25,11 +25,17 @@ public static class FhirEndpoints
         // GET /fhir/{resourceType}
         group.MapGet("/{resourceType}", async (
             string resourceType,
-            [AsParameters] SearchFhirResourcesQuery query,
             ISender sender,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            int skip = 0,
+            int take = 100) =>
         {
-            var searchQuery = query with { ResourceType = resourceType };
+            var searchQuery = new SearchFhirResourcesQuery 
+            { 
+                ResourceType = resourceType,
+                Skip = skip,
+                Take = take
+            };
             var result = await sender.Send(searchQuery, cancellationToken);
             return Results.Ok(result);
         })

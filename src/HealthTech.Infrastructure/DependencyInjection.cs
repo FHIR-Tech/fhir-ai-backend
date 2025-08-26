@@ -40,6 +40,9 @@ public static class DependencyInjection
         // Add services
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IDateTime, DateTimeService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IAuditService, AuditService>();
+        services.AddHttpContextAccessor();
 
         // Add repositories
         services.AddScoped<HealthTech.Domain.Repositories.IFhirResourceRepository, HealthTech.Infrastructure.Repositories.FhirResourceRepository>();
