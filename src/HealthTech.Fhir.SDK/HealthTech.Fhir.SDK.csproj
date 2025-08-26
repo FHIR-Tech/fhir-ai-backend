@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HealthTech.Fhir.SDK</RootNamespace>
+    <AssemblyName>HealthTech.Fhir.SDK</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Description>FHIR R4B SDK for HealthTech - Based on HL7.Fhir.R4B</Description>
+    <Authors>HealthTech Team</Authors>
+    <Company>HealthTech</Company>
+    <Product>HealthTech.Fhir.SDK</Product>
+    <Copyright>Copyright © HealthTech 2024</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>

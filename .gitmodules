@@ -1,0 +1,3 @@
+[submodule "external/firely-net-sdk"]
+	path = external/firely-net-sdk
+	url = https://github.com/FirelyTeam/firely-net-sdk.git
