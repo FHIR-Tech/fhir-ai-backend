@@ -158,7 +158,7 @@ This document provides a comprehensive reference of all sample values used in th
 ## 🔧 Technical Details
 
 ### API Configuration
-- **Base URL**: https://localhost:52871
+- **Base URL**: https://localhost:5001
 - **Tenant ID**: demo-tenant
 - **FHIR Scopes**: user/* patient/*
 - **Content Type**: application/json
@@ -179,7 +179,7 @@ This document provides a comprehensive reference of all sample values used in th
 
 ### Test Single Patient Creation
 ```bash
-curl -X POST "https://localhost:52871/fhir/Patient" \
+curl -X POST "https://localhost:5001/fhir/Patient" \
   -H "X-Tenant-ID: demo-tenant" \
   -H "X-FHIR-Scopes: user/* patient/*" \
   -H "Content-Type: application/json" \
@@ -193,7 +193,7 @@ curl -X POST "https://localhost:52871/fhir/Patient" \
 
 ### Test Single Observation Creation
 ```bash
-curl -X POST "https://localhost:52871/fhir/Observation" \
+curl -X POST "https://localhost:5001/fhir/Observation" \
   -H "X-Tenant-ID: demo-tenant" \
   -H "X-FHIR-Scopes: user/* patient/*" \
   -H "Content-Type: application/json" \

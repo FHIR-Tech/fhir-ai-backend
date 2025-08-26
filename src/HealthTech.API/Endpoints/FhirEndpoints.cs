@@ -327,10 +327,15 @@ This is a soft delete operation. The resource remains in the database but is mar
 
         // POST /fhir
         group.MapPost("", async (
-            ImportFhirBundleCommand command,
+            HttpContext httpContext,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
+            // Read the request body as JSON string
+            using var reader = new StreamReader(httpContext.Request.Body);
+            var bundleJson = await reader.ReadToEndAsync(cancellationToken);
+            
+            var command = new ImportFhirBundleCommand { BundleJson = bundleJson };
             var result = await sender.Send(command, cancellationToken);
             return Results.Ok(result);
         })

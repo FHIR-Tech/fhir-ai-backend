@@ -77,116 +77,145 @@ public class ImportFhirBundleCommandHandler : IRequestHandler<ImportFhirBundleCo
 
             _context.AuditEvents.Add(bundleAuditEvent);
 
-            // Process each entry in the bundle
-            if (bundle.Entry != null)
+            // Sort entries by dependencies for proper import order
+            var sortedEntries = SortEntriesByDependencies(bundle.Entry?.ToList() ?? new List<Bundle.EntryComponent>());
+            
+            // Get all resource IDs in the bundle for reference checking
+            var bundleResourceIds = new HashSet<string>();
+            foreach (var entry in sortedEntries)
             {
-                foreach (var entry in bundle.Entry)
+                if (entry.Resource?.Id != null)
                 {
-                    totalProcessed++;
+                    var resourceKey = $"{entry.Resource.GetType().Name}/{entry.Resource.Id}";
+                    bundleResourceIds.Add(resourceKey);
+                }
+            }
 
-                    try
+            // Process each entry in the bundle
+            foreach (var entry in sortedEntries)
+            {
+                totalProcessed++;
+
+                try
+                {
+                    var resource = entry.Resource;
+                    if (resource == null)
                     {
-                        var resource = entry.Resource;
-                        if (resource == null)
+                        errors.Add(new ImportError
+                        {
+                            ResourceType = "Unknown",
+                            OriginalId = null,
+                            Message = "Entry contains no resource",
+                            ErrorCode = "INVALID_ENTRY"
+                        });
+                        failedToImport++;
+                        continue;
+                    }
+
+                    var resourceType = resource.GetType().Name;
+                    var resourceId = resource.Id;
+
+                    // Determine operation type
+                    var operation = entry.Request?.Method?.ToString() ?? "POST";
+
+                    // Validate references before processing
+                    if (operation?.ToUpper() != "DELETE")
+                    {
+                        var invalidReferences = ValidateReferences(resource, bundleResourceIds);
+                        if (invalidReferences.Any())
                         {
                             errors.Add(new ImportError
                             {
-                                ResourceType = "Unknown",
-                                OriginalId = null,
-                                Message = "Entry contains no resource",
-                                ErrorCode = "INVALID_ENTRY"
+                                ResourceType = resourceType,
+                                OriginalId = resourceId,
+                                Message = $"Invalid references found: {string.Join(", ", invalidReferences)}",
+                                ErrorCode = "INVALID_REFERENCES"
                             });
                             failedToImport++;
                             continue;
                         }
-
-                        var resourceType = resource.GetType().Name;
-                        var resourceId = resource.Id;
-
-                        // Determine operation type
-                        var operation = entry.Request?.Method?.ToString() ?? "POST";
-
-                        string finalResourceId;
-                        ImportStatus status;
-
-                        switch (operation.ToUpper())
-                        {
-                            case "PUT":
-                            case "PATCH":
-                                // Update existing resource
-                                var updateCommand = new UpdateFhirResourceCommand
-                                {
-                                    ResourceType = resourceType,
-                                    FhirId = resourceId,
-                                    ResourceJson = JsonSerializer.Serialize(resource, new JsonSerializerOptions
-                                    {
-                                        WriteIndented = false,
-                                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                                    })
-                                };
-
-                                var updateResult = await _sender.Send(updateCommand, cancellationToken);
-                                finalResourceId = updateResult.FhirId;
-                                status = ImportStatus.Success;
-                                break;
-
-                            case "DELETE":
-                                // Handle delete operation
-                                var deleteCommand = new DeleteFhirResourceCommand
-                                {
-                                    ResourceType = resourceType,
-                                    FhirId = resourceId
-                                };
-
-                                await _sender.Send(deleteCommand, cancellationToken);
-                                finalResourceId = resourceId;
-                                status = ImportStatus.Success;
-                                break;
-
-                            default:
-                                // Create new resource
-                                var createCommand = new CreateFhirResourceCommand
-                                {
-                                    ResourceType = resourceType,
-                                    ResourceJson = JsonSerializer.Serialize(resource, new JsonSerializerOptions
-                                    {
-                                        WriteIndented = false,
-                                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                                    }),
-                                    FhirId = resourceId
-                                };
-
-                                var createResult = await _sender.Send(createCommand, cancellationToken);
-                                finalResourceId = createResult.FhirId;
-                                status = ImportStatus.Success;
-                                break;
-                        }
-
-                        importedResources.Add(new ImportedResource
-                        {
-                            ResourceType = resourceType,
-                            FhirId = finalResourceId,
-                            Status = status,
-                            ErrorMessage = null
-                        });
-
-                        successfullyImported++;
                     }
-                    catch (Exception ex)
+
+                    string finalResourceId;
+                    ImportStatus status;
+
+                    switch (operation.ToUpper())
                     {
-                        var resourceType = entry.Resource?.GetType().Name ?? "Unknown";
-                        var resourceId = entry.Resource?.Id;
+                        case "PUT":
+                        case "PATCH":
+                            // Update existing resource
+                            var updateCommand = new UpdateFhirResourceCommand
+                            {
+                                ResourceType = resourceType,
+                                FhirId = resourceId,
+                                ResourceJson = JsonSerializer.Serialize(resource, new JsonSerializerOptions
+                                {
+                                    WriteIndented = false,
+                                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                                })
+                            };
 
-                        errors.Add(new ImportError
-                        {
-                            ResourceType = resourceType,
-                            OriginalId = resourceId,
-                            Message = ex.Message,
-                            ErrorCode = ex.GetType().Name
-                        });
+                            var updateResult = await _sender.Send(updateCommand, cancellationToken);
+                            finalResourceId = updateResult.FhirId;
+                            status = ImportStatus.Success;
+                            break;
 
-                        failedToImport++;
+                        case "DELETE":
+                            // Handle delete operation
+                            var deleteCommand = new DeleteFhirResourceCommand
+                            {
+                                ResourceType = resourceType,
+                                FhirId = resourceId
+                            };
+
+                            await _sender.Send(deleteCommand, cancellationToken);
+                            finalResourceId = resourceId;
+                            status = ImportStatus.Success;
+                            break;
+
+                        default:
+                            // Create new resource
+                            var createCommand = new CreateFhirResourceCommand
+                            {
+                                ResourceType = resourceType,
+                                ResourceJson = JsonSerializer.Serialize(resource, new JsonSerializerOptions
+                                {
+                                    WriteIndented = false,
+                                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                                }),
+                                FhirId = resourceId
+                            };
+
+                            var createResult = await _sender.Send(createCommand, cancellationToken);
+                            finalResourceId = createResult.FhirId;
+                            status = ImportStatus.Success;
+                            break;
                     }
+
+                    importedResources.Add(new ImportedResource
+                    {
+                        ResourceType = resourceType,
+                        FhirId = finalResourceId,
+                        Status = status,
+                        ErrorMessage = null
+                    });
+
+                    successfullyImported++;
+                }
+                catch (Exception ex)
+                {
+                    var resourceType = entry.Resource?.GetType().Name ?? "Unknown";
+                    var resourceId = entry.Resource?.Id;
+
+                    errors.Add(new ImportError
+                    {
+                        ResourceType = resourceType,
+                        OriginalId = resourceId,
+                        Message = ex.Message,
+                        ErrorCode = ex.GetType().Name
+                    });
+
+                    failedToImport++;
                 }
             }
 
@@ -215,5 +244,121 @@ public class ImportFhirBundleCommandHandler : IRequestHandler<ImportFhirBundleCo
             ImportedResources = importedResources,
             Errors = errors
         };
+    }
+
+    /// <summary>
+    /// Sort bundle entries by dependencies to ensure proper import order
+    /// </summary>
+    /// <param name="entries">Bundle entries</param>
+    /// <returns>Sorted entries</returns>
+    private List<Bundle.EntryComponent> SortEntriesByDependencies(List<Bundle.EntryComponent> entries)
+    {
+        if (entries == null || entries.Count == 1)
+            return entries;
+
+        var result = new List<Bundle.EntryComponent>();
+        var processed = new HashSet<string>();
+        var resourceIdToEntry = new Dictionary<string, Bundle.EntryComponent>();
+
+        // Create mapping of resource ID to entry
+        foreach (var entry in entries)
+        {
+            if (entry.Resource?.Id != null)
+            {
+                var key = $"{entry.Resource.GetType().Name}/{entry.Resource.Id}";
+                resourceIdToEntry[key] = entry;
+            }
+        }
+
+        // Define resource type priority (lower number = higher priority)
+        var typePriority = new Dictionary<string, int>
+        {
+            // Foundation resources (should be imported first)
+            { "Patient", 1 },
+            { "Organization", 2 },
+            { "Practitioner", 3 },
+            { "Location", 4 },
+            
+            // Clinical resources (depend on foundation resources)
+            { "Encounter", 5 },
+            { "Condition", 6 },
+            { "Observation", 7 },
+            { "Procedure", 8 },
+            { "MedicationRequest", 9 },
+            { "AllergyIntolerance", 10 },
+            
+            // Document resources (depend on clinical resources)
+            { "DocumentReference", 11 },
+            { "Composition", 12 },
+            
+            // Default for other types
+            { "default", 100 }
+        };
+
+        // Sort by type priority first, then by dependencies
+        var sortedEntries = entries.OrderBy(e => 
+        {
+            var resourceType = e.Resource?.GetType().Name ?? "Unknown";
+            return typePriority.GetValueOrDefault(resourceType, typePriority["default"]);
+        }).ToList();
+
+        foreach (var entry in sortedEntries)
+        {
+            if (entry.Resource?.Id == null)
+            {
+                result.Add(entry);
+                continue;
+            }
+
+            var resourceKey = $"{entry.Resource.GetType().Name}/{entry.Resource.Id}";
+            
+            // Skip if already processed
+            if (processed.Contains(resourceKey))
+                continue;
+
+            // Add this entry and mark as processed
+            result.Add(entry);
+            processed.Add(resourceKey);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Validate references in a resource against available resources in the bundle
+    /// </summary>
+    /// <param name="resource">Resource to validate</param>
+    /// <param name="bundleResourceIds">Available resource IDs in the bundle</param>
+    /// <returns>List of invalid references</returns>
+    private List<string> ValidateReferences(Resource resource, HashSet<string> bundleResourceIds)
+    {
+        var invalidReferences = new List<string>();
+        var references = FhirBundleReferenceHelper.ExtractReferences(resource);
+        
+        foreach (var reference in references)
+        {
+            if (reference.Reference != null)
+            {
+                var referenceType = FhirBundleReferenceHelper.GetResourceTypeFromReference(reference.Reference);
+                var referenceId = FhirBundleReferenceHelper.GetResourceIdFromReference(reference.Reference);
+                
+                if (referenceType != null && referenceId != null)
+                {
+                    var resourceKey = $"{referenceType}/{referenceId}";
+                    
+                    // Check if reference exists in bundle
+                    if (!bundleResourceIds.Contains(resourceKey))
+                    {
+                        // Check if it's a reference to an external resource (has # prefix)
+                        if (!reference.Reference.StartsWith("#") && !reference.Reference.StartsWith("http"))
+                        {
+                            invalidReferences.Add(reference.Reference);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return invalidReferences;
     }
 }

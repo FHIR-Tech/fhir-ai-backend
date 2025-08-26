@@ -27,7 +27,7 @@ node scripts/sample-data-api.js
 ## Configuration
 
 ### API URL
-The scripts are configured to use `http://localhost:52872` by default. If your API is running on a different port, update the `API_BASE_URL` variable in the scripts.
+The scripts are configured to use `http://localhost:5000` by default. If your API is running on a different port, update the `API_BASE_URL` variable in the scripts.
 
 ### Tenant ID
 Default tenant ID is `demo-tenant`. You can change this by modifying the `TENANT_ID` variable.
@@ -133,7 +133,7 @@ The scripts use the following FHIR endpoints:
 ## Data Validation
 
 After running the script, you can validate the data by:
-1. Using the Swagger UI at `https://localhost:52871`
+1. Using the Swagger UI at `https://localhost:5001`
 2. Making GET requests to retrieve the created resources
 3. Checking the database directly
 
