@@ -85,16 +85,16 @@ fhir-ai-backend/
 
 1. **Clone the repository**
 
-   ```bash
-   git clone https://github.com/your-org/fhir-ai-backend.git
-   cd fhir-ai-backend
-   ```
+```bash
+git clone https://github.com/your-org/fhir-ai-backend.git
+cd fhir-ai-backend
+```
 
 2. **Start the development environment**
 
-   ```bash
-   docker-compose up -d
-   ```
+```bash
+docker-compose up -d
+```
 
 3. **Access the application**
    - API: http://localhost:5000
@@ -105,36 +105,37 @@ fhir-ai-backend/
 
 1. **Restore dependencies**
 
-   ```bash
-   dotnet restore
-   ```
+```bash
+dotnet restore
+```
 
 2. **Set up the database**
 
-   ```bash
-               # Using Docker
-     docker run --name fhir-ai-postgres -e POSTGRES_DB=fhir-ai -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:14
+```bash
+# Using Docker
+docker run --name fhir-ai-postgres -e POSTGRES_DB=fhir-ai -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:14
 
-   # Run database initialization
-   psql -h localhost -U postgres -d fhir-ai -f scripts/init-db.sql
-   ```
+# Run database initialization
+psql -h localhost -U postgres -d fhir-ai -f scripts/init-db.sql
+```
 
 3. **Update connection string**
 
-   ```json
-   // src/HealthTech.API/appsettings.json
-   {
-     "ConnectionStrings": {
-       "DefaultConnection": "Host=localhost;Database=fhir-ai;Username=postgres;Password=password"
-     }
-   }
-   ```
+```json
+// src/HealthTech.API/appsettings.json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=fhir-ai;Username=postgres;Password=password"
+  }
+}
+```
 
 4. **Run the application**
-   ```bash
-   cd src/HealthTech.API
-   dotnet run
-   ```
+
+```bash
+cd src/HealthTech.API
+dotnet run
+```
 
 ## 📚 API Documentation
 
@@ -208,26 +209,27 @@ dotnet test --collect:"XPlat Code Coverage"
 
 1. **Build the Docker image**
 
-   ```bash
-   docker build -t fhir-ai-backend .
-   ```
+```bash
+docker build -t fhir-ai-backend .
+```
 
 2. **Set environment variables**
 
-   ```bash
-   export CONNECTION_STRING="your-production-connection-string"
-   export JWT_SECRET="your-super-secret-key"
-   ```
+```bash
+export CONNECTION_STRING="your-production-connection-string"
+export JWT_SECRET="your-super-secret-key"
+```
 
 3. **Run the container**
-   ```bash
-   docker run -d \
-     --name fhir-ai-api \
-     -p 80:80 \
-     -e ConnectionStrings__DefaultConnection="$CONNECTION_STRING" \
-     -e JwtSettings__SecretKey="$JWT_SECRET" \
-     fhir-ai-backend
-   ```
+
+```bash
+docker run -d \
+   --name fhir-ai-api \
+   -p 80:80 \
+   -e ConnectionStrings__DefaultConnection="$CONNECTION_STRING" \
+   -e JwtSettings__SecretKey="$JWT_SECRET" \
+   fhir-ai-backend
+```
 
 ### Environment Configuration
 
