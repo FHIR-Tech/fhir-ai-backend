@@ -17,6 +17,18 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 // Add API services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Add authentication for development/testing
+builder.Services.AddAuthentication("Development")
+    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, HealthTech.API.Authentication.DevelopmentAuthenticationHandler>("Development", options => { });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo 
