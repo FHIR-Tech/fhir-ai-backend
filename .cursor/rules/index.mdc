@@ -4,9 +4,9 @@ globs:
 alwaysApply: true
 ---
 
-# FHIR2AI Backend - Cursor AI Rules
+# FHIR-AI Backend - Cursor AI Rules
 
-This file defines comprehensive rules for Cursor AI when developing, scaffolding, and deploying the FHIR2AI Backend application.
+This file defines comprehensive rules for Cursor AI when developing, scaffolding, and deploying the FHIR-AI Backend application.
 
 ## Project Overview
 - **Technology Stack**: .NET 8, FHIR/HL7, PostgreSQL, Clean Architecture
@@ -169,4 +169,4 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 
 ---
 
-*This rule set ensures consistent, secure, and maintainable development and deployment of the FHIR2AI Backend application.*
+*This rule set ensures consistent, secure, and maintainable development and deployment of the FHIR-AI Backend application.*
