@@ -19,29 +19,15 @@ The sample data generator creates a comprehensive dataset including:
 4. **PowerShell** (optional): For running the PowerShell version
 
 ## Quick Start
-
-### Option 1: Windows Batch File (Recommended)
-```bash
-# Double-click or run from command line
-scripts/run-sample-data.bat
-```
-
-### Option 2: Node.js Script
 ```bash
 # Make sure Node.js is installed
 node scripts/sample-data-api.js
 ```
 
-### Option 3: PowerShell Script
-```powershell
-# Run PowerShell script
-.\scripts\sample-data-api.ps1
-```
-
 ## Configuration
 
 ### API URL
-The scripts are configured to use `https://localhost:52871` by default. If your API is running on a different port, update the `API_BASE_URL` variable in the scripts.
+The scripts are configured to use `http://localhost:52872` by default. If your API is running on a different port, update the `API_BASE_URL` variable in the scripts.
 
 ### Tenant ID
 Default tenant ID is `demo-tenant`. You can change this by modifying the `TENANT_ID` variable.
