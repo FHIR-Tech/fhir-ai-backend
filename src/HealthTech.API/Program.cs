@@ -2,9 +2,11 @@ using HealthTech.Application;
 using HealthTech.Infrastructure;
 using HealthTech.API.Middleware;
 using HealthTech.API.Endpoints;
+using HealthTech.API.Swagger;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,49 @@ builder.Services.AddSwaggerGen(c =>
     { 
         Title = "FHIR-AI Backend API", 
         Version = "v1",
-        Description = "HealthTech FHIR-compliant backend with AI integration capabilities"
+        Description = @"
+## HealthTech FHIR-AI Backend
+
+A comprehensive FHIR-compliant healthcare data platform with AI integration capabilities, built on .NET 8 and PostgreSQL.
+
+### Key Features
+- **FHIR R4 Compliance**: Full support for FHIR R4 resources and operations
+- **Multi-tenant Architecture**: Secure data isolation with Row-Level Security
+- **SMART on FHIR**: OAuth2/OpenID Connect authentication with scope enforcement
+- **AI Integration**: Ready for machine learning and AI model integration
+- **Audit Trail**: Comprehensive logging for compliance and security
+- **Performance Optimized**: JSONB storage with GIN indexes for efficient querying
+
+### Authentication
+This API supports SMART on FHIR authentication with the following scopes:
+- `system/*` - System-level access
+- `user/*` - User-level access  
+- `patient/*` - Patient-level access
+- `user/Patient.read` - Specific resource access
+
+### Multi-tenancy
+All requests must include tenant context via:
+- JWT claim: `tenant_id` or `org_id`
+- Header: `X-Tenant-ID`
+
+### Rate Limiting
+- 100 requests per minute per tenant
+- Additional limits may apply based on subscription tier
+
+### Support
+For technical support, contact: support@healthtech.com
+",
+        Contact = new OpenApiContact
+        {
+            Name = "HealthTech Support",
+            Email = "support@healthtech.com",
+            Url = new Uri("https://healthtech.com/support")
+        },
+        License = new OpenApiLicense
+        {
+            Name = "MIT License",
+            Url = new Uri("https://opensource.org/licenses/MIT")
+        }
     });
 
     // Add JWT authentication
@@ -32,6 +76,15 @@ builder.Services.AddSwaggerGen(c =>
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
+    });
+
+    // Add API Key for development/testing
+    c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Description = "API Key for development and testing purposes",
+        Name = "X-API-Key",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -45,9 +98,71 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
+            new[] { "system/*", "user/*", "patient/*" }
+        },
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                }
+            },
             Array.Empty<string>()
         }
     });
+
+    // Include XML comments
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+
+    // Add operation filters for better documentation
+    c.OperationFilter<SwaggerDefaultValues>();
+    
+    // Add schema filters for FHIR resources
+    c.SchemaFilter<FhirResourceSchemaFilter>();
+
+    // Customize operation IDs
+    c.CustomOperationIds(apiDesc =>
+    {
+        return apiDesc.ActionDescriptor?.DisplayName ?? apiDesc.RelativePath;
+    });
+
+    // Add tags for better organization
+    c.TagActionsBy(api =>
+    {
+        if (api.GroupName != null)
+        {
+            return new[] { api.GroupName };
+        }
+
+        var controllerActionDescriptor = api.ActionDescriptor as Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor;
+        if (controllerActionDescriptor != null)
+        {
+            return new[] { controllerActionDescriptor.ControllerName };
+        }
+
+        // Fallback for Minimal API endpoints
+        if (api.RelativePath?.StartsWith("fhir") == true)
+        {
+            return new[] { "FHIR" };
+        }
+
+        if (api.RelativePath?.StartsWith("health") == true)
+        {
+            return new[] { "System" };
+        }
+
+        // Default fallback
+        return new[] { "API" };
+    });
+
+    c.DocInclusionPredicate((name, api) => true);
 });
 
 // Configure JSON serialization
@@ -62,15 +177,19 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("HealthTechCors", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000", // React dev server
-                "http://localhost:4200", // Angular dev server
-                "https://localhost:3000",
-                "https://localhost:4200"
-            )
+        policy
+            //.WithOrigins(
+            //    "http://localhost:3000", // React dev server
+            //    "http://localhost:4200", // Angular dev server
+            //    "https://localhost:3000",
+            //    "https://localhost:4200"
+            //)
+            //.AllowAnyMethod()
+            //.AllowAnyHeader()
+            //.AllowCredentials();
+            .AllowAnyOrigin()
             .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+            .AllowAnyHeader();
     });
 });
 
@@ -84,6 +203,27 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "FHIR-AI Backend API v1");
         c.RoutePrefix = string.Empty; // Serve Swagger UI at root
+        
+        // Customize Swagger UI
+        c.DocumentTitle = "FHIR-AI Backend API Documentation";
+        c.DefaultModelsExpandDepth(2);
+        c.DefaultModelExpandDepth(2);
+        c.DisplayRequestDuration();
+        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+        
+        // Add custom CSS for better styling
+        c.InjectStylesheet("/swagger-ui/custom.css");
+        
+        // Add custom JavaScript for enhanced functionality
+        c.InjectJavascript("/swagger-ui/custom.js");
+        
+        // Configure OAuth2 settings for testing
+        c.OAuthClientId("swagger-ui");
+        c.OAuthClientSecret("swagger-secret");
+        c.OAuthRealm("healthtech-fhir");
+        c.OAuthAppName("FHIR-AI Backend Swagger UI");
+        c.OAuthScopeSeparator(" ");
+        c.OAuthUsePkce();
     });
 }
 
