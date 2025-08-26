@@ -3,6 +3,7 @@ using HealthTech.Application.FhirResources.Queries.GetFhirResource;
 using HealthTech.Application.FhirResources.Queries.SearchFhirResources;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.OpenApi.Any;
 
 namespace HealthTech.API.Endpoints;
 
@@ -41,7 +42,46 @@ public static class FhirEndpoints
         })
         .WithName("SearchFhirResources")
         .WithSummary("Search FHIR resources by type")
-        .WithDescription("Search for FHIR resources of a specific type with optional search parameters");
+        .WithDescription(@"
+Search for FHIR resources of a specific type with pagination support.
+
+### Supported Resource Types
+- **Patient**: Patient demographic and administrative information
+- **Observation**: Clinical measurements and simple assertions
+- **Encounter**: An interaction between a patient and healthcare provider
+- **Condition**: Detailed information about conditions, problems, or diagnoses
+- **MedicationRequest**: An order or request for medication
+- **Procedure**: An action that is performed on or for a patient
+
+### Examples
+```
+GET /fhir/Patient?skip=0&take=10
+GET /fhir/Observation?skip=20&take=50
+```
+
+### Response Format
+Returns a FHIR Bundle containing the matching resources with pagination metadata.
+")
+        .WithOpenApi(operation =>
+        {
+            if (operation.Parameters != null && operation.Parameters.Count > 0)
+            {
+                operation.Parameters[0].Description = "FHIR resource type (e.g., Patient, Observation, Encounter)";
+                operation.Parameters[0].Example = new Microsoft.OpenApi.Any.OpenApiString("Patient");
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 3)
+            {
+                operation.Parameters[3].Description = "Number of records to skip for pagination (default: 0)";
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 4)
+            {
+                operation.Parameters[4].Description = "Number of records to return, maximum 100 (default: 100)";
+            }
+            
+            return operation;
+        });
 
         // GET /fhir/{resourceType}/{id}
         group.MapGet("/{resourceType}/{id}", async (
@@ -60,7 +100,38 @@ public static class FhirEndpoints
         })
         .WithName("GetFhirResource")
         .WithSummary("Get FHIR resource by ID")
-        .WithDescription("Retrieve a specific FHIR resource by its type and ID");
+        .WithDescription(@"
+Retrieve a specific FHIR resource by its type and ID.
+
+### Examples
+```
+GET /fhir/Patient/patient-123
+GET /fhir/Observation/obs-456
+```
+
+### Response Format
+Returns the complete FHIR resource in JSON format following R4 specification.
+
+### Error Responses
+- **404 Not Found**: Resource not found or access denied
+- **403 Forbidden**: Insufficient permissions for the requested resource
+")
+        .WithOpenApi(operation =>
+        {
+            if (operation.Parameters != null && operation.Parameters.Count > 0)
+            {
+                operation.Parameters[0].Description = "FHIR resource type (e.g., Patient, Observation, Encounter)";
+                operation.Parameters[0].Example = new Microsoft.OpenApi.Any.OpenApiString("Patient");
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 1)
+            {
+                operation.Parameters[1].Description = "Unique identifier for the FHIR resource";
+                operation.Parameters[1].Example = new Microsoft.OpenApi.Any.OpenApiString("patient-123");
+            }
+            
+            return operation;
+        });
 
         // POST /fhir/{resourceType}
         group.MapPost("/{resourceType}", async (
@@ -75,7 +146,65 @@ public static class FhirEndpoints
         })
         .WithName("CreateFhirResource")
         .WithSummary("Create FHIR resource")
-        .WithDescription("Create a new FHIR resource of the specified type");
+        .WithDescription(@"
+Create a new FHIR resource of the specified type.
+
+### Request Body
+The request body should contain a valid FHIR resource in JSON format following R4 specification.
+
+### Examples
+
+#### Create a Patient
+```json
+{
+  ""resourceType"": ""Patient"",
+  ""name"": [
+    {
+      ""use"": ""official"",
+      ""family"": ""Smith"",
+      ""given"": [""John"", ""Michael""]
+    }
+  ],
+  ""gender"": ""male"",
+  ""birthDate"": ""1990-01-15""
+}
+```
+
+#### Create an Observation
+```json
+{
+  ""resourceType"": ""Observation"",
+  ""status"": ""final"",
+  ""code"": {
+    ""coding"": [
+      {
+        ""system"": ""http://loinc.org"",
+        ""code"": ""8302-2"",
+        ""display"": ""Body height""
+      }
+    ]
+  },
+  ""valueQuantity"": {
+    ""value"": 175.0,
+    ""unit"": ""cm"",
+    ""system"": ""http://unitsofmeasure.org"",
+    ""code"": ""cm""
+  }
+}
+```
+
+### Response
+Returns the created resource with assigned ID and metadata.
+")
+        .WithOpenApi(operation =>
+        {
+            if (operation.Parameters != null && operation.Parameters.Count > 0)
+            {
+                operation.Parameters[0].Description = "FHIR resource type (e.g., Patient, Observation, Encounter)";
+                operation.Parameters[0].Example = new Microsoft.OpenApi.Any.OpenApiString("Patient");
+            }
+            return operation;
+        });
 
         // PUT /fhir/{resourceType}/{id} - TODO: Implement UpdateFhirResourceCommand
         // group.MapPut("/{resourceType}/{id}", async (
