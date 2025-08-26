@@ -113,7 +113,7 @@ dotnet restore
 
 ```bash
 # Using Docker
-docker run --name fhir-ai-postgres -e POSTGRES_DB=fhir-ai -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:14
+docker run --name fhir-ai-postgres -e POSTGRES_DB=fhir-ai -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=Post:!@#4 -p 5432:5432 -d postgres:14
 
 # Run database initialization
 psql -h localhost -U postgres -d fhir-ai -f scripts/init-db.sql
@@ -124,7 +124,7 @@ psql -h localhost -U postgres -d fhir-ai -f scripts/init-db.sql
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=fhir-ai;Username=postgres;Password=password"
+    "DefaultConnection": "Host=localhost;Database=fhir-ai;Username=postgres;Password=Post:!@#4"
   }
 }
 ```
