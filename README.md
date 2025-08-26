@@ -122,7 +122,6 @@ psql -h localhost -U postgres -d fhir-ai -f scripts/init-db.sql
 3. **Update connection string**
 
 ```json
-// src/HealthTech.API/appsettings.json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Database=fhir-ai;Username=postgres;Password=password"
