@@ -1,0 +1,172 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# FHIR2AI Backend - Cursor AI Rules
+
+This file defines comprehensive rules for Cursor AI when developing, scaffolding, and deploying the FHIR2AI Backend application.
+
+## Project Overview
+- **Technology Stack**: .NET 8, FHIR/HL7, PostgreSQL, Clean Architecture
+- **Purpose**: HealthTech FHIR-compliant backend with AI integration capabilities
+- **Architecture**: Multi-tenant, secure, scalable healthcare data platform
+
+## Core Architecture Principles
+
+### 1. Clean Architecture Implementation
+- **Layers**: Domain → Application → Integration → Infrastructure → API
+- **Dependencies**: Only inward (Domain has no external dependencies)
+- **Namespace Pattern**: `HealthTech.{Layer}.{Feature}`
+
+### 2. FHIR Compliance & Standards
+- **FHIR Resources**: Stored in PostgreSQL JSONB with GIN indexes
+- **Multi-tenancy**: Row-Level Security (RLS) by tenant
+- **HL7 v2 Integration**: NHapi for parsing, Firely SDK for FHIR mapping
+- **SMART on FHIR**: OAuth2/OpenID Connect authentication with scope enforcement
+
+### 3. Security & Compliance
+- **Authentication**: SMART on FHIR (patient/*, user/*, system/* scopes)
+- **Data Protection**: pgcrypto encryption for sensitive columns
+- **Audit Trail**: FHIR `AuditEvent` resources, append-only logging
+- **Privacy**: No PII in application logs
+- **RLS**: Mandatory Row-Level Security in production
+
+## Development Rules
+
+### 1. CQRS Pattern Implementation
+- **Commands/Queries**: Use MediatR for all use cases
+- **Naming**: `VerbNounCommand`, `VerbNounQuery`
+- **Validation**: FluentValidation for all handlers
+- **Immutability**: Use records for DTOs
+
+### 2. API Design Standards
+- **Framework**: Minimal APIs with ProblemDetails for errors
+- **Endpoints**: All FHIR endpoints under `/fhir/...`
+- **Error Handling**: Consistent error responses with proper HTTP status codes
+- **Documentation**: OpenAPI/Swagger documentation for all endpoints
+
+### 3. Data Access Patterns
+- **Repository Pattern**: Domain layer contains only business rules
+- **No Direct DB Access**: API layer must go through Application layer
+- **EF Core**: Used only in Infrastructure layer
+- **Database**: PostgreSQL with JSONB for FHIR resources
+
+## Deployment & Infrastructure Rules
+
+### 1. Containerization
+- **Docker**: Multi-stage builds for optimized images
+- **Health Checks**: Implement proper health check endpoints
+- **Environment Variables**: Use configuration providers for all settings
+- **Secrets Management**: Never hardcode sensitive information
+
+### 2. Database Deployment
+- **Migrations**: Use EF Core migrations for schema changes
+- **Connection Strings**: Environment-specific configuration
+- **Backup Strategy**: Automated backups with point-in-time recovery
+- **Performance**: Proper indexing strategy for JSONB queries
+
+### 3. Security Deployment
+- **HTTPS**: Mandatory TLS/SSL in production
+- **CORS**: Configured for healthcare domain requirements
+- **Rate Limiting**: Implement API rate limiting
+- **Monitoring**: Security event logging and alerting
+
+### 4. Testing Strategy
+- **Unit Tests**: All handlers and business logic
+- **Integration Tests**: PostgreSQL container-based testing
+- **API Tests**: End-to-end FHIR resource testing
+- **Security Tests**: Authentication and authorization validation
+
+## Code Quality Standards
+
+### 1. Naming Conventions
+- **PascalCase**: Classes, methods, properties
+- **camelCase**: Variables, parameters
+- **UPPER_CASE**: Constants
+- **Descriptive Names**: Self-documenting code
+
+### 2. Documentation
+- **XML Comments**: All public APIs
+- **README**: Comprehensive setup and deployment instructions
+- **Architecture**: Document design decisions and patterns
+- **API Documentation**: OpenAPI specifications
+
+### 3. Performance Considerations
+- **Async/Await**: Use throughout for I/O operations
+- **Caching**: Implement appropriate caching strategies
+- **Database Optimization**: Efficient queries and indexing
+- **Memory Management**: Proper disposal of resources
+
+## Forbidden Practices
+
+### ❌ Never Do
+- Let Domain layer depend on EF Core or NHapi
+- Bypass Application layer for direct database access
+- Disable RLS or audit logging in production
+- Hardcode connection strings or secrets
+- Skip validation in handlers
+- Use synchronous I/O in async contexts
+- Log sensitive patient information
+- Disable HTTPS in production
+
+### ✅ Always Do
+- Follow Clean Architecture principles
+- Implement proper error handling
+- Use dependency injection
+- Write comprehensive tests
+- Document public APIs
+- Use secure coding practices
+- Implement proper logging
+- Follow FHIR standards
+
+## Environment Configuration
+
+### Development
+- **Database**: Local PostgreSQL or Docker container
+- **Logging**: Console and file logging
+- **Authentication**: Development certificates
+- **CORS**: Allow localhost origins
+
+### Staging
+- **Database**: Staging PostgreSQL instance
+- **Logging**: Structured logging with correlation IDs
+- **Authentication**: Staging certificates
+- **Monitoring**: Basic health checks
+
+### Production
+- **Database**: Production PostgreSQL with high availability
+- **Logging**: Centralized logging with alerting
+- **Authentication**: Production certificates and key rotation
+- **Monitoring**: Comprehensive APM and security monitoring
+- **Backup**: Automated daily backups with retention policies
+
+## Deployment Checklist
+
+### Pre-Deployment
+- [ ] All tests passing
+- [ ] Security scan completed
+- [ ] Performance testing done
+- [ ] Documentation updated
+- [ ] Environment variables configured
+- [ ] Database migrations tested
+
+### Deployment
+- [ ] Database migration executed
+- [ ] Application deployed
+- [ ] Health checks passing
+- [ ] SSL certificates valid
+- [ ] Monitoring configured
+- [ ] Backup system verified
+
+### Post-Deployment
+- [ ] Smoke tests executed
+- [ ] Performance metrics monitored
+- [ ] Error logs reviewed
+- [ ] Security audit completed
+- [ ] User acceptance testing done
+
+---
+
+*This rule set ensures consistent, secure, and maintainable development and deployment of the FHIR2AI Backend application.*
