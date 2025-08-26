@@ -26,7 +26,7 @@ A modern, FHIR-compliant healthcare backend system built with .NET 8, PostgreSQL
 
 ### Core FHIR Features
 
-- ✅ FHIR R4 compliant resource storage
+- ✅ FHIR R4B compliant resource storage
 - ✅ JSONB-based efficient querying
 - ✅ Multi-tenant architecture with Row Level Security
 - ✅ Full CRUD operations for all FHIR resources

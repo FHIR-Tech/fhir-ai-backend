@@ -21,7 +21,7 @@ public class FhirResourceSchemaFilter : ISchemaFilter
         // Add FHIR-specific examples and descriptions
         if (type.Name.Contains("FhirResource") || type.Name.Contains("Patient") || type.Name.Contains("Observation"))
         {
-            schema.Description = "FHIR R4 compliant resource following HL7 FHIR specification";
+            schema.Description = "FHIR R4B compliant resource following HL7 FHIR specification";
             
             if (type.Name.Contains("Patient"))
             {

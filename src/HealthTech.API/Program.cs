@@ -41,7 +41,7 @@ builder.Services.AddSwaggerGen(c =>
 A comprehensive FHIR-compliant healthcare data platform with AI integration capabilities, built on .NET 8 and PostgreSQL.
 
 ### Key Features
-- **FHIR R4 Compliance**: Full support for FHIR R4 resources and operations
+- **FHIR R4B Compliance**: Full support for FHIR R4B resources and operations
 - **Multi-tenant Architecture**: Secure data isolation with Row-Level Security
 - **SMART on FHIR**: OAuth2/OpenID Connect authentication with scope enforcement
 - **AI Integration**: Ready for machine learning and AI model integration

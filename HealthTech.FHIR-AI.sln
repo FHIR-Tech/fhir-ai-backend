@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{F4093A0A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthTech.Database", "src\HealthTech.Database\HealthTech.Database.csproj", "{93DBAE25-5F81-4426-864C-B141D018149D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthTech.Fhir.SDK", "src\HealthTech.Fhir.SDK\HealthTech.Fhir.SDK.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567891}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +64,10 @@ Global
 		{93DBAE25-5F81-4426-864C-B141D018149D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93DBAE25-5F81-4426-864C-B141D018149D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93DBAE25-5F81-4426-864C-B141D018149D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567891}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567891}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567891}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567891}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -70,5 +76,6 @@ Global
 		{5CE34A27-B908-4A4A-88A0-BCD22B102A65} = {A3C0CA5B-8D7D-4698-B449-8F4629EED2CF}
 		{09504D09-E513-4057-8692-6A386E4D8A67} = {A3C0CA5B-8D7D-4698-B449-8F4629EED2CF}
 		{701B6184-60A5-46C5-AD54-4F891757476D} = {A3C0CA5B-8D7D-4698-B449-8F4629EED2CF}
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567891} = {A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
 	EndGlobalSection
 EndGlobal
