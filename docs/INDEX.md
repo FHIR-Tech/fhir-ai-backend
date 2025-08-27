@@ -31,6 +31,7 @@ docs/
 - [FHIR Endpoints Specification](api/specifications/FHIR_ENDPOINTS_IMPLEMENTATION.md)
 - [FHIR Import Guide](api/guides/FHIR_IMPORT_GUIDE.md)
 - [Endpoint Verification Report](api/reports/ENDPOINT_VERIFICATION_REPORT.md)
+- [FHIR Endpoint Refactoring Report](api/reports/fhir_endpoint_refactoring_2024-12-19_report.md)
 
 ### Cursor Agent Reports
 - [Cursor Agent Overview](cursor-agent/README.md)
@@ -54,6 +55,7 @@ Khi thêm tài liệu mới:
 - **2024-12-19**: Tạo cấu trúc thư mục mới cho API và Cursor Agent
 - **2024-12-19**: Di chuyển các file hiện có vào thư mục phù hợp
 - **2024-12-19**: Tạo templates và quy ước đặt tên
+- **2024-12-19**: Di chuyển README_ENDPOINT_REFACTOR.md vào docs/api/reports/ với tên fhir_endpoint_refactoring_2024-12-19_report.md
 
 ---
 
