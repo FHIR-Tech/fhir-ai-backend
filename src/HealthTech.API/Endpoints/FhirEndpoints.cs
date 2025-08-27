@@ -5,6 +5,7 @@ using HealthTech.Application.FhirResources.Commands.ImportFhirBundle;
 using HealthTech.Application.FhirResources.Queries.GetFhirResource;
 using HealthTech.Application.FhirResources.Queries.SearchFhirResources;
 using HealthTech.Application.FhirResources.Queries.GetFhirResourceHistory;
+using HealthTech.API.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Any;
@@ -48,26 +49,7 @@ public static class FhirEndpoints
         })
         .WithName("SearchFhirResources")
         .WithSummary("Search FHIR resources by type")
-        .WithDescription(@"
-Search for FHIR resources of a specific type with pagination support.
-
-### Supported Resource Types
-- **Patient**: Patient demographic and administrative information
-- **Observation**: Clinical measurements and simple assertions
-- **Encounter**: An interaction between a patient and healthcare provider
-- **Condition**: Detailed information about conditions, problems, or diagnoses
-- **MedicationRequest**: An order or request for medication
-- **Procedure**: An action that is performed on or for a patient
-
-### Examples
-```
-GET /fhir/Patient?skip=0&take=10
-GET /fhir/Observation?skip=20&take=50
-```
-
-### Response Format
-Returns a FHIR Bundle containing the matching resources with pagination metadata.
-")
+        .WithDescription(FhirEndpointDescriptions.SearchFhirResources)
         .WithOpenApi(operation =>
         {
             if (operation.Parameters != null && operation.Parameters.Count > 0)
@@ -106,22 +88,7 @@ Returns a FHIR Bundle containing the matching resources with pagination metadata
         })
         .WithName("GetFhirResource")
         .WithSummary("Get FHIR resource by ID")
-        .WithDescription(@"
-Retrieve a specific FHIR resource by its type and ID.
-
-### Examples
-```
-GET /fhir/Patient/patient-123
-GET /fhir/Observation/obs-456
-```
-
-### Response Format
-Returns the complete FHIR resource in JSON format following R4 specification.
-
-### Error Responses
-- **404 Not Found**: Resource not found or access denied
-- **403 Forbidden**: Insufficient permissions for the requested resource
-")
+        .WithDescription(FhirEndpointDescriptions.GetFhirResource)
         .WithOpenApi(operation =>
         {
             if (operation.Parameters != null && operation.Parameters.Count > 0)
@@ -150,61 +117,7 @@ Returns the complete FHIR resource in JSON format following R4 specification.
         })
         .WithName("CreateFhirResourceAutoDetect")
         .WithSummary("Create FHIR resource with auto-detected type")
-        .WithDescription(@"
-Create a new FHIR resource with automatic resource type detection from the request body.
-
-### Request Body
-The request body should contain a valid FHIR resource in JSON format following R4 specification.
-The resource type is automatically detected from the 'resourceType' field in the JSON.
-
-### Examples
-
-#### Create a Patient
-```json
-{
-  ""resourceType"": ""Patient"",
-  ""name"": [
-    {
-      ""use"": ""official"",
-      ""family"": ""Smith"",
-      ""given"": [""John"", ""Michael""]
-    }
-  ],
-  ""gender"": ""male"",
-  ""birthDate"": ""1990-01-15""
-}
-```
-
-#### Create an Observation
-```json
-{
-  ""resourceType"": ""Observation"",
-  ""status"": ""final"",
-  ""code"": {
-    ""coding"": [
-      {
-        ""system"": ""http://loinc.org"",
-        ""code"": ""8302-2"",
-        ""display"": ""Body height""
-      }
-    ]
-  },
-  ""valueQuantity"": {
-    ""value"": 175.0,
-    ""unit"": ""cm"",
-    ""system"": ""http://unitsofmeasure.org"",
-    ""code"": ""cm""
-  }
-}
-```
-
-### Response
-Returns the created resource with assigned ID and metadata.
-
-### Note
-This endpoint automatically detects the resource type from the 'resourceType' field in the request body.
-For explicit resource type creation, use POST /fhir/{resourceType} instead.
-");
+        .WithDescription(FhirEndpointDescriptions.CreateFhirResourceAutoDetect);
 
         // POST /fhir/{resourceType}
         group.MapPost("/{resourceType}", async (
@@ -219,56 +132,7 @@ For explicit resource type creation, use POST /fhir/{resourceType} instead.
         })
         .WithName("CreateFhirResource")
         .WithSummary("Create FHIR resource")
-        .WithDescription(@"
-Create a new FHIR resource of the specified type.
-
-### Request Body
-The request body should contain a valid FHIR resource in JSON format following R4 specification.
-
-### Examples
-
-#### Create a Patient
-```json
-{
-  ""resourceType"": ""Patient"",
-  ""name"": [
-    {
-      ""use"": ""official"",
-      ""family"": ""Smith"",
-      ""given"": [""John"", ""Michael""]
-    }
-  ],
-  ""gender"": ""male"",
-  ""birthDate"": ""1990-01-15""
-}
-```
-
-#### Create an Observation
-```json
-{
-  ""resourceType"": ""Observation"",
-  ""status"": ""final"",
-  ""code"": {
-    ""coding"": [
-      {
-        ""system"": ""http://loinc.org"",
-        ""code"": ""8302-2"",
-        ""display"": ""Body height""
-      }
-    ]
-  },
-  ""valueQuantity"": {
-    ""value"": 175.0,
-    ""unit"": ""cm"",
-    ""system"": ""http://unitsofmeasure.org"",
-    ""code"": ""cm""
-  }
-}
-```
-
-### Response
-Returns the created resource with assigned ID and metadata.
-")
+        .WithDescription(FhirEndpointDescriptions.CreateFhirResource)
         .WithOpenApi(operation =>
         {
             if (operation.Parameters != null && operation.Parameters.Count > 0)
@@ -293,45 +157,7 @@ Returns the created resource with assigned ID and metadata.
         })
         .WithName("UpdateFhirResource")
         .WithSummary("Update FHIR resource")
-        .WithDescription(@"
-Update an existing FHIR resource by ID.
-
-### Request Body
-The request body should contain the updated FHIR resource in JSON format following R4 specification.
-
-### Examples
-
-#### Update a Patient
-```json
-{
-  ""resourceType"": ""Patient"",
-  ""id"": ""patient-123"",
-  ""name"": [
-    {
-      ""use"": ""official"",
-      ""family"": ""Smith"",
-      ""given"": [""John"", ""Michael"", ""Updated""]
-    }
-  ],
-  ""gender"": ""male"",
-  ""birthDate"": ""1990-01-15"",
-  ""address"": [
-    {
-      ""use"": ""home"",
-      ""type"": ""physical"",
-      ""text"": ""123 Main St, Anytown, USA"",
-      ""line"": [""123 Main St""],
-      ""city"": ""Anytown"",
-      ""state"": ""CA"",
-      ""postalCode"": ""12345""
-    }
-  ]
-}
-```
-
-### Response
-Returns the updated resource with new version ID and metadata.
-")
+        .WithDescription(FhirEndpointDescriptions.UpdateFhirResource)
         .WithOpenApi(operation =>
         {
             if (operation.Parameters != null && operation.Parameters.Count > 0)
@@ -362,21 +188,7 @@ Returns the updated resource with new version ID and metadata.
         })
         .WithName("DeleteFhirResource")
         .WithSummary("Delete FHIR resource")
-        .WithDescription(@"
-Delete a FHIR resource (soft delete). The resource is marked as deleted but remains in the system for audit purposes.
-
-### Examples
-```
-DELETE /fhir/Patient/patient-123
-DELETE /fhir/Observation/obs-456
-```
-
-### Response
-Returns deletion confirmation with timestamp and success status.
-
-### Note
-This is a soft delete operation. The resource remains in the database but is marked as deleted.
-")
+        .WithDescription(FhirEndpointDescriptions.DeleteFhirResource)
         .WithOpenApi(operation =>
         {
             if (operation.Parameters != null && operation.Parameters.Count > 0)
@@ -480,93 +292,7 @@ This is a soft delete operation. The resource remains in the database but is mar
         })
         .WithName("ImportFhirBundle")
         .WithSummary("Import FHIR Bundle (HL7 Standard)")
-        .WithDescription(@"
-Import FHIR resources from a standard HL7 FHIR Bundle. This endpoint supports importing complete patient records including:
-
-### Supported FHIR Resources
-- **Organization**: Healthcare facilities and providers
-- **Patient**: Patient demographic and administrative information
-- **Encounter**: Patient visits and interactions with healthcare providers
-- **Observation**: Clinical measurements, lab results, and vital signs
-- **Condition**: Diagnoses and medical conditions
-- **MedicationRequest**: Prescriptions and medication orders
-- **Immunization**: Vaccination records
-- **Procedure**: Medical procedures performed
-- **AllergyIntolerance**: Patient allergies and intolerances
-- **FamilyMemberHistory**: Family medical history
-
-### Request Options
-You can provide the FHIR Bundle in two ways:
-
-#### Option 1: JSON Body
-Send the FHIR Bundle directly in the request body as JSON.
-
-#### Option 2: File Upload
-Upload a JSON file containing the FHIR Bundle using multipart form data.
-
-### FHIR Bundle Format (HL7 Standard)
-The FHIR Bundle must follow the HL7 FHIR R4 specification:
-
-```json
-{
-  ""resourceType"": ""Bundle"",
-  ""type"": ""collection"",
-  ""timestamp"": ""2024-01-15T10:30:00Z"",
-  ""entry"": [
-    {
-      ""resource"": {
-        ""resourceType"": ""Organization"",
-        ""id"": ""org-hospital"",
-        ""name"": ""Hospital Name""
-      }
-    },
-    {
-      ""resource"": {
-        ""resourceType"": ""Patient"",
-        ""id"": ""patient-123"",
-        ""name"": [
-          {
-            ""use"": ""official"",
-            ""family"": ""Nguyễn"",
-            ""given"": [""Trung"", ""Kiên""]
-          }
-        ],
-        ""gender"": ""male"",
-        ""birthDate"": ""1993-01-08""
-      }
-    },
-    {
-      ""resource"": {
-        ""resourceType"": ""Encounter"",
-        ""id"": ""encounter-1"",
-        ""status"": ""finished"",
-        ""subject"": {
-          ""reference"": ""Patient/patient-123""
-        },
-        ""serviceProvider"": {
-          ""reference"": ""Organization/org-hospital""
-        }
-      }
-    }
-  ]
-}
-```
-
-### Bundle Types Supported
-- **collection**: A set of resources (most common for patient records)
-- **transaction**: A set of actions to be performed
-- **batch**: A set of actions to be performed as a group
-- **searchset**: Results from a search operation
-- **history**: A list of historical versions of a resource
-
-### File Requirements
-- **Format**: JSON only (.json files)
-- **Maximum size**: 50MB (for large patient records)
-- **Content**: Valid FHIR Bundle following HL7 FHIR R4 specification
-
-### Response
-Returns import summary with statistics and detailed results for each resource.
-")
+        .WithDescription(FhirEndpointDescriptions.ImportFhirBundle)
         .WithOpenApi(operation =>
         {
             // Add support for both JSON body and file upload
@@ -624,25 +350,7 @@ Returns import summary with statistics and detailed results for each resource.
         })
         .WithName("GetFhirResourceHistory")
         .WithSummary("Get FHIR resource history")
-        .WithDescription(@"
-Get the version history of a FHIR resource.
-
-### Examples
-```
-GET /fhir/Patient/patient-123/_history
-GET /fhir/Patient/patient-123/_history?maxVersions=50
-```
-
-### Response Format
-Returns a list of all versions of the resource with metadata including:
-- Version ID
-- Resource JSON at each version
-- Creation and update timestamps
-- Operation type (create, update, delete)
-
-### Parameters
-- **maxVersions**: Maximum number of versions to return (default: 100)
-")
+        .WithDescription(FhirEndpointDescriptions.GetFhirResourceHistory)
         .WithOpenApi(operation =>
         {
             if (operation.Parameters != null && operation.Parameters.Count > 0)
