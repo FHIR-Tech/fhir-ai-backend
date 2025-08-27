@@ -348,6 +348,21 @@ GET /fhir/$export-bundle?resourceType=Patient&fhirIds=patient-123&includeHistory
 GET /fhir/$export-bundle?maxResources=500&bundleType=collection
 ```
 
+#### Export Observations with Time Filtering
+```
+GET /fhir/$export-bundle?resourceType=Observation&timePeriod=days&timePeriodCount=30&observationCode=29463-7
+```
+
+#### Export Weight Observations for Last 10 Measurements
+```
+GET /fhir/$export-bundle?resourceType=Observation&observationCode=29463-7&maxObservationsPerPatient=10&sortOrder=desc
+```
+
+#### Export Observations for Specific Time Range
+```
+GET /fhir/$export-bundle?resourceType=Observation&startDate=2024-01-01T00:00:00Z&endDate=2024-12-31T23:59:59Z&observationCode=29463-7
+```
+
 #### Export with Complex Search (POST)
 ```json
 POST /fhir/$export-bundle
@@ -362,6 +377,37 @@ POST /fhir/$export-bundle
   ""bundleType"": ""collection""
 }
 ```
+
+### Time-Based Filtering
+The endpoint supports flexible time-based filtering:
+
+#### Relative Time Periods
+- **days**: Filter by number of days (e.g., `timePeriod=days&timePeriodCount=7` for last 7 days)
+- **weeks**: Filter by number of weeks (e.g., `timePeriod=weeks&timePeriodCount=4` for last 4 weeks)
+- **months**: Filter by number of months (e.g., `timePeriod=months&timePeriodCount=6` for last 6 months)
+- **years**: Filter by number of years (e.g., `timePeriod=years&timePeriodCount=1` for last year)
+
+#### Absolute Date Ranges
+- **startDate**: Start date in ISO 8601 format (e.g., `2024-01-01T00:00:00Z`)
+- **endDate**: End date in ISO 8601 format (e.g., `2024-12-31T23:59:59Z`)
+
+### Observation-Specific Filtering
+For lab results and clinical measurements:
+
+- **observationCode**: LOINC code for specific lab tests (e.g., `29463-7` for body weight)
+- **observationSystem**: Coding system (e.g., `http://loinc.org`)
+- **patientId**: Filter observations for specific patient
+- **maxObservationsPerPatient**: Limit number of observations per patient
+- **sortOrder**: Sort order (asc, desc)
+- **latestOnly**: Include only latest observation per patient
+
+### Common Observation Codes
+- **29463-7**: Body weight
+- **8302-2**: Body height
+- **85354-9**: Blood pressure systolic
+- **8462-4**: Blood pressure diastolic
+- **8867-4**: Heart rate
+- **2708-6**: Oxygen saturation
 
 ### Bundle Types Supported
 - **collection**: A set of resources (most common for patient records)
@@ -409,11 +455,16 @@ Returns a standard FHIR Bundle in JSON format following R4 specification:
 - **maxHistoryVersions**: Maximum number of history versions per resource (default: 10)
 - **includeDeleted**: Include deleted resources in the bundle (default: false)
 - **format**: Export format: json, xml (default: json)
-
-### Performance Considerations
-- Large exports are limited to 1000 resources by default
-- History inclusion can significantly increase bundle size
-- Consider using POST method for complex queries with multiple search parameters";
+- **startDate**: Start date for filtering (ISO 8601 format)
+- **endDate**: End date for filtering (ISO 8601 format)
+- **timePeriod**: Time period: days, weeks, months, years
+- **timePeriodCount**: Number of time periods to look back
+- **observationCode**: Observation code for filtering lab results
+- **observationSystem**: Observation system for filtering lab results
+- **patientId**: Patient ID for filtering observations
+- **maxObservationsPerPatient**: Maximum observations per patient
+- **sortOrder**: Sort order: asc, desc (default: desc)
+- **latestOnly**: Include only latest observations per patient";
 
     public const string ExportFhirBundlePost = @"
 Export FHIR resources as a bundle using POST method for complex queries with advanced filtering options.

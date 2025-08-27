@@ -51,6 +51,58 @@ public record ExportFhirBundleQuery : IRequest<ExportFhirBundleResponse>
     /// Export format (json, xml)
     /// </summary>
     public string Format { get; init; } = "json";
+
+    // === NEW PARAMETERS FOR TIME-BASED FILTERING ===
+
+    /// <summary>
+    /// Start date for time-based filtering (ISO 8601 format)
+    /// </summary>
+    public DateTime? StartDate { get; init; }
+
+    /// <summary>
+    /// End date for time-based filtering (ISO 8601 format)
+    /// </summary>
+    public DateTime? EndDate { get; init; }
+
+    /// <summary>
+    /// Time period for filtering (days, weeks, months, years)
+    /// </summary>
+    public string? TimePeriod { get; init; }
+
+    /// <summary>
+    /// Number of time periods to look back
+    /// </summary>
+    public int? TimePeriodCount { get; init; }
+
+    /// <summary>
+    /// Observation code for filtering specific lab results
+    /// </summary>
+    public string? ObservationCode { get; init; }
+
+    /// <summary>
+    /// Observation system for filtering specific lab results
+    /// </summary>
+    public string? ObservationSystem { get; init; }
+
+    /// <summary>
+    /// Patient ID for filtering observations
+    /// </summary>
+    public string? PatientId { get; init; }
+
+    /// <summary>
+    /// Limit number of observations per patient
+    /// </summary>
+    public int? MaxObservationsPerPatient { get; init; }
+
+    /// <summary>
+    /// Sort order for observations (asc, desc)
+    /// </summary>
+    public string SortOrder { get; init; } = "desc";
+
+    /// <summary>
+    /// Include only latest observations per patient
+    /// </summary>
+    public bool LatestOnly { get; init; } = false;
 }
 
 /// <summary>

@@ -148,6 +148,8 @@ All FHIR endpoints follow the standard FHIR REST API pattern:
 - `PUT /fhir/{resourceType}/{id}` - Update resource
 - `DELETE /fhir/{resourceType}/{id}` - Delete resource
 - `GET /fhir/{resourceType}/{id}/_history` - Get resource history
+- `GET /fhir/$export-bundle` - Export FHIR resources as bundle (Enhanced with time-based filtering)
+- `POST /fhir/$export-bundle` - Export FHIR resources as bundle (Complex queries)
 
 ### Authentication
 
@@ -179,6 +181,26 @@ curl -X POST http://localhost:5000/fhir/Patient \
     "gender": "male",
     "birthDate": "1990-01-01"
   }'
+```
+
+### Enhanced Export Bundle Examples
+
+#### Export Weight Observations for Last 10 Measurements
+```bash
+curl -X GET "http://localhost:5000/fhir/\$export-bundle?resourceType=Observation&observationCode=29463-7&maxObservationsPerPatient=10&sortOrder=desc" \
+  -H "Content-Type: application/json"
+```
+
+#### Export Observations for Last 30 Days
+```bash
+curl -X GET "http://localhost:5000/fhir/\$export-bundle?resourceType=Observation&timePeriod=days&timePeriodCount=30" \
+  -H "Content-Type: application/json"
+```
+
+#### Export Observations for Specific Time Range
+```bash
+curl -X GET "http://localhost:5000/fhir/\$export-bundle?resourceType=Observation&startDate=2024-01-01T00:00:00Z&endDate=2024-12-31T23:59:59Z&observationCode=29463-7" \
+  -H "Content-Type: application/json"
 ```
 
 ## 🧪 Testing

@@ -385,7 +385,18 @@ public static class FhirEndpoints
             bool includeHistory = false,
             int maxHistoryVersions = 10,
             bool includeDeleted = false,
-            string format = "json") =>
+            string format = "json",
+            // === NEW PARAMETERS FOR TIME-BASED FILTERING ===
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            string? timePeriod = null,
+            int? timePeriodCount = null,
+            string? observationCode = null,
+            string? observationSystem = null,
+            string? patientId = null,
+            int? maxObservationsPerPatient = null,
+            string sortOrder = "desc",
+            bool latestOnly = false) =>
         {
             var query = new ExportFhirBundleQuery
             {
@@ -396,7 +407,18 @@ public static class FhirEndpoints
                 IncludeHistory = includeHistory,
                 MaxHistoryVersions = maxHistoryVersions,
                 IncludeDeleted = includeDeleted,
-                Format = format
+                Format = format,
+                // === NEW PARAMETERS ===
+                StartDate = startDate,
+                EndDate = endDate,
+                TimePeriod = timePeriod,
+                TimePeriodCount = timePeriodCount,
+                ObservationCode = observationCode,
+                ObservationSystem = observationSystem,
+                PatientId = patientId,
+                MaxObservationsPerPatient = maxObservationsPerPatient,
+                SortOrder = sortOrder,
+                LatestOnly = latestOnly
             };
             
             var result = await sender.Send(query, cancellationToken);
@@ -449,6 +471,66 @@ public static class FhirEndpoints
             if (operation.Parameters != null && operation.Parameters.Count > 7)
             {
                 operation.Parameters[7].Description = "Export format: json, xml (default: json)";
+            }
+
+            // === NEW PARAMETER DESCRIPTIONS ===
+            if (operation.Parameters != null && operation.Parameters.Count > 8)
+            {
+                operation.Parameters[8].Description = "Start date for filtering (ISO 8601 format)";
+                operation.Parameters[8].Example = new Microsoft.OpenApi.Any.OpenApiString("2024-01-01T00:00:00Z");
+            }
+
+            if (operation.Parameters != null && operation.Parameters.Count > 9)
+            {
+                operation.Parameters[9].Description = "End date for filtering (ISO 8601 format)";
+                operation.Parameters[9].Example = new Microsoft.OpenApi.Any.OpenApiString("2024-12-31T23:59:59Z");
+            }
+
+            if (operation.Parameters != null && operation.Parameters.Count > 10)
+            {
+                operation.Parameters[10].Description = "Time period: days, weeks, months, years";
+                operation.Parameters[10].Example = new Microsoft.OpenApi.Any.OpenApiString("days");
+            }
+
+            if (operation.Parameters != null && operation.Parameters.Count > 11)
+            {
+                operation.Parameters[11].Description = "Number of time periods to look back";
+                operation.Parameters[11].Example = new Microsoft.OpenApi.Any.OpenApiInteger(30);
+            }
+
+            if (operation.Parameters != null && operation.Parameters.Count > 12)
+            {
+                operation.Parameters[12].Description = "Observation code for filtering lab results";
+                operation.Parameters[12].Example = new Microsoft.OpenApi.Any.OpenApiString("29463-7");
+            }
+
+            if (operation.Parameters != null && operation.Parameters.Count > 13)
+            {
+                operation.Parameters[13].Description = "Observation system for filtering lab results";
+                operation.Parameters[13].Example = new Microsoft.OpenApi.Any.OpenApiString("http://loinc.org");
+            }
+
+            if (operation.Parameters != null && operation.Parameters.Count > 14)
+            {
+                operation.Parameters[14].Description = "Patient ID for filtering observations";
+                operation.Parameters[14].Example = new Microsoft.OpenApi.Any.OpenApiString("patient-123");
+            }
+
+            if (operation.Parameters != null && operation.Parameters.Count > 15)
+            {
+                operation.Parameters[15].Description = "Maximum observations per patient";
+                operation.Parameters[15].Example = new Microsoft.OpenApi.Any.OpenApiInteger(10);
+            }
+
+            if (operation.Parameters != null && operation.Parameters.Count > 16)
+            {
+                operation.Parameters[16].Description = "Sort order: asc, desc (default: desc)";
+                operation.Parameters[16].Example = new Microsoft.OpenApi.Any.OpenApiString("desc");
+            }
+
+            if (operation.Parameters != null && operation.Parameters.Count > 17)
+            {
+                operation.Parameters[17].Description = "Include only latest observations per patient";
             }
             
             return operation;
