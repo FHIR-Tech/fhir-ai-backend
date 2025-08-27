@@ -94,28 +94,94 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 - **API Documentation**: OpenAPI specifications
 
 ### 3. Project Structure & File Organization
-- **Documentation Files**: Place all `.md` files in `/docs/` directory
-  - `README.md` remains in root for project overview
-  - Technical documentation goes in `/docs/`
-  - API documentation in `/docs/api/`
-  - Architecture docs in `/docs/architecture/`
-- **Sample Data**: Organize JSON sample files in `/scripts/samples/`
-  - FHIR Bundle samples: `/scripts/samples/bundles/`
-  - Individual resource samples: `/scripts/samples/resources/`
-  - Test data: `/scripts/samples/test-data/`
-- **Scripts**: Keep utility scripts in `/scripts/`
-  - Database scripts: `/scripts/database/`
-  - API testing scripts: `/scripts/api/`
-  - Deployment scripts: `/scripts/deployment/`
-- **Naming Convention**: Use descriptive names with date/version
-  - `{resource-type}_{purpose}_{date}.json`
-  - `{feature}_{description}.md`
+
+#### Documentation Structure (`/docs/`)
+```
+docs/
+├── README.md                    # Project overview
+├── INDEX.md                     # Master documentation index
+├── api/                         # API Documentation
+│   ├── README.md               # API overview and navigation
+│   ├── specifications/         # Technical specifications
+│   │   └── {resource-type}_specification.md
+│   ├── guides/                 # Usage guides and tutorials
+│   │   └── {feature}_guide.md
+│   ├── reports/                # API implementation reports
+│   │   └── {report-type}_{date}.md
+│   └── examples/               # Code examples and samples
+│       └── {use-case}_example.md
+├── architecture/               # Architecture documentation
+│   ├── decisions/             # Architecture Decision Records (ADRs)
+│   └── diagrams/              # System diagrams and flows
+├── cursor-agent/               # Cursor Agent Reports & Documentation
+│   ├── README.md              # Cursor Agent overview
+│   ├── reports/               # Implementation reports
+│   │   ├── template_implementation_report.md
+│   │   └── {feature}_{date}_report.md
+│   ├── logs/                  # Session logs and transcripts
+│   │   └── {session-type}_{date}_{time}.md
+│   ├── decisions/             # AI-generated architecture decisions
+│   │   └── ADR_{number}_{title}.md
+│   └── tasks/                 # Task tracking and milestones
+│       └── {task-type}_{date}_summary.md
+└── deployment/                 # Deployment documentation
+    ├── guides/                # Deployment guides
+    └── configurations/        # Environment configs
+```
+
+#### Sample Data Organization (`/scripts/samples/`)
+- **FHIR Bundle samples**: `/scripts/samples/bundles/`
+- **Individual resource samples**: `/scripts/samples/resources/`
+- **Test data**: `/scripts/samples/test-data/`
+
+#### Scripts Organization (`/scripts/`)
+- **Database scripts**: `/scripts/database/`
+- **API testing scripts**: `/scripts/api/`
+- **Deployment scripts**: `/scripts/deployment/`
+
+#### Naming Conventions
+- **Specifications**: `{resource-type}_specification.md`
+- **Guides**: `{feature}_guide.md`
+- **Reports**: `{report-type}_{date}.md`
+- **Examples**: `{use-case}_example.md`
+- **Samples**: `{resource-type}_{purpose}_{date}.json`
+- **Logs**: `{session-type}_{date}_{time}.md`
+- **Decisions**: `ADR_{number}_{title}.md`
 
 ### 4. Performance Considerations
 - **Async/Await**: Use throughout for I/O operations
 - **Caching**: Implement appropriate caching strategies
 - **Database Optimization**: Efficient queries and indexing
 - **Memory Management**: Proper disposal of resources
+
+### 5. Cursor Agent Documentation Rules
+
+#### When Creating Documentation
+- **Always use templates**: Use `docs/cursor-agent/reports/template_implementation_report.md` for implementation reports
+- **Include metadata**: Date, Agent name, Session ID, Status, Duration
+- **Follow naming conventions**: Use exact patterns specified in naming conventions
+- **Update index**: Always update `docs/INDEX.md` when adding new documentation
+- **Cross-reference**: Link related documents and maintain traceability
+
+#### When Generating Reports
+- **Use structured format**: Follow the template structure exactly
+- **Include technical details**: Architecture decisions, implementation approach, challenges
+- **Document code quality**: Patterns used, testing coverage, validation results
+- **Track metrics**: Performance impact, success metrics, issues found
+- **Provide next steps**: Immediate actions, future improvements, recommendations
+
+#### When Logging Sessions
+- **Record session metadata**: Date, time, duration, agent version
+- **Document decisions**: Architecture decisions, technology choices, implementation strategies
+- **Track progress**: Task completion, milestone achievements, feature delivery
+- **Maintain audit trail**: All changes, reasons, and outcomes
+
+#### Documentation Quality Standards
+- **Completeness**: All sections of templates must be filled
+- **Accuracy**: Technical details must be precise and verifiable
+- **Clarity**: Use clear, professional language
+- **Consistency**: Follow established patterns and conventions
+- **Traceability**: Link to related documents and code changes
 
 ## Forbidden Practices
 
@@ -132,6 +198,15 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 - Mix sample data with source code
 - Use generic names for sample files
 - Create unstructured file hierarchies
+- **Documentation violations**:
+  - Create documentation without using proper templates
+  - Skip metadata in reports (date, agent, status)
+  - Use inconsistent naming conventions
+  - Fail to update documentation index
+  - Place API docs outside `/docs/api/` structure
+  - Place Cursor Agent reports outside `/docs/cursor-agent/` structure
+  - Create documentation without cross-references
+  - Skip technical details in implementation reports
 
 ### ✅ Always Do
 - Follow Clean Architecture principles
@@ -146,6 +221,17 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 - Use descriptive naming conventions
 - Maintain clean project structure
 - Keep documentation up-to-date
+- **Documentation best practices**:
+  - Use templates for all documentation creation
+  - Include complete metadata in all reports
+  - Follow exact naming conventions
+  - Update documentation index immediately
+  - Place files in correct directory structure
+  - Cross-reference related documents
+  - Include technical details and metrics
+  - Maintain audit trail for all changes
+  - Use professional language and formatting
+  - Validate documentation completeness
 
 ## Environment Configuration
 

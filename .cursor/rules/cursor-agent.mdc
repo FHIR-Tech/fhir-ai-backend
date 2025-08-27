@@ -1,0 +1,135 @@
+# Cursor Agent Documentation & Reporting Rules
+
+## Overview
+This file contains specific rules for Cursor AI when creating documentation, generating reports, and maintaining project structure.
+
+## Documentation Structure Enforcement
+
+### 1. File Placement Rules
+- **API Documentation**: Must be placed in `/docs/api/` with proper subdirectories
+- **Cursor Agent Reports**: Must be placed in `/docs/cursor-agent/` with proper subdirectories
+- **Architecture Docs**: Must be placed in `/docs/architecture/`
+- **Deployment Docs**: Must be placed in `/docs/deployment/`
+
+### 2. Naming Convention Enforcement
+- **Specifications**: `{resource-type}_specification.md`
+- **Guides**: `{feature}_guide.md`
+- **Reports**: `{report-type}_{date}.md`
+- **Examples**: `{use-case}_example.md`
+- **Logs**: `{session-type}_{date}_{time}.md`
+- **Decisions**: `ADR_{number}_{title}.md`
+
+## Report Generation Rules
+
+### 1. Implementation Reports
+- **Template**: Always use `docs/cursor-agent/reports/template_implementation_report.md`
+- **Metadata**: Must include Date, Agent, Session ID, Status, Duration
+- **Sections**: All template sections must be completed
+- **Technical Details**: Include architecture decisions, implementation approach, challenges
+- **Metrics**: Document performance impact, success metrics, issues found
+
+### 2. Session Logs
+- **Format**: Structured logging with clear sections
+- **Content**: Include decisions made, code changes, challenges faced
+- **Traceability**: Link to related documents and code changes
+- **Metadata**: Session type, date, time, duration, agent version
+
+### 3. Architecture Decisions
+- **Format**: ADR (Architecture Decision Record) format
+- **Numbering**: Sequential numbering (ADR_001, ADR_002, etc.)
+- **Content**: Context, decision, consequences, alternatives considered
+- **Status**: Open, Accepted, Deprecated, Superseded
+
+## Quality Standards
+
+### 1. Completeness
+- All template sections must be filled
+- No empty or placeholder content
+- All metadata fields must be completed
+- Cross-references must be valid
+
+### 2. Accuracy
+- Technical details must be precise
+- Code examples must be tested
+- Performance metrics must be measured
+- Architecture decisions must be justified
+
+### 3. Consistency
+- Follow established patterns exactly
+- Use consistent terminology
+- Maintain uniform formatting
+- Apply naming conventions strictly
+
+### 4. Traceability
+- Link to related documents
+- Reference code changes
+- Maintain audit trail
+- Document dependencies
+
+## Automation Rules
+
+### 1. When Creating New Documentation
+1. Identify correct directory structure
+2. Use appropriate template
+3. Follow naming convention
+4. Include all required metadata
+5. Update documentation index
+6. Add cross-references
+
+### 2. When Updating Existing Documentation
+1. Maintain existing structure
+2. Update metadata (date, version)
+3. Preserve cross-references
+4. Update index if needed
+5. Maintain audit trail
+
+### 3. When Generating Reports
+1. Use template structure exactly
+2. Include all required sections
+3. Provide technical details
+4. Document metrics and results
+5. Include next steps and recommendations
+
+## Validation Checklist
+
+### Before Creating Documentation
+- [ ] Correct directory identified
+- [ ] Appropriate template selected
+- [ ] Naming convention followed
+- [ ] Metadata fields identified
+
+### After Creating Documentation
+- [ ] All template sections completed
+- [ ] Metadata included
+- [ ] Cross-references added
+- [ ] Index updated
+- [ ] Quality standards met
+
+### Before Committing Changes
+- [ ] Documentation structure validated
+- [ ] Naming conventions checked
+- [ ] Cross-references verified
+- [ ] Index consistency confirmed
+
+## Error Prevention
+
+### Common Mistakes to Avoid
+- Placing files in wrong directories
+- Using incorrect naming patterns
+- Skipping template sections
+- Missing metadata fields
+- Failing to update index
+- Creating broken cross-references
+- Using inconsistent formatting
+- Skipping technical details
+
+### Quality Gates
+- All documentation must pass structure validation
+- All reports must include complete metadata
+- All cross-references must be valid
+- All templates must be fully completed
+- All naming conventions must be followed
+
+---
+
+*These rules ensure consistent, high-quality documentation and reporting by Cursor AI.*

@@ -1,0 +1,172 @@
+# API Documentation Rules
+
+## Overview
+This file contains specific rules for creating and maintaining API documentation for the FHIR-AI Backend.
+
+## API Documentation Structure
+
+### 1. Directory Organization
+```
+docs/api/
+├── README.md                    # API overview and navigation
+├── specifications/              # Technical specifications
+│   ├── fhir_endpoints_specification.md
+│   ├── authentication_specification.md
+│   └── error_handling_specification.md
+├── guides/                      # Usage guides
+│   ├── integration_guide.md
+│   ├── fhir_import_guide.md
+│   └── best_practices_guide.md
+├── reports/                     # Implementation reports
+│   ├── endpoint_verification_report.md
+│   ├── performance_report.md
+│   └── compliance_report.md
+└── examples/                    # Code examples
+    ├── patient_resource_example.md
+    ├── bundle_import_example.md
+    └── authentication_example.md
+```
+
+### 2. File Naming Conventions
+- **Specifications**: `{resource-type}_specification.md`
+- **Guides**: `{feature}_guide.md`
+- **Reports**: `{report-type}_{date}.md`
+- **Examples**: `{use-case}_example.md`
+
+## Content Standards
+
+### 1. Specifications
+- **Purpose**: Technical details of API endpoints
+- **Required Sections**:
+  - Endpoint description
+  - Request/Response schemas
+  - Authentication requirements
+  - Error codes and handling
+  - FHIR compliance notes
+  - Performance considerations
+
+### 2. Guides
+- **Purpose**: Step-by-step instructions for developers
+- **Required Sections**:
+  - Prerequisites
+  - Step-by-step instructions
+  - Code examples
+  - Common issues and solutions
+  - Best practices
+
+### 3. Reports
+- **Purpose**: Implementation status and verification
+- **Required Sections**:
+  - Implementation status
+  - Testing results
+  - Performance metrics
+  - Compliance verification
+  - Issues and resolutions
+
+### 4. Examples
+- **Purpose**: Practical code examples
+- **Required Sections**:
+  - Use case description
+  - Complete code example
+  - Expected output
+  - Error handling
+  - Related resources
+
+## FHIR Compliance Requirements
+
+### 1. Resource Documentation
+- Must include FHIR resource type
+- Must specify FHIR version (R4B)
+- Must document all required fields
+- Must include validation rules
+- Must reference FHIR specification
+
+### 2. Endpoint Documentation
+- Must follow FHIR REST API patterns
+- Must include proper HTTP methods
+- Must document query parameters
+- Must specify response formats
+- Must include error responses
+
+### 3. Authentication Documentation
+- Must document SMART on FHIR scopes
+- Must include OAuth2 flow details
+- Must specify required permissions
+- Must include token validation
+- Must document security considerations
+
+## Quality Standards
+
+### 1. Completeness
+- All endpoints must be documented
+- All parameters must be described
+- All error codes must be explained
+- All examples must be tested
+- All links must be valid
+
+### 2. Accuracy
+- Code examples must be functional
+- Schemas must match implementation
+- Error codes must be current
+- Performance data must be measured
+- Compliance status must be verified
+
+### 3. Clarity
+- Use clear, concise language
+- Provide practical examples
+- Include troubleshooting guides
+- Use consistent terminology
+- Structure information logically
+
+### 4. Maintainability
+- Update documentation with code changes
+- Version documentation appropriately
+- Maintain cross-references
+- Keep examples current
+- Review documentation regularly
+
+## Automation Rules
+
+### 1. When Adding New Endpoints
+1. Create specification document
+2. Add to API overview
+3. Create example if needed
+4. Update navigation
+5. Add to compliance report
+
+### 2. When Updating Existing Endpoints
+1. Update specification document
+2. Update examples if needed
+3. Update compliance report
+4. Maintain backward compatibility notes
+5. Update version information
+
+### 3. When Creating Guides
+1. Use step-by-step format
+2. Include complete examples
+3. Add troubleshooting section
+4. Reference related documents
+5. Test all examples
+
+## Validation Checklist
+
+### Before Publishing Documentation
+- [ ] All endpoints documented
+- [ ] All examples tested
+- [ ] All links verified
+- [ ] FHIR compliance verified
+- [ ] Security considerations included
+- [ ] Performance data current
+- [ ] Error handling documented
+- [ ] Cross-references valid
+
+### Before Code Changes
+- [ ] Documentation impact assessed
+- [ ] Update plan created
+- [ ] Examples updated
+- [ ] Compliance verified
+- [ ] Performance tested
+
+---
+
+*These rules ensure comprehensive, accurate, and maintainable API documentation.*
