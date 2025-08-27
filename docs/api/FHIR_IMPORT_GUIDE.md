@@ -6,7 +6,7 @@ The FHIR import endpoint allows you to import FHIR resources from a standard HL7
 
 ## Endpoint Details
 
-- **URL**: `POST /fhir/$import`
+- **URL**: `POST /fhir/$import-bundle`
 - **Authentication**: Required (API Key or JWT Bearer token)
 - **Content-Type**: 
   - `application/json` (for JSON input)
@@ -19,7 +19,7 @@ The FHIR import endpoint allows you to import FHIR resources from a standard HL7
 Send the FHIR Bundle directly in the request body as JSON:
 
 ```bash
-curl -X POST "https://your-api-url/fhir/$import" \
+curl -X POST "https://your-api-url/fhir/$import-bundle" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-api-key" \
   -H "X-Tenant-ID: your-tenant-id" \
@@ -31,7 +31,7 @@ curl -X POST "https://your-api-url/fhir/$import" \
 Upload a JSON file containing the FHIR Bundle:
 
 ```bash
-curl -X POST "https://your-api-url/fhir/$import" \
+curl -X POST "https://your-api-url/fhir/$import-bundle" \
   -H "X-API-Key: your-api-key" \
   -H "X-Tenant-ID: your-tenant-id" \
   -F "bundleFile=@sample-fhir-bundle.json" \
@@ -147,7 +147,7 @@ The FHIR Bundle must follow the HL7 FHIR R4 specification. Here's an example of 
 
 ```json
 {
-  "error": "File size exceeds 10MB limit"
+  "error": "File size exceeds 50MB limit"
 }
 ```
 
@@ -163,7 +163,7 @@ When using the Swagger UI interface:
 ### Using Swagger UI
 
 1. Navigate to the Swagger UI at your API root URL
-2. Find the `POST /fhir/$import` endpoint
+2. Find the `POST /fhir/$import-bundle` endpoint
 3. Click "Try it out"
 4. Choose between JSON input or file upload
 5. For file upload:
@@ -180,13 +180,13 @@ Use the provided `sample-fhir-bundle.json` file for testing, or use the actual p
 
 ```bash
 # Test with sample file
-curl -X POST "https://your-api-url/fhir/$import" \
+curl -X POST "https://your-api-url/fhir/$import-bundle" \
   -H "X-API-Key: demo-api-key-12345" \
   -H "X-Tenant-ID: demo-tenant" \
   -F "bundleFile=@sample-fhir-bundle.json"
 
 # Test with actual patient record
-curl -X POST "https://your-api-url/fhir/$import" \
+curl -X POST "https://your-api-url/fhir/$import-bundle" \
   -H "X-API-Key: demo-api-key-12345" \
   -H "X-Tenant-ID: demo-tenant" \
   -F "bundleFile=@scripts/fhir_bundle_ntkien_2024.json"
@@ -196,8 +196,8 @@ curl -X POST "https://your-api-url/fhir/$import" \
 
 The endpoint performs the following validations:
 
-1. **File Size**: Maximum 10MB
-2. **File Type**: Only `.json` and `.txt` files
+1. **File Size**: Maximum 50MB
+2. **File Type**: Only `.json` files
 3. **JSON Format**: Valid JSON structure
 4. **FHIR Bundle**: Valid FHIR Bundle format
 5. **Resource Validation**: FHIR resource validation (if enabled)
