@@ -17,6 +17,10 @@ This directory contains utility scripts, sample data, and tools for the FHIR-AI 
 
 ### `/api/` - API Testing Scripts
 - **`sample-data-api.js`** - Node.js script for testing API endpoints with sample data
+```Terminal
+dotnet run --project src/HealthTech.API
+node scripts/api/sample-data-api.js
+```
 
 ### `/deployment/` - Deployment Scripts
 - Deployment automation scripts (to be added)
