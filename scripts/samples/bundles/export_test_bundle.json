@@ -1,0 +1,196 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "timestamp": "2024-12-19T10:30:00Z",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "org-hospital-export-test",
+        "name": "Test Hospital for Export",
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                "code": "prov",
+                "display": "Healthcare Provider"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-export-test-1",
+        "name": [
+          {
+            "use": "official",
+            "family": "Nguyễn",
+            "given": ["Trung", "Kiên"]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1993-01-08",
+        "address": [
+          {
+            "use": "home",
+            "type": "physical",
+            "text": "123 Test Street, Hanoi, Vietnam",
+            "line": ["123 Test Street"],
+            "city": "Hanoi",
+            "state": "Hanoi",
+            "postalCode": "10000",
+            "country": "VN"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-export-test-2",
+        "name": [
+          {
+            "use": "official",
+            "family": "Tran",
+            "given": ["Thi", "Mai"]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1985-05-15",
+        "address": [
+          {
+            "use": "home",
+            "type": "physical",
+            "text": "456 Sample Road, Ho Chi Minh City, Vietnam",
+            "line": ["456 Sample Road"],
+            "city": "Ho Chi Minh City",
+            "state": "Ho Chi Minh",
+            "postalCode": "70000",
+            "country": "VN"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "encounter-export-test-1",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "subject": {
+          "reference": "Patient/patient-export-test-1"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-hospital-export-test"
+        },
+        "period": {
+          "start": "2024-12-01T09:00:00Z",
+          "end": "2024-12-01T10:30:00Z"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "observation-export-test-1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8302-2",
+              "display": "Body height"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/patient-export-test-1"
+        },
+        "encounter": {
+          "reference": "Encounter/encounter-export-test-1"
+        },
+        "effectiveDateTime": "2024-12-01T09:15:00Z",
+        "valueQuantity": {
+          "value": 175.0,
+          "unit": "cm",
+          "system": "http://unitsofmeasure.org",
+          "code": "cm"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "observation-export-test-2",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/patient-export-test-1"
+        },
+        "encounter": {
+          "reference": "Encounter/encounter-export-test-1"
+        },
+        "effectiveDateTime": "2024-12-01T09:20:00Z",
+        "valueQuantity": {
+          "value": 70.5,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "condition-export-test-1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive disorder"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/patient-export-test-1"
+        },
+        "onsetDateTime": "2020-01-01"
+      }
+    }
+  ]
+}

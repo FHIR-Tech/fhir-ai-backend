@@ -306,4 +306,143 @@ Returns a list of all versions of the resource with metadata including:
 
 ### Parameters
 - **maxVersions**: Maximum number of versions to return (default: 100)";
+
+    public const string ExportFhirBundle = @"
+Export FHIR resources as a standard HL7 FHIR Bundle. This endpoint supports exporting complete patient records including:
+
+### Supported FHIR Resources
+- **Organization**: Healthcare facilities and providers
+- **Patient**: Patient demographic and administrative information
+- **Encounter**: Patient visits and interactions with healthcare providers
+- **Observation**: Clinical measurements, lab results, and vital signs
+- **Condition**: Diagnoses and medical conditions
+- **MedicationRequest**: Prescriptions and medication orders
+- **Immunization**: Vaccination records
+- **Procedure**: Medical procedures performed
+- **AllergyIntolerance**: Patient allergies and intolerances
+- **FamilyMemberHistory**: Family medical history
+
+### Request Options
+You can export resources in two ways:
+
+#### Option 1: GET Method (Simple Queries)
+Use query parameters for simple filtering and export operations.
+
+#### Option 2: POST Method (Complex Queries)
+Use POST method with JSON body for complex search parameters and advanced filtering.
+
+### Examples
+
+#### Export All Patients
+```
+GET /fhir/$export-bundle?resourceType=Patient&maxResources=100
+```
+
+#### Export Specific Patient with History
+```
+GET /fhir/$export-bundle?resourceType=Patient&fhirIds=patient-123&includeHistory=true&maxHistoryVersions=5
+```
+
+#### Export All Resources of Multiple Types
+```
+GET /fhir/$export-bundle?maxResources=500&bundleType=collection
+```
+
+#### Export with Complex Search (POST)
+```json
+POST /fhir/$export-bundle
+{
+  ""resourceType"": ""Patient"",
+  ""searchParameters"": {
+    ""name"": ""Nguyễn"",
+    ""date"": ""2024-01-01""
+  },
+  ""maxResources"": 100,
+  ""includeHistory"": true,
+  ""bundleType"": ""collection""
+}
+```
+
+### Bundle Types Supported
+- **collection**: A set of resources (most common for patient records)
+- **transaction**: A set of actions to be performed
+- **batch**: A set of actions to be performed as a group
+- **searchset**: Results from a search operation
+- **history**: A list of historical versions of a resource
+
+### Response Format
+Returns a standard FHIR Bundle in JSON format following R4 specification:
+
+```json
+{
+  ""resourceType"": ""Bundle"",
+  ""type"": ""collection"",
+  ""timestamp"": ""2024-01-15T10:30:00Z"",
+  ""total"": 5,
+  ""entry"": [
+    {
+      ""resource"": {
+        ""resourceType"": ""Patient"",
+        ""id"": ""patient-123"",
+        ""name"": [
+          {
+            ""use"": ""official"",
+            ""family"": ""Nguyễn"",
+            ""given"": [""Trung"", ""Kiên""]
+          }
+        ]
+      },
+      ""search"": {
+        ""mode"": ""match""
+      }
+    }
+  ]
+}
+```
+
+### Parameters
+- **resourceType**: FHIR resource type to export (optional - if null, exports all types)
+- **fhirIds**: Comma-separated list of specific FHIR resource IDs to export
+- **maxResources**: Maximum number of resources to include in the bundle (default: 1000)
+- **bundleType**: Bundle type: collection, transaction, batch, searchset, history (default: collection)
+- **includeHistory**: Include resource history in the bundle (default: false)
+- **maxHistoryVersions**: Maximum number of history versions per resource (default: 10)
+- **includeDeleted**: Include deleted resources in the bundle (default: false)
+- **format**: Export format: json, xml (default: json)
+
+### Performance Considerations
+- Large exports are limited to 1000 resources by default
+- History inclusion can significantly increase bundle size
+- Consider using POST method for complex queries with multiple search parameters";
+
+    public const string ExportFhirBundlePost = @"
+Export FHIR resources as a bundle using POST method for complex queries with advanced filtering options.
+
+### Use Cases
+- Complex search parameters that cannot be expressed in URL query parameters
+- Large parameter sets that exceed URL length limits
+- Advanced filtering with multiple conditions
+- Bulk export operations with specific criteria
+
+### Request Body
+```json
+{
+  ""resourceType"": ""Patient"",
+  ""fhirIds"": [""patient-123"", ""patient-456""],
+  ""searchParameters"": {
+    ""name"": ""Nguyễn"",
+    ""identifier"": ""12345"",
+    ""date"": ""2024-01-01""
+  },
+  ""maxResources"": 500,
+  ""bundleType"": ""collection"",
+  ""includeHistory"": true,
+  ""maxHistoryVersions"": 5,
+  ""includeDeleted"": false,
+  ""format"": ""json""
+}
+```
+
+### Response
+Returns a standard FHIR Bundle in JSON format following R4 specification.";
 }

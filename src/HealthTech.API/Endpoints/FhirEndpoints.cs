@@ -5,6 +5,7 @@ using HealthTech.Application.FhirResources.Commands.ImportFhirBundle;
 using HealthTech.Application.FhirResources.Queries.GetFhirResource;
 using HealthTech.Application.FhirResources.Queries.SearchFhirResources;
 using HealthTech.Application.FhirResources.Queries.GetFhirResourceHistory;
+using HealthTech.Application.FhirResources.Queries.ExportFhirBundle;
 using HealthTech.API.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -372,5 +373,100 @@ public static class FhirEndpoints
             
             return operation;
         });
+
+        // GET /fhir/$export-bundle
+        group.MapGet("/$export-bundle", async (
+            ISender sender,
+            CancellationToken cancellationToken,
+            string? resourceType = null,
+            string? fhirIds = null,
+            int maxResources = 1000,
+            string bundleType = "collection",
+            bool includeHistory = false,
+            int maxHistoryVersions = 10,
+            bool includeDeleted = false,
+            string format = "json") =>
+        {
+            var query = new ExportFhirBundleQuery
+            {
+                ResourceType = resourceType,
+                FhirIds = !string.IsNullOrEmpty(fhirIds) ? fhirIds.Split(',', StringSplitOptions.RemoveEmptyEntries) : null,
+                MaxResources = maxResources,
+                BundleType = bundleType,
+                IncludeHistory = includeHistory,
+                MaxHistoryVersions = maxHistoryVersions,
+                IncludeDeleted = includeDeleted,
+                Format = format
+            };
+            
+            var result = await sender.Send(query, cancellationToken);
+            
+            // Return as JSON with proper content type
+            return Results.Content(result.BundleJson, "application/json");
+        })
+        .WithName("ExportFhirBundle")
+        .WithSummary("Export FHIR resources as a bundle")
+        .WithDescription(FhirEndpointDescriptions.ExportFhirBundle)
+        .WithOpenApi(operation =>
+        {
+            if (operation.Parameters != null && operation.Parameters.Count > 0)
+            {
+                operation.Parameters[0].Description = "FHIR resource type to export (optional - if null, exports all types)";
+                operation.Parameters[0].Example = new Microsoft.OpenApi.Any.OpenApiString("Patient");
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 1)
+            {
+                operation.Parameters[1].Description = "Comma-separated list of specific FHIR resource IDs to export";
+                operation.Parameters[1].Example = new Microsoft.OpenApi.Any.OpenApiString("patient-123,patient-456");
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 2)
+            {
+                operation.Parameters[2].Description = "Maximum number of resources to include in the bundle (default: 1000)";
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 3)
+            {
+                operation.Parameters[3].Description = "Bundle type: collection, transaction, batch, searchset, history (default: collection)";
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 4)
+            {
+                operation.Parameters[4].Description = "Include resource history in the bundle (default: false)";
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 5)
+            {
+                operation.Parameters[5].Description = "Maximum number of history versions per resource (default: 10)";
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 6)
+            {
+                operation.Parameters[6].Description = "Include deleted resources in the bundle (default: false)";
+            }
+            
+            if (operation.Parameters != null && operation.Parameters.Count > 7)
+            {
+                operation.Parameters[7].Description = "Export format: json, xml (default: json)";
+            }
+            
+            return operation;
+        });
+
+        // POST /fhir/$export-bundle (for complex queries)
+        group.MapPost("/$export-bundle", async (
+            ExportFhirBundleQuery query,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(query, cancellationToken);
+            
+            // Return as JSON with proper content type
+            return Results.Content(result.BundleJson, "application/json");
+        })
+        .WithName("ExportFhirBundlePost")
+        .WithSummary("Export FHIR resources as a bundle (POST method for complex queries)")
+        .WithDescription(FhirEndpointDescriptions.ExportFhirBundlePost);
     }
 }
