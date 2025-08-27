@@ -30,6 +30,9 @@
         // Add response formatter
         addResponseFormatter();
         
+        // Add file upload enhancements
+        addFileUploadEnhancements();
+        
         // Add keyboard shortcuts
         addKeyboardShortcuts();
         
@@ -221,6 +224,132 @@
                 }
             }
         });
+    }
+
+    function addFileUploadEnhancements() {
+        // Enhance file upload for FHIR Bundle import
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const fileInputs = node.querySelectorAll('input[type="file"]');
+                        fileInputs.forEach(function(fileInput) {
+                            enhanceFileInput(fileInput);
+                        });
+                        
+                        // Also check the node itself
+                        if (node.tagName === 'INPUT' && node.type === 'file') {
+                            enhanceFileInput(node);
+                        }
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        // Check existing file inputs
+        const existingFileInputs = document.querySelectorAll('input[type="file"]');
+        existingFileInputs.forEach(function(fileInput) {
+            enhanceFileInput(fileInput);
+        });
+    }
+    
+    function enhanceFileInput(fileInput) {
+        if (fileInput.dataset.enhanced) return;
+        fileInput.dataset.enhanced = 'true';
+        
+                 // Add file type validation
+         fileInput.accept = '.json';
+        
+        // Add drag and drop support
+        const container = fileInput.closest('.body-param__text') || fileInput.parentElement;
+        if (container) {
+            container.style.position = 'relative';
+            
+            const dropZone = document.createElement('div');
+            dropZone.className = 'file-drop-zone';
+                         dropZone.innerHTML = `
+                 <div class="drop-zone-content">
+                     <div class="drop-zone-icon">🏥</div>
+                     <div class="drop-zone-text">Drop HL7 FHIR Bundle JSON file here or click to browse</div>
+                     <div class="drop-zone-hint">Supports .json files (up to 50MB)</div>
+                 </div>
+             `;
+            dropZone.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border: 2px dashed #ccc;
+                border-radius: 4px;
+                background: rgba(255,255,255,0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                z-index: 10;
+            `;
+            
+            // Hide original file input
+            fileInput.style.opacity = '0';
+            fileInput.style.position = 'absolute';
+            fileInput.style.zIndex = '11';
+            fileInput.style.width = '100%';
+            fileInput.style.height = '100%';
+            fileInput.style.cursor = 'pointer';
+            
+            container.appendChild(dropZone);
+            
+            // Handle drag and drop events
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZone.style.borderColor = '#4990e2';
+                dropZone.style.background = 'rgba(73,144,226,0.1)';
+            });
+            
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                dropZone.style.borderColor = '#ccc';
+                dropZone.style.background = 'rgba(255,255,255,0.9)';
+            });
+            
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.style.borderColor = '#ccc';
+                dropZone.style.background = 'rgba(255,255,255,0.9)';
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    updateDropZoneText(dropZone, files[0]);
+                }
+            });
+            
+            dropZone.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    updateDropZoneText(dropZone, this.files[0]);
+                }
+            });
+        }
+    }
+    
+    function updateDropZoneText(dropZone, file) {
+        const content = dropZone.querySelector('.drop-zone-content');
+        content.innerHTML = `
+            <div class="drop-zone-icon">✅</div>
+            <div class="drop-zone-text">${file.name}</div>
+            <div class="drop-zone-hint">${(file.size / 1024).toFixed(1)} KB</div>
+        `;
+        dropZone.style.borderColor = '#4caf50';
+        dropZone.style.background = 'rgba(76,175,80,0.1)';
     }
 
     function addDarkModeToggle() {

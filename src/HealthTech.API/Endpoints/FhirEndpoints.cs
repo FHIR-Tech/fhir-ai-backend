@@ -8,6 +8,8 @@ using HealthTech.Application.FhirResources.Queries.GetFhirResourceHistory;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
+using System.Text.Json;
 
 namespace HealthTech.API.Endpoints;
 
@@ -136,6 +138,68 @@ Returns the complete FHIR resource in JSON format following R4 specification.
             
             return operation;
         });
+
+        // POST /fhir
+        group.MapPost("", async (
+            CreateFhirResourceCommand command,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(command, cancellationToken);
+            return Results.Created($"/fhir/{command.ResourceType}/{result.FhirId}", result);
+        })
+        .WithName("CreateFhirResourceSingle")
+        .WithSummary("Create FHIR resource (auto-detect type)")
+        .WithDescription(@"
+Create a new FHIR resource. The resource type is automatically detected from the request body.
+
+### Request Body
+The request body should contain a valid FHIR resource in JSON format following R4 specification.
+
+### Examples
+
+#### Create a Patient
+```json
+{
+  ""resourceType"": ""Patient"",
+  ""name"": [
+    {
+      ""use"": ""official"",
+      ""family"": ""Smith"",
+      ""given"": [""John"", ""Michael""]
+    }
+  ],
+  ""gender"": ""male"",
+  ""birthDate"": ""1990-01-15""
+}
+```
+
+#### Create an Observation
+```json
+{
+  ""resourceType"": ""Observation"",
+  ""status"": ""final"",
+  ""code"": {
+    ""coding"": [
+      {
+        ""system"": ""http://loinc.org"",
+        ""code"": ""8302-2"",
+        ""display"": ""Body height""
+      }
+    ]
+  },
+  ""valueQuantity"": {
+    ""value"": 175.0,
+    ""unit"": ""cm"",
+    ""system"": ""http://unitsofmeasure.org"",
+    ""code"": ""cm""
+  }
+}
+```
+
+### Response
+Returns the created resource with assigned ID and metadata.
+");
 
         // POST /fhir/{resourceType}
         group.MapPost("/{resourceType}", async (
@@ -325,87 +389,214 @@ This is a soft delete operation. The resource remains in the database but is mar
             return operation;
         });
 
-        // POST /fhir
-        group.MapPost("", async (
+        // POST /fhir/$import
+        group.MapPost("/$import", async (
             HttpContext httpContext,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            // Read the request body as JSON string
-            using var reader = new StreamReader(httpContext.Request.Body);
-            var bundleJson = await reader.ReadToEndAsync(cancellationToken);
+            string bundleJson;
+            bool validate = true; // Default to true
+            string? description = null;
             
-            var command = new ImportFhirBundleCommand { BundleJson = bundleJson };
+            // Check if the request is multipart form data (file upload)
+            if (httpContext.Request.HasFormContentType)
+            {
+                var form = await httpContext.Request.ReadFormAsync(cancellationToken);
+                var file = form.Files.FirstOrDefault(f => f.Name == "bundleFile");
+                
+                if (file != null && file.Length > 0)
+                {
+                    // Check file size (50MB limit for large FHIR bundles)
+                    if (file.Length > 50 * 1024 * 1024)
+                    {
+                        return Results.BadRequest(new { error = "File size exceeds 50MB limit" });
+                    }
+                    
+                    // Check file extension
+                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (extension != ".json")
+                    {
+                        return Results.BadRequest(new { error = "Only .json files are supported for FHIR bundles" });
+                    }
+                    
+                    using var reader = new StreamReader(file.OpenReadStream());
+                    bundleJson = await reader.ReadToEndAsync(cancellationToken);
+                }
+                else
+                {
+                    return Results.BadRequest(new { error = "No FHIR bundle file provided" });
+                }
+                
+                // Get optional parameters
+                description = form["description"].FirstOrDefault();
+                var validateStr = form["validate"].FirstOrDefault();
+                validate = string.IsNullOrEmpty(validateStr) || bool.Parse(validateStr);
+            }
+            else
+            {
+                // Read the request body as JSON string
+                using var reader = new StreamReader(httpContext.Request.Body);
+                bundleJson = await reader.ReadToEndAsync(cancellationToken);
+            }
+            
+            // Validate that this is a valid FHIR Bundle
+            try
+            {
+                var bundle = JsonSerializer.Deserialize<JsonElement>(bundleJson);
+                if (!bundle.TryGetProperty("resourceType", out var resourceType) || 
+                    resourceType.GetString() != "Bundle")
+                {
+                    return Results.BadRequest(new { error = "Invalid FHIR Bundle: resourceType must be 'Bundle'" });
+                }
+                
+                if (!bundle.TryGetProperty("entry", out var entry))
+                {
+                    return Results.BadRequest(new { error = "Invalid FHIR Bundle: missing 'entry' array" });
+                }
+                
+                if (entry.ValueKind != JsonValueKind.Array)
+                {
+                    return Results.BadRequest(new { error = "Invalid FHIR Bundle: 'entry' must be an array" });
+                }
+            }
+            catch (JsonException)
+            {
+                return Results.BadRequest(new { error = "Invalid JSON format in FHIR Bundle" });
+            }
+            
+            var command = new ImportFhirBundleCommand 
+            { 
+                BundleJson = bundleJson,
+                ValidateResources = validate
+            };
             var result = await sender.Send(command, cancellationToken);
             return Results.Ok(result);
         })
         .WithName("ImportFhirBundle")
-        .WithSummary("Import FHIR Bundle")
+        .WithSummary("Import FHIR Bundle (HL7 Standard)")
         .WithDescription(@"
-Import multiple FHIR resources from a FHIR Bundle. Supports create, update, and delete operations.
+Import FHIR resources from a standard HL7 FHIR Bundle. This endpoint supports importing complete patient records including:
 
-### Request Body
-The request body should contain a valid FHIR Bundle in JSON format following R4 specification.
+### Supported FHIR Resources
+- **Organization**: Healthcare facilities and providers
+- **Patient**: Patient demographic and administrative information
+- **Encounter**: Patient visits and interactions with healthcare providers
+- **Observation**: Clinical measurements, lab results, and vital signs
+- **Condition**: Diagnoses and medical conditions
+- **MedicationRequest**: Prescriptions and medication orders
+- **Immunization**: Vaccination records
+- **Procedure**: Medical procedures performed
+- **AllergyIntolerance**: Patient allergies and intolerances
+- **FamilyMemberHistory**: Family medical history
 
-### Examples
+### Request Options
+You can provide the FHIR Bundle in two ways:
 
-#### Import Patient Bundle
+#### Option 1: JSON Body
+Send the FHIR Bundle directly in the request body as JSON.
+
+#### Option 2: File Upload
+Upload a JSON file containing the FHIR Bundle using multipart form data.
+
+### FHIR Bundle Format (HL7 Standard)
+The FHIR Bundle must follow the HL7 FHIR R4 specification:
+
 ```json
 {
   ""resourceType"": ""Bundle"",
-  ""type"": ""transaction"",
+  ""type"": ""collection"",
+  ""timestamp"": ""2024-01-15T10:30:00Z"",
   ""entry"": [
     {
-      ""request"": {
-        ""method"": ""POST"",
-        ""url"": ""Patient""
-      },
       ""resource"": {
-        ""resourceType"": ""Patient"",
-        ""name"": [
-          {
-            ""use"": ""official"",
-            ""family"": ""Smith"",
-            ""given"": [""John"", ""Michael""]
-          }
-        ],
-        ""gender"": ""male"",
-        ""birthDate"": ""1990-01-15""
+        ""resourceType"": ""Organization"",
+        ""id"": ""org-hospital"",
+        ""name"": ""Hospital Name""
       }
     },
     {
-      ""request"": {
-        ""method"": ""PUT"",
-        ""url"": ""Patient/patient-123""
-      },
       ""resource"": {
         ""resourceType"": ""Patient"",
         ""id"": ""patient-123"",
         ""name"": [
           {
             ""use"": ""official"",
-            ""family"": ""Jones"",
-            ""given"": [""Jane"", ""Elizabeth""]
+            ""family"": ""Nguyễn"",
+            ""given"": [""Trung"", ""Kiên""]
           }
         ],
-        ""gender"": ""female"",
-        ""birthDate"": ""1985-03-20""
+        ""gender"": ""male"",
+        ""birthDate"": ""1993-01-08""
+      }
+    },
+    {
+      ""resource"": {
+        ""resourceType"": ""Encounter"",
+        ""id"": ""encounter-1"",
+        ""status"": ""finished"",
+        ""subject"": {
+          ""reference"": ""Patient/patient-123""
+        },
+        ""serviceProvider"": {
+          ""reference"": ""Organization/org-hospital""
+        }
       }
     }
   ]
 }
 ```
 
-### Supported Operations
-- **POST**: Create new resource
-- **PUT**: Update existing resource
-- **DELETE**: Delete resource
+### Bundle Types Supported
+- **collection**: A set of resources (most common for patient records)
+- **transaction**: A set of actions to be performed
+- **batch**: A set of actions to be performed as a group
+- **searchset**: Results from a search operation
+- **history**: A list of historical versions of a resource
+
+### File Requirements
+- **Format**: JSON only (.json files)
+- **Maximum size**: 50MB (for large patient records)
+- **Content**: Valid FHIR Bundle following HL7 FHIR R4 specification
 
 ### Response
 Returns import summary with statistics and detailed results for each resource.
 ")
         .WithOpenApi(operation =>
         {
+            // Add support for both JSON body and file upload
+            operation.RequestBody = new OpenApiRequestBody
+            {
+                Description = "FHIR Bundle as JSON or file upload",
+                Required = true,
+                Content = new Dictionary<string, OpenApiMediaType>
+                {
+                    ["application/json"] = new OpenApiMediaType
+                    {
+                        Schema = new OpenApiSchema
+                        {
+                            Type = "object",
+                            Description = "FHIR Bundle JSON object"
+                        }
+                    },
+                    ["multipart/form-data"] = new OpenApiMediaType
+                    {
+                        Schema = new OpenApiSchema
+                        {
+                            Type = "object",
+                            Properties = new Dictionary<string, OpenApiSchema>
+                            {
+                                ["bundleFile"] = new OpenApiSchema
+                                {
+                                    Type = "string",
+                                    Format = "binary",
+                                    Description = "JSON file containing FHIR Bundle"
+                                }
+                            }
+                        }
+                    }
+                }
+            };
             return operation;
         });
 
