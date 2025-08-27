@@ -93,7 +93,25 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 - **Architecture**: Document design decisions and patterns
 - **API Documentation**: OpenAPI specifications
 
-### 3. Performance Considerations
+### 3. Project Structure & File Organization
+- **Documentation Files**: Place all `.md` files in `/docs/` directory
+  - `README.md` remains in root for project overview
+  - Technical documentation goes in `/docs/`
+  - API documentation in `/docs/api/`
+  - Architecture docs in `/docs/architecture/`
+- **Sample Data**: Organize JSON sample files in `/scripts/samples/`
+  - FHIR Bundle samples: `/scripts/samples/bundles/`
+  - Individual resource samples: `/scripts/samples/resources/`
+  - Test data: `/scripts/samples/test-data/`
+- **Scripts**: Keep utility scripts in `/scripts/`
+  - Database scripts: `/scripts/database/`
+  - API testing scripts: `/scripts/api/`
+  - Deployment scripts: `/scripts/deployment/`
+- **Naming Convention**: Use descriptive names with date/version
+  - `{resource-type}_{purpose}_{date}.json`
+  - `{feature}_{description}.md`
+
+### 4. Performance Considerations
 - **Async/Await**: Use throughout for I/O operations
 - **Caching**: Implement appropriate caching strategies
 - **Database Optimization**: Efficient queries and indexing
@@ -110,6 +128,10 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 - Use synchronous I/O in async contexts
 - Log sensitive patient information
 - Disable HTTPS in production
+- Place documentation files in root directory (except README.md)
+- Mix sample data with source code
+- Use generic names for sample files
+- Create unstructured file hierarchies
 
 ### ✅ Always Do
 - Follow Clean Architecture principles
@@ -120,6 +142,10 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 - Use secure coding practices
 - Implement proper logging
 - Follow FHIR standards
+- Organize files in appropriate directories
+- Use descriptive naming conventions
+- Maintain clean project structure
+- Keep documentation up-to-date
 
 ## Environment Configuration
 
