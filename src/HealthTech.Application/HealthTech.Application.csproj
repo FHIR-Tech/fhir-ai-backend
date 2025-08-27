@@ -10,11 +10,11 @@
     <PackageReference Include="MediatR" Version="12.2.0" />
     <PackageReference Include="FluentValidation" Version="11.8.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.8.1" />
-    <PackageReference Include="Hl7.Fhir.R4B" Version="4.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.19" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\sdk\Hl7.Fhir\Hl7.Fhir.R4B\Hl7.Fhir.R4B.csproj" />
     <ProjectReference Include="..\HealthTech.Domain\HealthTech.Domain.csproj" />
   </ItemGroup>
 

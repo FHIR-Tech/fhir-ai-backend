@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Hl7.Fhir.Model;
 
 namespace HealthTech.Domain.Entities;
 
