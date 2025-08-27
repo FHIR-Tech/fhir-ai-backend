@@ -139,8 +139,8 @@ Returns the complete FHIR resource in JSON format following R4 specification.
             return operation;
         });
 
-        // POST /fhir
-        group.MapPost("", async (
+        // POST /fhir/$auto-detect-type
+        group.MapPost("/$auto-detect-type", async (
             CreateFhirResourceCommand command,
             ISender sender,
             CancellationToken cancellationToken) =>
@@ -148,13 +148,14 @@ Returns the complete FHIR resource in JSON format following R4 specification.
             var result = await sender.Send(command, cancellationToken);
             return Results.Created($"/fhir/{command.ResourceType}/{result.FhirId}", result);
         })
-        .WithName("CreateFhirResourceSingle")
-        .WithSummary("Create FHIR resource (auto-detect type)")
+        .WithName("CreateFhirResourceAutoDetect")
+        .WithSummary("Create FHIR resource with auto-detected type")
         .WithDescription(@"
-Create a new FHIR resource. The resource type is automatically detected from the request body.
+Create a new FHIR resource with automatic resource type detection from the request body.
 
 ### Request Body
 The request body should contain a valid FHIR resource in JSON format following R4 specification.
+The resource type is automatically detected from the 'resourceType' field in the JSON.
 
 ### Examples
 
@@ -199,6 +200,10 @@ The request body should contain a valid FHIR resource in JSON format following R
 
 ### Response
 Returns the created resource with assigned ID and metadata.
+
+### Note
+This endpoint automatically detects the resource type from the 'resourceType' field in the request body.
+For explicit resource type creation, use POST /fhir/{resourceType} instead.
 ");
 
         // POST /fhir/{resourceType}
@@ -389,8 +394,8 @@ This is a soft delete operation. The resource remains in the database but is mar
             return operation;
         });
 
-        // POST /fhir/$import
-        group.MapPost("/$import", async (
+        // POST /fhir/$import-bundle
+        group.MapPost("/$import-bundle", async (
             HttpContext httpContext,
             ISender sender,
             CancellationToken cancellationToken) =>

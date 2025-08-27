@@ -23,13 +23,13 @@ public class FileUploadOperationFilter : IOperationFilter
             {
                 var multipartContent = operation.RequestBody.Content["multipart/form-data"];
                 
-                                 // Add better description for file upload
-                 if (multipartContent.Schema?.Properties?.ContainsKey("bundleFile") == true)
-                 {
-                     var fileSchema = multipartContent.Schema.Properties["bundleFile"];
-                     fileSchema.Description = "HL7 FHIR Bundle JSON file. Must contain valid FHIR resources following R4 specification. Supports .json files up to 50MB.";
-                     fileSchema.Example = new Microsoft.OpenApi.Any.OpenApiString("fhir_bundle_ntkien_2024.json");
-                 }
+                // Add better description for file upload
+                if (multipartContent.Schema?.Properties?.ContainsKey("bundleFile") == true)
+                {
+                    var fileSchema = multipartContent.Schema.Properties["bundleFile"];
+                    fileSchema.Description = "HL7 FHIR Bundle JSON file. Must contain valid FHIR resources following R4 specification. Supports .json files up to 50MB.";
+                    fileSchema.Example = new Microsoft.OpenApi.Any.OpenApiString("fhir_bundle_ntkien_2024.json");
+                }
                 
                 // Add additional properties for better UX
                 if (multipartContent.Schema?.Properties != null)
