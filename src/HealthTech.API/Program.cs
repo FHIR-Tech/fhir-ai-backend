@@ -175,6 +175,9 @@ For technical support, contact: support@healthtech.com
     });
 
     c.DocInclusionPredicate((name, api) => true);
+    
+    // Add support for file uploads
+    c.OperationFilter<FileUploadOperationFilter>();
 });
 
 // Configure JSON serialization
@@ -182,6 +185,14 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+});
+
+// Configure form options for file uploads
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB limit for large FHIR bundles
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
 });
 
 // Add CORS

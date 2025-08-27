@@ -11,6 +11,9 @@ namespace HealthTech.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Enable uuid-ossp extension for UUID generation
+            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";");
+            
             migrationBuilder.CreateTable(
                 name: "audit_events",
                 columns: table => new
