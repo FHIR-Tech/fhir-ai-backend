@@ -11,32 +11,52 @@ public enum UserRole
     SystemAdministrator = 1,
 
     /// <summary>
-    /// Healthcare provider (doctor, nurse, etc.)
+    /// Healthcare provider (doctor, physician)
     /// </summary>
     HealthcareProvider = 2,
 
     /// <summary>
-    /// Patient with access to their own data
+    /// Nurse or nursing staff
     /// </summary>
-    Patient = 3,
+    Nurse = 3,
 
     /// <summary>
-    /// Researcher with limited access for research purposes
+    /// Patient with access to their own data
     /// </summary>
-    Researcher = 4,
+    Patient = 4,
+
+    /// <summary>
+    /// Family member or caregiver
+    /// </summary>
+    FamilyMember = 5,
+
+    /// <summary>
+    /// Research personnel
+    /// </summary>
+    Researcher = 6,
+
+    /// <summary>
+    /// IT support staff
+    /// </summary>
+    ITSupport = 7,
+
+    /// <summary>
+    /// Read-only user for reporting
+    /// </summary>
+    ReadOnlyUser = 8,
 
     /// <summary>
     /// Data analyst with analytics access
     /// </summary>
-    DataAnalyst = 5,
+    DataAnalyst = 9,
 
     /// <summary>
     /// IT administrator with technical access
     /// </summary>
-    ITAdministrator = 6,
+    ITAdministrator = 10,
 
     /// <summary>
     /// Guest user with very limited access
     /// </summary>
-    Guest = 7
+    Guest = 11
 }

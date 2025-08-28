@@ -33,5 +33,15 @@ public enum UserStatus
     /// <summary>
     /// User account is expired
     /// </summary>
-    Expired = 6
+    Expired = 6,
+
+    /// <summary>
+    /// Pending email verification
+    /// </summary>
+    PendingVerification = 7,
+
+    /// <summary>
+    /// Deleted account
+    /// </summary>
+    Deleted = 8
 }

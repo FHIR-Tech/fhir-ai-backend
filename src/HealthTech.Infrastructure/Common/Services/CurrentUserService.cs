@@ -125,8 +125,12 @@ public class CurrentUserService : ICurrentUserService
             {
                 "systemadministrator" => UserRole.SystemAdministrator,
                 "healthcareprovider" => UserRole.HealthcareProvider,
+                "nurse" => UserRole.Nurse,
                 "patient" => UserRole.Patient,
+                "familymember" => UserRole.FamilyMember,
                 "researcher" => UserRole.Researcher,
+                "itsupport" => UserRole.ITSupport,
+                "readonlyuser" => UserRole.ReadOnlyUser,
                 "dataanalyst" => UserRole.DataAnalyst,
                 "itadministrator" => UserRole.ITAdministrator,
                 _ => UserRole.Guest
