@@ -29,7 +29,7 @@ public class GrantPatientAccessCommandHandlerTests
         // Arrange
         var command = new GrantPatientAccessCommand
         {
-            TargetUserId = "target-user-1",
+            TargetUserId = "87654321-4321-4321-4321-210987654321",
             PatientId = "patient-1",
             AccessLevel = PatientAccessLevel.Read,
             Reason = "Treatment coordination"
@@ -44,16 +44,16 @@ public class GrantPatientAccessCommandHandlerTests
 
         var targetUser = new User
         {
-            Id = "target-user-1",
+            Id = Guid.Parse("87654321-4321-4321-4321-210987654321"),
             Username = "targetuser",
             TenantId = "tenant-1"
         };
 
-        _userServiceMock.Setup(x => x.GetUserByIdAsync("target-user-1"))
+        _userServiceMock.Setup(x => x.GetUserByIdAsync(Guid.Parse("87654321-4321-4321-4321-210987654321"), "tenant-1"))
             .ReturnsAsync(targetUser);
 
         _patientAccessServiceMock.Setup(x => x.GrantAccessAsync(
-            "target-user-1", "patient-1", PatientAccessLevel.Read, "admin-1", "Treatment coordination", null))
+            "87654321-4321-4321-4321-210987654321", "patient-1", PatientAccessLevel.Read, "admin-1", "Treatment coordination", null))
             .ReturnsAsync("access-1");
 
         // Act
@@ -71,7 +71,7 @@ public class GrantPatientAccessCommandHandlerTests
         // Arrange
         var command = new GrantPatientAccessCommand
         {
-            TargetUserId = "target-user-1",
+            TargetUserId = "87654321-4321-4321-4321-210987654321",
             PatientId = "patient-1",
             AccessLevel = PatientAccessLevel.Read,
             Reason = "Consultation"
@@ -86,16 +86,16 @@ public class GrantPatientAccessCommandHandlerTests
 
         var targetUser = new User
         {
-            Id = "target-user-1",
+            Id = Guid.Parse("87654321-4321-4321-4321-210987654321"),
             Username = "targetuser",
             TenantId = "tenant-1"
         };
 
-        _userServiceMock.Setup(x => x.GetUserByIdAsync("target-user-1"))
+        _userServiceMock.Setup(x => x.GetUserByIdAsync(Guid.Parse("87654321-4321-4321-4321-210987654321"), "tenant-1"))
             .ReturnsAsync(targetUser);
 
         _patientAccessServiceMock.Setup(x => x.GrantAccessAsync(
-            "target-user-1", "patient-1", PatientAccessLevel.Read, "provider-1", "Consultation", null))
+            "87654321-4321-4321-4321-210987654321", "patient-1", PatientAccessLevel.Read, "provider-1", "Consultation", null))
             .ReturnsAsync("access-1");
 
         // Act
@@ -113,7 +113,7 @@ public class GrantPatientAccessCommandHandlerTests
         // Arrange
         var command = new GrantPatientAccessCommand
         {
-            TargetUserId = "target-user-1",
+            TargetUserId = "87654321-4321-4321-4321-210987654321",
             PatientId = "patient-1",
             AccessLevel = PatientAccessLevel.Read
         };
@@ -165,7 +165,7 @@ public class GrantPatientAccessCommandHandlerTests
         // Arrange
         var command = new GrantPatientAccessCommand
         {
-            TargetUserId = "target-user-1",
+            TargetUserId = "87654321-4321-4321-4321-210987654321",
             PatientId = "patient-1",
             AccessLevel = PatientAccessLevel.Read
         };
@@ -177,7 +177,7 @@ public class GrantPatientAccessCommandHandlerTests
         _patientAccessServiceMock.Setup(x => x.CanGrantAccessAsync("admin-1", "patient-1", UserRole.SystemAdministrator))
             .ReturnsAsync(true);
 
-        _userServiceMock.Setup(x => x.GetUserByIdAsync("target-user-1"))
+        _userServiceMock.Setup(x => x.GetUserByIdAsync(Guid.Parse("87654321-4321-4321-4321-210987654321"), "tenant-1"))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -195,7 +195,7 @@ public class GrantPatientAccessCommandHandlerTests
         // Arrange
         var command = new GrantPatientAccessCommand
         {
-            TargetUserId = "target-user-1",
+            TargetUserId = "87654321-4321-4321-4321-210987654321",
             PatientId = "patient-1",
             AccessLevel = PatientAccessLevel.Read
         };
@@ -209,12 +209,12 @@ public class GrantPatientAccessCommandHandlerTests
 
         var targetUser = new User
         {
-            Id = "target-user-1",
+            Id = Guid.Parse("87654321-4321-4321-4321-210987654321"),
             Username = "targetuser",
             TenantId = "tenant-2" // Different tenant
         };
 
-        _userServiceMock.Setup(x => x.GetUserByIdAsync("target-user-1"))
+        _userServiceMock.Setup(x => x.GetUserByIdAsync(Guid.Parse("87654321-4321-4321-4321-210987654321"), "tenant-1"))
             .ReturnsAsync(targetUser);
 
         // Act
@@ -232,7 +232,7 @@ public class GrantPatientAccessCommandHandlerTests
         // Arrange
         var command = new GrantPatientAccessCommand
         {
-            TargetUserId = "target-user-1",
+            TargetUserId = "87654321-4321-4321-4321-210987654321",
             PatientId = "patient-1",
             AccessLevel = PatientAccessLevel.Emergency,
             Reason = "Emergency situation",
@@ -248,16 +248,16 @@ public class GrantPatientAccessCommandHandlerTests
 
         var targetUser = new User
         {
-            Id = "target-user-1",
+            Id = Guid.Parse("87654321-4321-4321-4321-210987654321"),
             Username = "targetuser",
             TenantId = "tenant-1"
         };
 
-        _userServiceMock.Setup(x => x.GetUserByIdAsync("target-user-1"))
+        _userServiceMock.Setup(x => x.GetUserByIdAsync(Guid.Parse("87654321-4321-4321-4321-210987654321"), "tenant-1"))
             .ReturnsAsync(targetUser);
 
         _patientAccessServiceMock.Setup(x => x.GrantAccessAsync(
-            "target-user-1", "patient-1", PatientAccessLevel.Emergency, "admin-1", "Emergency situation", command.ExpiresAt))
+            "87654321-4321-4321-4321-210987654321", "patient-1", PatientAccessLevel.Emergency, "admin-1", "Emergency situation", command.ExpiresAt))
             .ReturnsAsync("access-1");
 
         // Act

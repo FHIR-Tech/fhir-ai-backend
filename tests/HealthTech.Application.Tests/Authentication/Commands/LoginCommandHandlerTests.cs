@@ -35,28 +35,29 @@ public class LoginCommandHandlerTests
 
         var user = new User
         {
-            Id = "user-1",
+            Id = Guid.Parse("12345678-1234-1234-1234-123456789012"),
             Username = "testuser",
             Email = "test@example.com",
-            FullName = "Test User",
+            FirstName = "Test",
+            LastName = "User",
             Role = UserRole.HealthcareProvider,
             Status = UserStatus.Active,
             TenantId = "tenant-1"
         };
 
-        var scopes = new List<UserScope>
+        var scopes = new List<string>
         {
-            new() { Scope = "patient/*.read" },
-            new() { Scope = "user/*.read" }
+            "patient/*.read",
+            "user/*.read"
         };
 
-        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password))
+        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password, "default"))
             .ReturnsAsync(user);
         _userServiceMock.Setup(x => x.GetUserScopesAsync(user.Id))
             .ReturnsAsync(scopes);
-        _jwtServiceMock.Setup(x => x.GenerateAccessToken(user, scopes))
+        _jwtServiceMock.Setup(x => x.GenerateToken(user.Id.ToString(), user.Username, user.Email, user.Role.ToString(), user.TenantId, scopes, user.PractitionerId))
             .Returns("access-token");
-        _jwtServiceMock.Setup(x => x.GenerateRefreshToken())
+        _jwtServiceMock.Setup(x => x.GenerateRefreshToken(user.Id.ToString()))
             .Returns("refresh-token");
         _userServiceMock.Setup(x => x.CreateUserSessionAsync(user.Id, "refresh-token"))
             .Returns(Task.CompletedTask);
@@ -84,7 +85,7 @@ public class LoginCommandHandlerTests
             Password = "wrongpassword"
         };
 
-        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password))
+        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password, "default"))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -108,12 +109,12 @@ public class LoginCommandHandlerTests
 
         var user = new User
         {
-            Id = "user-1",
+            Id = Guid.Parse("12345678-1234-1234-1234-123456789012"),
             Username = "testuser",
             Status = UserStatus.Locked
         };
 
-        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password))
+        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password, "default"))
             .ReturnsAsync(user);
 
         // Act
@@ -137,12 +138,12 @@ public class LoginCommandHandlerTests
 
         var user = new User
         {
-            Id = "user-1",
+            Id = Guid.Parse("12345678-1234-1234-1234-123456789012"),
             Username = "testuser",
             Status = UserStatus.Inactive
         };
 
-        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password))
+        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password, "default"))
             .ReturnsAsync(user);
 
         // Act
@@ -164,7 +165,7 @@ public class LoginCommandHandlerTests
             Password = "password123"
         };
 
-        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password))
+        _userServiceMock.Setup(x => x.ValidateCredentialsAsync(command.Username, command.Password, "default"))
             .ThrowsAsync(new Exception("Database error"));
 
         // Act

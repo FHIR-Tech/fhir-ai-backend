@@ -50,6 +50,7 @@ docs/
 - [Boolean Properties Usage Checklist Report](cursor-agent/reports/boolean_properties_usage_checklist_2024-12-19_report.md)
 - [AuthenticationEndpoints Compilation Fixes Report](cursor-agent/reports/authentication_endpoints_fixes_2024-12-19_report.md)
 - [GetPolicyForResource Method Analysis Report](cursor-agent/reports/get_policy_for_resource_analysis_2024-12-19_report.md)
+- [Application Tests Fixes Report](cursor-agent/reports/application_tests_fixes_2024-12-19_report.md)
 - [Architecture Decisions](cursor-agent/decisions/)
 - [Task Tracking](cursor-agent/tasks/)
 
