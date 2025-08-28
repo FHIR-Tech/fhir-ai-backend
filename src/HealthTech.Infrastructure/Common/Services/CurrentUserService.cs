@@ -108,6 +108,70 @@ public class CurrentUserService : ICurrentUserService
     }
 
     /// <summary>
+    /// Current user role
+    /// </summary>
+    public string? UserRole => _httpContextAccessor.HttpContext?.User?.FindFirst("user_role")?.Value
+        ?? _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
+
+    /// <summary>
+    /// Current user practitioner ID
+    /// </summary>
+    public string? PractitionerId => _httpContextAccessor.HttpContext?.User?.FindFirst("practitioner_id")?.Value;
+
+    /// <summary>
+    /// Check if current user is system administrator
+    /// </summary>
+    /// <returns>True if system administrator, false otherwise</returns>
+    public bool IsSystemAdministrator()
+    {
+        var role = UserRole;
+        return !string.IsNullOrEmpty(role) && role.Equals("SystemAdministrator", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Check if current user is healthcare provider
+    /// </summary>
+    /// <returns>True if healthcare provider, false otherwise</returns>
+    public bool IsHealthcareProvider()
+    {
+        var role = UserRole;
+        return !string.IsNullOrEmpty(role) && role.Equals("HealthcareProvider", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Check if current user is patient
+    /// </summary>
+    /// <returns>True if patient, false otherwise</returns>
+    public bool IsPatient()
+    {
+        var role = UserRole;
+        return !string.IsNullOrEmpty(role) && role.Equals("Patient", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Check if current user can access specific patient
+    /// </summary>
+    /// <param name="patientId">Patient ID to check</param>
+    /// <returns>True if can access, false otherwise</returns>
+    public async Task<bool> CanAccessPatientAsync(string patientId)
+    {
+        // System administrators can access all patients
+        if (IsSystemAdministrator())
+            return true;
+
+        // Check if user has specific patient access scope
+        if (HasScope($"patient/{patientId}.*"))
+            return true;
+
+        // Check if user has general patient access scope
+        if (HasScope("patient/*"))
+            return true;
+
+        // For now, return false - in a real implementation, this would check the database
+        return false;
+    }
+
+    /// <summary>
     /// Check if a user scope matches a required scope (handles wildcards)
     /// </summary>
     /// <param name="userScope">User's scope</param>

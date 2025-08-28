@@ -35,6 +35,36 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
     /// <summary>
+    /// Users DbSet
+    /// </summary>
+    public DbSet<User> Users => Set<User>();
+
+    /// <summary>
+    /// Patients DbSet
+    /// </summary>
+    public DbSet<Patient> Patients => Set<Patient>();
+
+    /// <summary>
+    /// Patient access DbSet
+    /// </summary>
+    public DbSet<PatientAccess> PatientAccesses => Set<PatientAccess>();
+
+    /// <summary>
+    /// Patient consents DbSet
+    /// </summary>
+    public DbSet<PatientConsent> PatientConsents => Set<PatientConsent>();
+
+    /// <summary>
+    /// User scopes DbSet
+    /// </summary>
+    public DbSet<UserScope> UserScopes => Set<UserScope>();
+
+    /// <summary>
+    /// User sessions DbSet
+    /// </summary>
+    public DbSet<UserSession> UserSessions => Set<UserSession>();
+
+    /// <summary>
     /// Configure model
     /// </summary>
     /// <param name="modelBuilder">Model builder</param>

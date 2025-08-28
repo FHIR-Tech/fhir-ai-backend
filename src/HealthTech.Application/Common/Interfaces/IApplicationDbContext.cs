@@ -19,6 +19,36 @@ public interface IApplicationDbContext
     DbSet<AuditEvent> AuditEvents { get; }
 
     /// <summary>
+    /// Users DbSet
+    /// </summary>
+    DbSet<User> Users { get; }
+
+    /// <summary>
+    /// Patients DbSet
+    /// </summary>
+    DbSet<Patient> Patients { get; }
+
+    /// <summary>
+    /// Patient access DbSet
+    /// </summary>
+    DbSet<PatientAccess> PatientAccesses { get; }
+
+    /// <summary>
+    /// Patient consents DbSet
+    /// </summary>
+    DbSet<PatientConsent> PatientConsents { get; }
+
+    /// <summary>
+    /// User scopes DbSet
+    /// </summary>
+    DbSet<UserScope> UserScopes { get; }
+
+    /// <summary>
+    /// User sessions DbSet
+    /// </summary>
+    DbSet<UserSession> UserSessions { get; }
+
+    /// <summary>
     /// Save changes to database
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>

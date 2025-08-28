@@ -42,6 +42,9 @@ public static class DependencyInjection
         services.AddScoped<IDateTime, DateTimeService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IPatientAccessService, PatientAccessService>();
         services.AddHttpContextAccessor();
 
         // Add repositories

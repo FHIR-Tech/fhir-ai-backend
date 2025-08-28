@@ -43,4 +43,39 @@ public interface ICurrentUserService
     /// <param name="scopes">Scopes to check</param>
     /// <returns>True if user has any scope, false otherwise</returns>
     bool HasAnyScope(params string[] scopes);
+
+    /// <summary>
+    /// Current user role
+    /// </summary>
+    string? UserRole { get; }
+
+    /// <summary>
+    /// Current user practitioner ID
+    /// </summary>
+    string? PractitionerId { get; }
+
+    /// <summary>
+    /// Check if current user is system administrator
+    /// </summary>
+    /// <returns>True if system administrator, false otherwise</returns>
+    bool IsSystemAdministrator();
+
+    /// <summary>
+    /// Check if current user is healthcare provider
+    /// </summary>
+    /// <returns>True if healthcare provider, false otherwise</returns>
+    bool IsHealthcareProvider();
+
+    /// <summary>
+    /// Check if current user is patient
+    /// </summary>
+    /// <returns>True if patient, false otherwise</returns>
+    bool IsPatient();
+
+    /// <summary>
+    /// Check if current user can access specific patient
+    /// </summary>
+    /// <param name="patientId">Patient ID to check</param>
+    /// <returns>True if can access, false otherwise</returns>
+    Task<bool> CanAccessPatientAsync(string patientId);
 }

@@ -18,8 +18,11 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Add authentication for development/testing
-builder.Services.AddAuthentication("Development")
+
+
+// Add authentication for development/testing and SMART on FHIR
+builder.Services.AddAuthentication("SMART")
+    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, HealthTech.API.Authentication.SmartOnFhirAuthenticationHandler>("SMART", options => { })
     .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, HealthTech.API.Authentication.DevelopmentAuthenticationHandler>("Development", options => { });
 
 builder.Services.AddAuthorization(options =>
@@ -27,6 +30,9 @@ builder.Services.AddAuthorization(options =>
     options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
+    
+    // Add FHIR authorization policies
+    options.AddFhirAuthorizationPolicies();
 });
 
 builder.Services.AddSwaggerGen(c =>
