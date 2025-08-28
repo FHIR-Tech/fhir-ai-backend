@@ -1,4 +1,5 @@
 using HealthTech.Application.Common.Interfaces;
+using HealthTech.Domain.Enums;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -140,7 +141,7 @@ public class SmartOnFhirAuthenticationHandler : AuthenticationHandler<Authentica
         }
 
         // Check if user is active
-        if (user.Status != Domain.Entities.UserStatus.Active)
+        if (user.Status != UserStatus.Active)
         {
             throw new UnauthorizedAccessException("User account is not active");
         }
@@ -196,18 +197,18 @@ public class SmartOnFhirAuthenticationHandler : AuthenticationHandler<Authentica
     /// </summary>
     /// <param name="role">User role</param>
     /// <returns>Default scopes</returns>
-    private static IEnumerable<string> GetDefaultScopesForRole(Domain.Entities.UserRole role)
+    private static IEnumerable<string> GetDefaultScopesForRole(UserRole role)
     {
         return role switch
         {
-            Domain.Entities.UserRole.SystemAdministrator => new[] { "system/*", "user/*", "patient/*" },
-            Domain.Entities.UserRole.HealthcareProvider => new[] { "user/*", "patient/*" },
-            Domain.Entities.UserRole.Nurse => new[] { "user/*", "patient/*" },
-            Domain.Entities.UserRole.Patient => new[] { "patient/*" },
-            Domain.Entities.UserRole.FamilyMember => new[] { "patient/*" },
-            Domain.Entities.UserRole.Researcher => new[] { "user/*" },
-            Domain.Entities.UserRole.ITSupport => new[] { "system/*" },
-            Domain.Entities.UserRole.ReadOnlyUser => new[] { "user/*" },
+            UserRole.SystemAdministrator => new[] { "system/*", "user/*", "patient/*" },
+            UserRole.HealthcareProvider => new[] { "user/*", "patient/*" },
+            UserRole.Nurse => new[] { "user/*", "patient/*" },
+            UserRole.Patient => new[] { "patient/*" },
+            UserRole.FamilyMember => new[] { "patient/*" },
+            UserRole.Researcher => new[] { "user/*" },
+            UserRole.ITSupport => new[] { "system/*" },
+            UserRole.ReadOnlyUser => new[] { "user/*" },
             _ => new[] { "user/*" }
         };
     }

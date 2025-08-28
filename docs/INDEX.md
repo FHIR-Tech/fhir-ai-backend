@@ -48,6 +48,8 @@ docs/
 - [PatientAccess IsActive Property Fix Report](cursor-agent/reports/patient_access_isactive_fix_2024-12-19_report.md)
 - [UserService Computed Properties Fix Report](cursor-agent/reports/user_service_computed_properties_fix_2024-12-19_report.md)
 - [Boolean Properties Usage Checklist Report](cursor-agent/reports/boolean_properties_usage_checklist_2024-12-19_report.md)
+- [AuthenticationEndpoints Compilation Fixes Report](cursor-agent/reports/authentication_endpoints_fixes_2024-12-19_report.md)
+- [GetPolicyForResource Method Analysis Report](cursor-agent/reports/get_policy_for_resource_analysis_2024-12-19_report.md)
 - [Architecture Decisions](cursor-agent/decisions/)
 - [Task Tracking](cursor-agent/tasks/)
 

@@ -112,7 +112,6 @@ public class FhirResourceAuthorizationAttribute : AuthorizeAttribute
             "careteam" => FhirAuthorizationPolicies.RequirePatientAccess,
             "episodeofcare" => FhirAuthorizationPolicies.RequirePatientAccess,
             "flag" => FhirAuthorizationPolicies.RequirePatientAccess,
-            "library" => FhirAuthorizationPolicies.RequireSystemAccess,
             "medicationknowledge" => FhirAuthorizationPolicies.RequireUserAccess,
             "medicinalproduct" => FhirAuthorizationPolicies.RequireUserAccess,
             "medicinalproductauthorization" => FhirAuthorizationPolicies.RequireUserAccess,

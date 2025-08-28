@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using HealthTech.Application.Authentication.Commands;
 using HealthTech.Application.PatientAccess.Queries;
 using HealthTech.Application.PatientAccess.Commands;
+using HealthTech.Domain.Enums;
 
 namespace HealthTech.API.Endpoints;
 
@@ -99,17 +100,6 @@ public static class AuthenticationEndpoints
     {
         try
         {
-            // Get client IP address and user agent
-            var httpContext = httpContextAccessor.HttpContext;
-            if (httpContext != null)
-            {
-                command = command with
-                {
-                    IpAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
-                    UserAgent = httpContext.Request.Headers.UserAgent.ToString()
-                };
-            }
-
             var response = await mediator.Send(command);
 
             if (!response.Success)
@@ -138,26 +128,13 @@ public static class AuthenticationEndpoints
     /// </summary>
     /// <param name="command">Refresh token command</param>
     /// <param name="mediator">Mediator</param>
-    /// <param name="httpContext">HTTP context</param>
     /// <returns>Refresh token response</returns>
     private static async Task<IResult> RefreshToken(
         [FromBody] RefreshTokenCommand command,
-        [FromServices] IMediator mediator,
-        [FromServices] IHttpContextAccessor httpContextAccessor)
+        [FromServices] IMediator mediator)
     {
         try
         {
-            // Get client IP address and user agent
-            var httpContext = httpContextAccessor.HttpContext;
-            if (httpContext != null)
-            {
-                command = command with
-                {
-                    IpAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
-                    UserAgent = httpContext.Request.Headers.UserAgent.ToString()
-                };
-            }
-
             var response = await mediator.Send(command);
 
             if (!response.Success)
@@ -306,21 +283,21 @@ public static class AuthenticationEndpoints
     /// Get patient access endpoint
     /// </summary>
     /// <param name="patientId">Patient ID</param>
+    /// <param name="mediator">Mediator</param>
     /// <param name="userId">User ID filter</param>
     /// <param name="accessLevel">Access level filter</param>
     /// <param name="isActive">Active status filter</param>
     /// <param name="page">Page number</param>
     /// <param name="pageSize">Page size</param>
-    /// <param name="mediator">Mediator</param>
     /// <returns>Get patient access response</returns>
     private static async Task<IResult> GetPatientAccess(
-        Guid patientId,
-        [FromQuery] Guid? userId,
-        [FromQuery] string? accessLevel,
-        [FromQuery] bool? isActive,
+        string patientId,
+        [FromServices] IMediator mediator,
+        [FromQuery] string? userId = null,
+        [FromQuery] PatientAccessLevel? accessLevel = null,
+        [FromQuery] bool? isActive = null,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20,
-        [FromServices] IMediator mediator)
+        [FromQuery] int pageSize = 20)
     {
         try
         {

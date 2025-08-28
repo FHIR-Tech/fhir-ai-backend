@@ -3,6 +3,7 @@ using HealthTech.Infrastructure;
 using HealthTech.API.Middleware;
 using HealthTech.API.Endpoints;
 using HealthTech.API.Swagger;
+using HealthTech.API.Authentication;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
