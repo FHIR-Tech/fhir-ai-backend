@@ -76,7 +76,7 @@ public class CreateFhirResourceCommandHandler : IRequestHandler<CreateFhirResour
         // Extract common search parameters from FHIR resource
         var parameters = new Dictionary<string, object>();
 
-        if (resource is Patient patient)
+        if (resource is Hl7.Fhir.Model.Patient patient)
         {
             if (patient.Identifier?.Any() == true)
                 parameters["identifier"] = patient.Identifier.First().Value;
