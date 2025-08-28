@@ -9,7 +9,7 @@
 ✅ **Pagination and history features functional**
 
 **Test Date:** August 27, 2025  
-**Test Environment:** Development (localhost:5001)  
+**Test Environment:** Development (http://localhost:5000, https://localhost:5001)  
 **API Version:** v1  
 
 ## Endpoint Status Overview
