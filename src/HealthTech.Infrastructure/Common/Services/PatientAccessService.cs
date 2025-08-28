@@ -59,7 +59,7 @@ public class PatientAccessService : IPatientAccessService
                 .FirstOrDefaultAsync(pa => 
                     pa.UserId.ToString() == userId && 
                     pa.Patient.FhirPatientId == patientId &&
-                    pa.AccessLevel >= PatientAccessLevel.ReadOnly &&
+                    pa.AccessLevel >= PatientAccessLevel.Read &&
                     pa.IsActive);
 
             return hasAccess != null;
@@ -261,7 +261,7 @@ public class PatientAccessService : IPatientAccessService
         var patientAccess = await GrantPatientAccessAsync(
             patientId,
             userId,
-            PatientAccessLevel.EmergencyAccess,
+            PatientAccessLevel.Emergency,
             grantedBy,
             "Emergency access",
             expiresAt,

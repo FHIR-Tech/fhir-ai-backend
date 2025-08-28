@@ -1,5 +1,6 @@
 using HealthTech.Application.Common.Interfaces;
 using HealthTech.Domain.Entities;
+using HealthTech.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
