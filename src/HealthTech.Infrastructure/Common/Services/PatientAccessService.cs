@@ -140,11 +140,13 @@ public class PatientAccessService : IPatientAccessService
             PatientId = patient.Id,
             UserId = Guid.Parse(userId),
             AccessLevel = accessLevel,
+            GrantedAt = DateTime.UtcNow,
             GrantedBy = grantedBy,
             Reason = reason,
             ExpiresAt = expiresAt,
             IsEmergencyAccess = isEmergencyAccess,
             EmergencyJustification = emergencyJustification,
+            IsEnabled = true,
             TenantId = "default" // TODO: Get from context
         };
 
@@ -178,8 +180,8 @@ public class PatientAccessService : IPatientAccessService
         if (patientAccess == null)
             return false;
 
-        // Soft delete the access
-        patientAccess.IsActive = false;
+        // Disable the access
+        patientAccess.IsEnabled = false;
         patientAccess.ModifiedAt = DateTime.UtcNow;
         patientAccess.ModifiedBy = revokedBy;
 

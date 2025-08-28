@@ -60,9 +60,14 @@ public class PatientAccess : BaseEntity
     public string? EmergencyJustification { get; set; }
 
     /// <summary>
-    /// Whether access is currently active
+    /// Whether access is manually enabled/disabled
     /// </summary>
-    public bool IsActive => ExpiresAt == null || ExpiresAt > DateTime.UtcNow;
+    public bool IsEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Whether access is currently active (computed based on IsEnabled and ExpiresAt)
+    /// </summary>
+    public bool IsActive => IsEnabled && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow);
 
     /// <summary>
     /// Navigation property for patient
