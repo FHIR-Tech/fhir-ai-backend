@@ -1,5 +1,6 @@
 using HealthTech.Application.Common.Interfaces;
 using HealthTech.Domain.Entities;
+using HealthTech.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -58,7 +59,7 @@ public class PatientAccessService : IPatientAccessService
                 .FirstOrDefaultAsync(pa => 
                     pa.UserId.ToString() == userId && 
                     pa.Patient.FhirPatientId == patientId &&
-                    pa.AccessLevel >= AccessLevel.ReadOnly &&
+                    pa.AccessLevel >= PatientAccessLevel.ReadOnly &&
                     pa.IsActive);
 
             return hasAccess != null;
@@ -97,7 +98,7 @@ public class PatientAccessService : IPatientAccessService
     public async Task<PatientAccess> GrantPatientAccessAsync(
         string patientId,
         string userId,
-        AccessLevel accessLevel,
+        PatientAccessLevel accessLevel,
         string grantedBy,
         string? reason = null,
         DateTime? expiresAt = null,
@@ -260,7 +261,7 @@ public class PatientAccessService : IPatientAccessService
         var patientAccess = await GrantPatientAccessAsync(
             patientId,
             userId,
-            AccessLevel.EmergencyAccess,
+            PatientAccessLevel.EmergencyAccess,
             grantedBy,
             "Emergency access",
             expiresAt,
@@ -277,7 +278,7 @@ public class PatientAccessService : IPatientAccessService
     /// <param name="userId">User ID</param>
     /// <param name="patientId">Patient ID</param>
     /// <returns>Access level or null if no access</returns>
-    public async Task<AccessLevel?> GetAccessLevelAsync(string userId, string patientId)
+    public async Task<PatientAccessLevel?> GetAccessLevelAsync(string userId, string patientId)
     {
         var patient = await _context.Patients.FirstOrDefaultAsync(p => p.FhirPatientId == patientId);
         if (patient == null)

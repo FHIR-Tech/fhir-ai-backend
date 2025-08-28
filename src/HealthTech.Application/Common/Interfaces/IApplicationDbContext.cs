@@ -31,7 +31,7 @@ public interface IApplicationDbContext
     /// <summary>
     /// Patient access DbSet
     /// </summary>
-    DbSet<PatientAccess> PatientAccesses { get; }
+    DbSet<Domain.Entities.PatientAccess> PatientAccesses { get; }
 
     /// <summary>
     /// Patient consents DbSet

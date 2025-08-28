@@ -1,4 +1,5 @@
 using HealthTech.Domain.Entities;
+using HealthTech.Domain.Enums;
 
 namespace HealthTech.Application.Common.Interfaces;
 
@@ -35,10 +36,10 @@ public interface IPatientAccessService
     /// <param name="isEmergencyAccess">Whether this is emergency access</param>
     /// <param name="emergencyJustification">Emergency justification (required if emergency access)</param>
     /// <returns>Created patient access</returns>
-    Task<PatientAccess> GrantPatientAccessAsync(
+    Task<Domain.Entities.PatientAccess> GrantPatientAccessAsync(
         string patientId,
         string userId,
-        AccessLevel accessLevel,
+        PatientAccessLevel accessLevel,
         string grantedBy,
         string? reason = null,
         DateTime? expiresAt = null,
@@ -61,7 +62,7 @@ public interface IPatientAccessService
     /// <param name="userId">User ID</param>
     /// <param name="tenantId">Tenant ID</param>
     /// <returns>Collection of patient access records</returns>
-    Task<IEnumerable<PatientAccess>> GetPatientAccessesForUserAsync(string userId, string tenantId);
+    Task<IEnumerable<Domain.Entities.PatientAccess>> GetPatientAccessesForUserAsync(string userId, string tenantId);
 
     /// <summary>
     /// Get patient access records for patient
@@ -69,7 +70,7 @@ public interface IPatientAccessService
     /// <param name="patientId">Patient ID</param>
     /// <param name="tenantId">Tenant ID</param>
     /// <returns>Collection of patient access records</returns>
-    Task<IEnumerable<PatientAccess>> GetPatientAccessesForPatientAsync(string patientId, string tenantId);
+    Task<IEnumerable<Domain.Entities.PatientAccess>> GetPatientAccessesForPatientAsync(string patientId, string tenantId);
 
     /// <summary>
     /// Check if user has emergency access to patient
@@ -88,7 +89,7 @@ public interface IPatientAccessService
     /// <param name="justification">Emergency justification</param>
     /// <param name="expiresAt">When emergency access expires</param>
     /// <returns>Created emergency access</returns>
-    Task<PatientAccess> CreateEmergencyAccessAsync(
+    Task<Domain.Entities.PatientAccess> CreateEmergencyAccessAsync(
         string patientId,
         string userId,
         string grantedBy,
@@ -101,7 +102,7 @@ public interface IPatientAccessService
     /// <param name="userId">User ID</param>
     /// <param name="patientId">Patient ID</param>
     /// <returns>Access level or null if no access</returns>
-    Task<AccessLevel?> GetAccessLevelAsync(string userId, string patientId);
+    Task<PatientAccessLevel?> GetAccessLevelAsync(string userId, string patientId);
 
     /// <summary>
     /// Check if access is expired
