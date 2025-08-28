@@ -11,13 +11,17 @@ docs/
 ├── api/                         # Tài liệu API
 │   ├── README.md               # Hướng dẫn API
 │   ├── specifications/         # Đặc tả kỹ thuật
+│   │   └── FHIR_ENDPOINTS_IMPLEMENTATION.md
 │   ├── guides/                 # Hướng dẫn sử dụng
-│   ├── reports/                # Báo cáo API
-│   └── examples/               # Ví dụ sử dụng
+│   │   ├── AUTHENTICATION_GUIDE.md
+│   │   └── FHIR_IMPORT_GUIDE.md
+│   └── reports/                # Báo cáo API
+│       └── ENDPOINT_VERIFICATION_REPORT.md
 ├── architecture/               # Tài liệu kiến trúc
 ├── cursor-agent/               # Báo cáo Cursor Agent
 │   ├── README.md              # Hướng dẫn Cursor Agent
 │   ├── reports/               # Báo cáo thực hiện
+│   │   └── template_implementation_report.md
 │   ├── logs/                  # Logs và transcripts
 │   ├── decisions/             # Quyết định kiến trúc
 │   ├── tasks/                 # Theo dõi task
@@ -25,6 +29,7 @@ docs/
 │       ├── README.md          # Workflows overview
 │       └── FIXES.md           # Workflow fixes and troubleshooting
 └── deployment/                 # Tài liệu triển khai
+    └── SECURITY_CHECKLIST.md
 ```
 
 ## 🔗 Quick Links
@@ -33,37 +38,17 @@ docs/
 - [API Overview](api/README.md)
 - [FHIR Endpoints Specification](api/specifications/FHIR_ENDPOINTS_IMPLEMENTATION.md)
 - [FHIR Import Guide](api/guides/FHIR_IMPORT_GUIDE.md)
+- [Authentication Guide](api/guides/AUTHENTICATION_GUIDE.md)
 - [Endpoint Verification Report](api/reports/ENDPOINT_VERIFICATION_REPORT.md)
-- [FHIR Endpoint Refactoring Report](api/reports/fhir_endpoint_refactoring_2024-12-19_report.md)
 
 ### Cursor Agent Reports
 - [Cursor Agent Overview](cursor-agent/README.md)
-- [Reports Directory](cursor-agent/reports/)
-- [Authentication System Implementation Report](cursor-agent/reports/authentication_implementation_2024-12-19_report.md)
-- [Authentication Architecture Refactoring Report](cursor-agent/reports/authentication_architecture_refactoring_2024-12-19_report.md)
-- [Missing Enums Creation Report](cursor-agent/reports/missing_enums_creation_2024-12-19_report.md)
-- [Duplicate Enum Resolution Report](cursor-agent/reports/duplicate_enum_resolution_2024-12-19_report.md)
-- [Service Implementation Verification Report](cursor-agent/reports/service_implementation_verification_2024-12-19_report.md)
-- [Authentication Commands Missing Functions Fix Report](cursor-agent/reports/authentication_commands_fixes_2024-12-19_report.md)
-- [PatientAccess Commands Missing Functions Fix Report](cursor-agent/reports/patient_access_commands_fixes_2024-12-19_report.md)
-- [Authentication Commands Parameter Fixes Report](cursor-agent/reports/authentication_commands_parameter_fixes_2024-12-19_report.md)
-- [TokenValidationResult Naming Conflict Analysis Report](cursor-agent/reports/token_validation_result_naming_conflict_2024-12-19_report.md)
-- [PatientAccess IsActive Property Fix Report](cursor-agent/reports/patient_access_isactive_fix_2024-12-19_report.md)
-- [UserService Computed Properties Fix Report](cursor-agent/reports/user_service_computed_properties_fix_2024-12-19_report.md)
-- [Boolean Properties Usage Checklist Report](cursor-agent/reports/boolean_properties_usage_checklist_2024-12-19_report.md)
-- [AuthenticationEndpoints Compilation Fixes Report](cursor-agent/reports/authentication_endpoints_fixes_2024-12-19_report.md)
-- [GetPolicyForResource Method Analysis Report](cursor-agent/reports/get_policy_for_resource_analysis_2024-12-19_report.md)
-- [Application Tests Fixes Report](cursor-agent/reports/application_tests_fixes_2024-12-19_report.md)
-- [API Endpoint Testing Report](cursor-agent/reports/api_endpoint_testing_2024-12-19_report.md)
-- [Swagger URL Update Report](cursor-agent/reports/swagger_url_update_2024-12-28_report.md)
-- [Architecture Decisions](cursor-agent/decisions/)
-- [Task Tracking](cursor-agent/tasks/)
+- [Implementation Report Template](cursor-agent/reports/template_implementation_report.md)
 - [GitHub Actions Workflows](cursor-agent/workflows/README.md)
 - [Workflow Fixes](cursor-agent/workflows/FIXES.md)
-- [Swagger Fix Implementation Report](cursor-agent/reports/swagger_fix_2024-12-28_report.md)
 
-### Architecture
-- [Architecture Documentation](architecture/)
+### Deployment
+- [Security Checklist](deployment/SECURITY_CHECKLIST.md)
 
 ## 📋 Cập nhật Index
 
@@ -76,14 +61,10 @@ Khi thêm tài liệu mới:
 ## 📅 Lịch sử cập nhật
 
 - **2024-12-19**: Tạo cấu trúc thư mục mới cho API và Cursor Agent
-- **2024-12-19**: Di chuyển các file hiện có vào thư mục phù hợp
-- **2024-12-19**: Tạo templates và quy ước đặt tên
-- **2024-12-19**: Di chuyển README_ENDPOINT_REFACTOR.md vào docs/api/reports/ với tên fhir_endpoint_refactoring_2024-12-19_report.md
-- **2024-12-28**: Tổ chức lại GitHub Actions workflows documentation, di chuyển vào docs/cursor-agent/workflows/
-- **2024-12-12-28**: Xóa file test-simple.yml và dọn dẹp thư mục .github/workflows/
-- **2024-12-28**: Cập nhật documentation structure để tuân thủ quy tắc dự án
-- **2024-12-28**: Fix Swagger/OpenAPI documentation accessibility issues
+- **2024-12-28**: Tổ chức lại GitHub Actions workflows documentation
+- **2025-08-28**: Dọn dẹp documentation - xóa các reports cũ và tài liệu dư thừa
+- **2025-08-28**: Đơn giản hóa cấu trúc, chỉ giữ lại tài liệu cần thiết
 
 ---
 
-*Cập nhật lần cuối: 2024-12-28*
+*Cập nhật lần cuối: 2025-08-28*
