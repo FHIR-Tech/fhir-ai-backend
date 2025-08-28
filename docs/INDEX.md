@@ -43,6 +43,7 @@ docs/
 - [Service Implementation Verification Report](cursor-agent/reports/service_implementation_verification_2024-12-19_report.md)
 - [Authentication Commands Missing Functions Fix Report](cursor-agent/reports/authentication_commands_fixes_2024-12-19_report.md)
 - [PatientAccess Commands Missing Functions Fix Report](cursor-agent/reports/patient_access_commands_fixes_2024-12-19_report.md)
+- [Authentication Commands Parameter Fixes Report](cursor-agent/reports/authentication_commands_parameter_fixes_2024-12-19_report.md)
 - [Architecture Decisions](cursor-agent/decisions/)
 - [Task Tracking](cursor-agent/tasks/)
 

@@ -70,7 +70,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         try
         {
             // Validate user credentials
-            var user = await _userService.ValidateCredentialsAsync(request.Username, request.Password);
+            var user = await _userService.ValidateCredentialsAsync(request.Username, request.Password, request.TenantId ?? "default");
             if (user == null)
             {
                 return new LoginResponse
@@ -104,8 +104,16 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             var scopes = await _userService.GetUserScopesAsync(user.Id);
 
             // Generate JWT tokens
-            var accessToken = _jwtService.GenerateAccessToken(user, scopes);
-            var refreshToken = _jwtService.GenerateRefreshToken();
+            var accessToken = _jwtService.GenerateToken(
+                user.Id.ToString(),
+                user.Username,
+                user.Email,
+                user.Role.ToString(),
+                user.TenantId,
+                scopes,
+                user.PractitionerId
+            );
+            var refreshToken = _jwtService.GenerateRefreshToken(user.Id.ToString());
 
             // Create user session
             await _userService.CreateUserSessionAsync(user.Id, refreshToken);
@@ -121,7 +129,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 RefreshToken = refreshToken,
                 User = new UserInfo
                 {
-                    Id = user.Id,
+                    Id = user.Id.ToString(),
                     Username = user.Username,
                     Email = user.Email,
                     FullName = user.DisplayName,

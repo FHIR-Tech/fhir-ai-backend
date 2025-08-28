@@ -56,7 +56,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             }
 
             // Get user and scopes
-            var user = await _userService.GetUserByIdAsync(session.UserId);
+            var user = await _userService.GetUserByIdAsync(session.UserId, session.TenantId ?? "default");
             if (user == null)
             {
                 return new RefreshTokenResponse
@@ -69,8 +69,16 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             var scopes = await _userService.GetUserScopesAsync(user.Id);
 
             // Generate new tokens
-            var newAccessToken = _jwtService.GenerateAccessToken(user, scopes);
-            var newRefreshToken = _jwtService.GenerateRefreshToken();
+            var newAccessToken = _jwtService.GenerateToken(
+                user.Id.ToString(),
+                user.Username,
+                user.Email,
+                user.Role.ToString(),
+                session.TenantId ?? "default",
+                scopes,
+                user.PractitionerId
+            );
+            var newRefreshToken = _jwtService.GenerateRefreshToken(user.Id.ToString());
 
             // Update session with new refresh token
             await _userService.UpdateUserSessionAsync(session.Id, newRefreshToken);
