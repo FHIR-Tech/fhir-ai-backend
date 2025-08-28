@@ -111,7 +111,7 @@ public class JwtService : IJwtService
     /// </summary>
     /// <param name="token">JWT token</param>
     /// <returns>Token validation result</returns>
-    public async Task<TokenValidationResult> ValidateTokenAsync(string token)
+    public async Task<Application.Common.Interfaces.TokenValidationResult> ValidateTokenAsync(string token)
     {
         try
         {
@@ -133,7 +133,7 @@ public class JwtService : IJwtService
             var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
             var jwtToken = (JwtSecurityToken)validatedToken;
 
-            var result = new TokenValidationResult
+            var result = new Application.Common.Interfaces.TokenValidationResult
             {
                 IsValid = true,
                 UserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value,
@@ -152,7 +152,7 @@ public class JwtService : IJwtService
         catch (SecurityTokenExpiredException ex)
         {
             _logger.LogWarning("Token expired: {Message}", ex.Message);
-            return new TokenValidationResult
+            return new Application.Common.Interfaces.TokenValidationResult
             {
                 IsValid = false,
                 ErrorMessage = "Token has expired"
@@ -161,7 +161,7 @@ public class JwtService : IJwtService
         catch (SecurityTokenInvalidSignatureException ex)
         {
             _logger.LogWarning("Invalid token signature: {Message}", ex.Message);
-            return new TokenValidationResult
+            return new Application.Common.Interfaces.TokenValidationResult
             {
                 IsValid = false,
                 ErrorMessage = "Invalid token signature"
@@ -170,7 +170,7 @@ public class JwtService : IJwtService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Token validation failed");
-            return new TokenValidationResult
+            return new Application.Common.Interfaces.TokenValidationResult
             {
                 IsValid = false,
                 ErrorMessage = "Token validation failed"

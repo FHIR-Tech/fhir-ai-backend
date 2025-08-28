@@ -1,4 +1,5 @@
 using HealthTech.Application.Common.Interfaces;
+using HealthTech.Application.PatientAccess.Queries;
 using HealthTech.Domain.Entities;
 using HealthTech.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
