@@ -55,6 +55,7 @@ docs/
 - [GetPolicyForResource Method Analysis Report](cursor-agent/reports/get_policy_for_resource_analysis_2024-12-19_report.md)
 - [Application Tests Fixes Report](cursor-agent/reports/application_tests_fixes_2024-12-19_report.md)
 - [API Endpoint Testing Report](cursor-agent/reports/api_endpoint_testing_2024-12-19_report.md)
+- [Swagger URL Update Report](cursor-agent/reports/swagger_url_update_2024-12-28_report.md)
 - [Architecture Decisions](cursor-agent/decisions/)
 - [Task Tracking](cursor-agent/tasks/)
 - [GitHub Actions Workflows](cursor-agent/workflows/README.md)

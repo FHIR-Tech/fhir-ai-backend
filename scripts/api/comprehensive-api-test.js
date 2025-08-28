@@ -281,7 +281,7 @@ async function runComprehensiveTest() {
     console.log(`   🔐 Authentication: ${authToken ? '✅ Success' : '❌ Failed'}`);
     console.log(`   🏥 FHIR Endpoints: ${authToken ? '✅ Tested' : '❌ Skipped'}`);
     console.log(`   🔐 Patient Access: ${authToken ? '✅ Tested' : '❌ Skipped'}`);
-    console.log('\n🌐 Swagger UI: https://localhost:5001/index.html');
+    console.log('\n🌐 Swagger UI: https://localhost:5001/swagger');
 }
 
 runComprehensiveTest().catch(console.error);

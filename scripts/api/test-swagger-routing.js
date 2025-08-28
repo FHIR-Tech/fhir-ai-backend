@@ -59,13 +59,16 @@ async function testEndpoint(path, name) {
 }
 
 async function testAllSwaggerEndpoints() {
-    console.log('🔍 Testing Swagger UI and API Documentation Endpoints...\n');
+    console.log('🔍 Testing Updated Swagger UI and API Documentation Endpoints...\n');
     
     for (const endpoint of swaggerEndpoints) {
         await testEndpoint(endpoint.path, endpoint.name);
     }
     
-    console.log('✨ Swagger routing test completed!');
+    console.log('✨ Updated Swagger routing test completed!');
+    console.log('\n🌐 Primary Swagger URLs:');
+    console.log(`   https://localhost:5001/swagger`);
+    console.log(`   https://localhost:5001/swagger/index.html`);
 }
 
 testAllSwaggerEndpoints().catch(console.error);
