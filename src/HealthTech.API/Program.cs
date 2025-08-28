@@ -226,36 +226,32 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+
+// Add Swagger in all environments for now (can be restricted later)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "FHIR-AI Backend API v1");
-        c.RoutePrefix = string.Empty; // Serve Swagger UI at root
-        
-        // Customize Swagger UI
-        c.DocumentTitle = "FHIR-AI Backend API Documentation";
-        c.DefaultModelsExpandDepth(2);
-        c.DefaultModelExpandDepth(2);
-        c.DisplayRequestDuration();
-        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
-        
-        // Add custom CSS for better styling
-        c.InjectStylesheet("/swagger-ui/custom.css");
-        
-        // Add custom JavaScript for enhanced functionality
-        c.InjectJavascript("/swagger-ui/custom.js");
-        
-        // Configure OAuth2 settings for testing
-        c.OAuthClientId("swagger-ui");
-        c.OAuthClientSecret("swagger-secret");
-        c.OAuthRealm("healthtech-fhir");
-        c.OAuthAppName("FHIR-AI Backend Swagger UI");
-        c.OAuthScopeSeparator(" ");
-        c.OAuthUsePkce();
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "FHIR-AI Backend API v1");
+    c.RoutePrefix = "swagger"; // Serve Swagger UI at /swagger
+    
+    // Customize Swagger UI
+    c.DocumentTitle = "FHIR-AI Backend API Documentation";
+    c.DefaultModelsExpandDepth(2);
+    c.DefaultModelExpandDepth(2);
+    c.DisplayRequestDuration();
+    c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+    
+    // Configure OAuth2 settings for testing
+    c.OAuthClientId("swagger-ui");
+    c.OAuthClientSecret("swagger-secret");
+    c.OAuthRealm("healthtech-fhir");
+    c.OAuthAppName("FHIR-AI Backend Swagger UI");
+    c.OAuthScopeSeparator(" ");
+    c.OAuthUsePkce();
+});
+
+// Add static files middleware
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 app.UseCors("HealthTechCors");
@@ -276,6 +272,16 @@ app.MapAuthenticationEndpoints();
 // Map health check
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }))
     .WithName("HealthCheck")
+    .WithOpenApi();
+
+// Redirect root to Swagger UI
+app.MapGet("/", () => Results.Redirect("/swagger"))
+    .WithName("RootRedirect")
+    .WithOpenApi();
+
+// Redirect /swagger to /swagger/index.html
+app.MapGet("/swagger", () => Results.Redirect("/swagger/index.html"))
+    .WithName("SwaggerRedirect")
     .WithOpenApi();
 
 app.Run();

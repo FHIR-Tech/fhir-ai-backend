@@ -58,6 +58,7 @@ docs/
 - [Task Tracking](cursor-agent/tasks/)
 - [GitHub Actions Workflows](cursor-agent/workflows/README.md)
 - [Workflow Fixes](cursor-agent/workflows/FIXES.md)
+- [Swagger Fix Implementation Report](cursor-agent/reports/swagger_fix_2024-12-28_report.md)
 
 ### Architecture
 - [Architecture Documentation](architecture/)
@@ -77,9 +78,10 @@ Khi thêm tài liệu mới:
 - **2024-12-19**: Tạo templates và quy ước đặt tên
 - **2024-12-19**: Di chuyển README_ENDPOINT_REFACTOR.md vào docs/api/reports/ với tên fhir_endpoint_refactoring_2024-12-19_report.md
 - **2024-12-28**: Tổ chức lại GitHub Actions workflows documentation, di chuyển vào docs/cursor-agent/workflows/
-- **2024-12-28**: Xóa file test-simple.yml và dọn dẹp thư mục .github/workflows/
+- **2024-12-12-28**: Xóa file test-simple.yml và dọn dẹp thư mục .github/workflows/
 - **2024-12-28**: Cập nhật documentation structure để tuân thủ quy tắc dự án
+- **2024-12-28**: Fix Swagger/OpenAPI documentation accessibility issues
 
 ---
 
-*Cập nhật lần cuối: 2024-12-19*
+*Cập nhật lần cuối: 2024-12-28*
