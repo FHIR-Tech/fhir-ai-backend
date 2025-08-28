@@ -20,7 +20,10 @@ docs/
 │   ├── reports/               # Báo cáo thực hiện
 │   ├── logs/                  # Logs và transcripts
 │   ├── decisions/             # Quyết định kiến trúc
-│   └── tasks/                 # Theo dõi task
+│   ├── tasks/                 # Theo dõi task
+│   └── workflows/             # GitHub Actions workflows documentation
+│       ├── README.md          # Workflows overview
+│       └── FIXES.md           # Workflow fixes and troubleshooting
 └── deployment/                 # Tài liệu triển khai
 ```
 
@@ -53,6 +56,8 @@ docs/
 - [Application Tests Fixes Report](cursor-agent/reports/application_tests_fixes_2024-12-19_report.md)
 - [Architecture Decisions](cursor-agent/decisions/)
 - [Task Tracking](cursor-agent/tasks/)
+- [GitHub Actions Workflows](cursor-agent/workflows/README.md)
+- [Workflow Fixes](cursor-agent/workflows/FIXES.md)
 
 ### Architecture
 - [Architecture Documentation](architecture/)
@@ -71,6 +76,9 @@ Khi thêm tài liệu mới:
 - **2024-12-19**: Di chuyển các file hiện có vào thư mục phù hợp
 - **2024-12-19**: Tạo templates và quy ước đặt tên
 - **2024-12-19**: Di chuyển README_ENDPOINT_REFACTOR.md vào docs/api/reports/ với tên fhir_endpoint_refactoring_2024-12-19_report.md
+- **2024-12-28**: Tổ chức lại GitHub Actions workflows documentation, di chuyển vào docs/cursor-agent/workflows/
+- **2024-12-28**: Xóa file test-simple.yml và dọn dẹp thư mục .github/workflows/
+- **2024-12-28**: Cập nhật documentation structure để tuân thủ quy tắc dự án
 
 ---
 
