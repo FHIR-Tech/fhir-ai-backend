@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using HealthTech.Domain.Enums;
 
 namespace HealthTech.Domain.Entities;
 
@@ -23,7 +24,7 @@ public class PatientAccess : BaseEntity
     /// Level of access granted
     /// </summary>
     [Required]
-    public AccessLevel AccessLevel { get; set; }
+    public PatientAccessLevel AccessLevel { get; set; }
 
     /// <summary>
     /// When access was granted
@@ -74,38 +75,4 @@ public class PatientAccess : BaseEntity
     public virtual User User { get; set; } = null!;
 }
 
-/// <summary>
-/// Access levels for patient data
-/// </summary>
-public enum AccessLevel
-{
-    /// <summary>
-    /// Read-only access to patient data
-    /// </summary>
-    ReadOnly,
 
-    /// <summary>
-    /// Read and write access to patient data
-    /// </summary>
-    ReadWrite,
-
-    /// <summary>
-    /// Full access including administrative functions
-    /// </summary>
-    FullAccess,
-
-    /// <summary>
-    /// Emergency access with limited scope
-    /// </summary>
-    EmergencyAccess,
-
-    /// <summary>
-    /// Research access with anonymized data
-    /// </summary>
-    ResearchAccess,
-
-    /// <summary>
-    /// Family member access with restrictions
-    /// </summary>
-    FamilyAccess
-}

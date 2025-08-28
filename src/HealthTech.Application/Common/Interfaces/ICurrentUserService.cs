@@ -1,3 +1,5 @@
+using HealthTech.Domain.Enums;
+
 namespace HealthTech.Application.Common.Interfaces;
 
 /// <summary>
@@ -47,7 +49,7 @@ public interface ICurrentUserService
     /// <summary>
     /// Current user role
     /// </summary>
-    string? UserRole { get; }
+    UserRole UserRole { get; }
 
     /// <summary>
     /// Current user practitioner ID

@@ -1,4 +1,5 @@
 using HealthTech.Application.Common.Interfaces;
+using HealthTech.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System.Security.Principal;
@@ -110,8 +111,28 @@ public class CurrentUserService : ICurrentUserService
     /// <summary>
     /// Current user role
     /// </summary>
-    public string? UserRole => _httpContextAccessor.HttpContext?.User?.FindFirst("user_role")?.Value
-        ?? _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
+    public UserRole UserRole
+    {
+        get
+        {
+            var roleValue = _httpContextAccessor.HttpContext?.User?.FindFirst("user_role")?.Value
+                ?? _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
+
+            if (string.IsNullOrEmpty(roleValue))
+                return UserRole.Guest;
+
+            return roleValue.ToLower() switch
+            {
+                "systemadministrator" => UserRole.SystemAdministrator,
+                "healthcareprovider" => UserRole.HealthcareProvider,
+                "patient" => UserRole.Patient,
+                "researcher" => UserRole.Researcher,
+                "dataanalyst" => UserRole.DataAnalyst,
+                "itadministrator" => UserRole.ITAdministrator,
+                _ => UserRole.Guest
+            };
+        }
+    }
 
     /// <summary>
     /// Current user practitioner ID
@@ -124,8 +145,7 @@ public class CurrentUserService : ICurrentUserService
     /// <returns>True if system administrator, false otherwise</returns>
     public bool IsSystemAdministrator()
     {
-        var role = UserRole;
-        return !string.IsNullOrEmpty(role) && role.Equals("SystemAdministrator", StringComparison.OrdinalIgnoreCase);
+        return UserRole == UserRole.SystemAdministrator;
     }
 
     /// <summary>
@@ -134,8 +154,7 @@ public class CurrentUserService : ICurrentUserService
     /// <returns>True if healthcare provider, false otherwise</returns>
     public bool IsHealthcareProvider()
     {
-        var role = UserRole;
-        return !string.IsNullOrEmpty(role) && role.Equals("HealthcareProvider", StringComparison.OrdinalIgnoreCase);
+        return UserRole == UserRole.HealthcareProvider;
     }
 
     /// <summary>
@@ -144,8 +163,7 @@ public class CurrentUserService : ICurrentUserService
     /// <returns>True if patient, false otherwise</returns>
     public bool IsPatient()
     {
-        var role = UserRole;
-        return !string.IsNullOrEmpty(role) && role.Equals("Patient", StringComparison.OrdinalIgnoreCase);
+        return UserRole == UserRole.Patient;
     }
 
     /// <summary>

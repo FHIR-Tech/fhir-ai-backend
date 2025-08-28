@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using HealthTech.Domain.Enums;
 
 namespace HealthTech.Domain.Entities;
 
