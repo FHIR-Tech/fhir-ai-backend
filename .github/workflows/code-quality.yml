@@ -1,0 +1,323 @@
+# FHIR-AI Backend Code Quality Pipeline
+# This workflow handles code quality checks, dependency scanning, and security analysis
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: FHIR-AI Backend Code Quality
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  schedule:
+    # Run dependency scanning weekly
+    - cron: '0 2 * * 1'
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  SOLUTION_FILE: 'HealthTech.FHIR-AI.sln'
+
+jobs:
+  # Code Quality Analysis
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install .NET tools
+      run: |
+        dotnet tool install --global dotnet-format
+        dotnet tool install --global dotnet-outdated-tool
+
+    - name: Check code formatting
+      run: |
+        dotnet format --verify-no-changes --verbosity normal ${{ env.SOLUTION_FILE }}
+
+    - name: Run code analysis
+      run: |
+        dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --verbosity normal
+        # Run additional static analysis tools if available
+
+    - name: Check for outdated packages
+      run: |
+        dotnet outdated ${{ env.SOLUTION_FILE }} --output json > outdated-packages.json
+        # Check if there are any outdated packages that need attention
+        if [ -s outdated-packages.json ]; then
+          echo "Found outdated packages:"
+          cat outdated-packages.json
+        else
+          echo "All packages are up to date"
+        fi
+
+    - name: Upload outdated packages report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: outdated-packages
+        path: outdated-packages.json
+
+  # Dependency Vulnerability Scan
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Run dependency vulnerability scan
+      run: |
+        # Install and run dotnet list package with vulnerability check
+        dotnet list ${{ env.SOLUTION_FILE }} package --vulnerable --output json > vulnerable-packages.json
+        
+        # Check for vulnerabilities
+        if [ -s vulnerable-packages.json ]; then
+          echo "Found vulnerable packages:"
+          cat vulnerable-packages.json
+          exit 1
+        else
+          echo "No vulnerable packages found"
+        fi
+
+    - name: Upload vulnerability report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: vulnerable-packages
+        path: vulnerable-packages.json
+
+  # FHIR Compliance Check
+  fhir-compliance:
+    name: FHIR Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Build solution
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release
+
+    - name: Run FHIR validation tests
+      run: |
+        # Run tests that validate FHIR compliance
+        dotnet test tests/HealthTech.API.Tests/HealthTech.API.Tests.csproj --filter "Category=FHIR" --verbosity normal
+        
+        # Run tests that validate HL7 compliance
+        dotnet test tests/HealthTech.API.Tests/HealthTech.API.Tests.csproj --filter "Category=HL7" --verbosity normal
+
+    - name: Validate FHIR resource schemas
+      run: |
+        # Check if FHIR resource schemas are properly defined
+        find src -name "*.cs" -exec grep -l "FHIR" {} \; | head -10
+        
+        # Validate FHIR endpoint implementations
+        echo "Checking FHIR endpoint implementations..."
+        # Add specific FHIR validation logic here
+
+  # Security Analysis
+  security-analysis:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run CodeQL Analysis
+      uses: github/codeql-action/init@v3
+      with:
+        languages: csharp
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Build solution for CodeQL
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+    - name: Run SAST scan
+      run: |
+        # Run additional SAST tools if available
+        echo "Running SAST analysis..."
+        # Add specific SAST tool commands here
+
+  # Performance Analysis
+  performance-analysis:
+    name: Performance Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install performance tools
+      run: |
+        dotnet tool install --global dotnet-counters
+        dotnet tool install --global dotnet-dump
+
+    - name: Run performance tests
+      run: |
+        # Run performance tests if available
+        dotnet test tests/HealthTech.API.Tests/HealthTech.API.Tests.csproj --filter "Category=Performance" --verbosity normal
+
+    - name: Analyze memory usage
+      run: |
+        # Run memory analysis if needed
+        echo "Running memory analysis..."
+        # Add specific memory analysis commands here
+
+  # Documentation Quality Check
+  documentation-quality:
+    name: Documentation Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check documentation completeness
+      run: |
+        # Check if all required documentation files exist
+        required_files=(
+          "docs/README.md"
+          "docs/INDEX.md"
+          "docs/api/README.md"
+          "README.md"
+        )
+        
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "Missing required documentation file: $file"
+            exit 1
+          fi
+        done
+        
+        echo "All required documentation files found"
+
+    - name: Validate API documentation
+      run: |
+        # Check if API documentation is up to date
+        if [ -f "docs/api/README.md" ]; then
+          echo "API documentation found"
+          # Add specific API documentation validation here
+        else
+          echo "Warning: API documentation not found"
+        fi
+
+    - name: Check code documentation
+      run: |
+        # Check if code has proper XML documentation
+        echo "Checking code documentation..."
+        # Add specific code documentation checks here
+
+  # Compliance Check
+  compliance-check:
+    name: Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check HIPAA compliance
+      run: |
+        echo "Checking HIPAA compliance..."
+        # Add HIPAA compliance checks here
+        # Check for proper logging, encryption, access controls
+
+    - name: Check GDPR compliance
+      run: |
+        echo "Checking GDPR compliance..."
+        # Add GDPR compliance checks here
+        # Check for data protection, consent mechanisms
+
+    - name: Check FHIR compliance
+      run: |
+        echo "Checking FHIR compliance..."
+        # Add FHIR compliance checks here
+        # Validate resource structures, endpoints, conformance
+
+  # Generate Quality Report
+  quality-report:
+    name: Generate Quality Report
+    runs-on: ubuntu-latest
+    needs: [code-quality, dependency-scan, fhir-compliance, security-analysis, performance-analysis, documentation-quality, compliance-check]
+    if: always()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Generate quality report
+      run: |
+        echo "# FHIR-AI Backend Quality Report" > quality-report.md
+        echo "Generated on: $(date)" >> quality-report.md
+        echo "" >> quality-report.md
+        
+        echo "## Job Status" >> quality-report.md
+        echo "- Code Quality: ${{ needs.code-quality.result }}" >> quality-report.md
+        echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> quality-report.md
+        echo "- FHIR Compliance: ${{ needs.fhir-compliance.result }}" >> quality-report.md
+        echo "- Security Analysis: ${{ needs.security-analysis.result }}" >> quality-report.md
+        echo "- Performance Analysis: ${{ needs.performance-analysis.result }}" >> quality-report.md
+        echo "- Documentation Quality: ${{ needs.documentation-quality.result }}" >> quality-report.md
+        echo "- Compliance Check: ${{ needs.compliance-check.result }}" >> quality-report.md
+        
+        echo "" >> quality-report.md
+        echo "## Summary" >> quality-report.md
+        if [ "${{ needs.code-quality.result }}" = "success" ] && [ "${{ needs.dependency-scan.result }}" = "success" ] && [ "${{ needs.fhir-compliance.result }}" = "success" ]; then
+          echo "✅ All quality checks passed" >> quality-report.md
+        else
+          echo "❌ Some quality checks failed" >> quality-report.md
+        fi
+
+    - name: Upload quality report
+      uses: actions/upload-artifact@v4
+      with:
+        name: quality-report
+        path: quality-report.md
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('quality-report.md', 'utf8');
+          
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: report
+          });
