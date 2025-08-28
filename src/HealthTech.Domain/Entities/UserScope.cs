@@ -39,9 +39,19 @@ public class UserScope : BaseEntity
     public string GrantedBy { get; set; } = string.Empty;
 
     /// <summary>
-    /// Whether scope is currently active
+    /// Whether scope was manually revoked
     /// </summary>
-    public bool IsActive => ExpiresAt == null || ExpiresAt > DateTime.UtcNow;
+    public bool IsRevoked { get; set; }
+
+    /// <summary>
+    /// When scope was revoked
+    /// </summary>
+    public DateTime? RevokedAt { get; set; }
+
+    /// <summary>
+    /// Whether scope is currently active (computed based on IsRevoked and ExpiresAt)
+    /// </summary>
+    public bool IsActive => !IsRevoked && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow);
 
     /// <summary>
     /// Navigation property for user

@@ -55,9 +55,9 @@ public class UserSession : BaseEntity
     public string? UserAgent { get; set; }
 
     /// <summary>
-    /// Whether session is currently active
+    /// Whether session is currently active (computed based on IsRevoked and ExpiresAt)
     /// </summary>
-    public bool IsActive => ExpiresAt > DateTime.UtcNow;
+    public bool IsActive => !IsRevoked && ExpiresAt > DateTime.UtcNow;
 
     /// <summary>
     /// Whether session was revoked

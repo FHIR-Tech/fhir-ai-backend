@@ -329,6 +329,7 @@ public class UserService : IUserService
             Scope = scope,
             GrantedBy = grantedBy,
             ExpiresAt = expiresAt,
+            IsRevoked = false,
             TenantId = "default" // TODO: Get from context
         };
 
@@ -351,7 +352,8 @@ public class UserService : IUserService
         
         if (userScope != null)
         {
-            userScope.IsActive = false;
+            userScope.IsRevoked = true;
+            userScope.RevokedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync(CancellationToken.None);
             
             _logger.LogInformation("Removed scope {Scope} from user {UserId}", scope, userId);
@@ -396,7 +398,7 @@ public class UserService : IUserService
             RefreshToken = refreshToken,
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddDays(30), // 30 days expiration
-            IsActive = true,
+            IsRevoked = false,
             TenantId = "default" // TODO: Get from context
         };
 
@@ -414,12 +416,14 @@ public class UserService : IUserService
     public async Task<bool> InvalidateUserSessionAsync(string sessionToken)
     {
         var session = await _context.UserSessions
-            .FirstOrDefaultAsync(us => us.RefreshToken == sessionToken && us.IsActive);
+            .FirstOrDefaultAsync(us => us.RefreshToken == sessionToken && !us.IsRevoked);
         
         if (session == null)
             return false;
 
-        session.IsActive = false;
+        session.IsRevoked = true;
+        session.RevokedAt = DateTime.UtcNow;
+        session.RevocationReason = "Manual revocation by administrator";
         session.ModifiedAt = DateTime.UtcNow;
         
         await _context.SaveChangesAsync(CancellationToken.None);
@@ -439,7 +443,7 @@ public class UserService : IUserService
             .Include(us => us.User)
             .FirstOrDefaultAsync(us => 
                 us.RefreshToken == refreshToken && 
-                us.IsActive && 
+                !us.IsRevoked && 
                 us.ExpiresAt > DateTime.UtcNow);
 
         if (session == null)

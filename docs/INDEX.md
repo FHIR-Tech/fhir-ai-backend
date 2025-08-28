@@ -45,6 +45,9 @@ docs/
 - [PatientAccess Commands Missing Functions Fix Report](cursor-agent/reports/patient_access_commands_fixes_2024-12-19_report.md)
 - [Authentication Commands Parameter Fixes Report](cursor-agent/reports/authentication_commands_parameter_fixes_2024-12-19_report.md)
 - [TokenValidationResult Naming Conflict Analysis Report](cursor-agent/reports/token_validation_result_naming_conflict_2024-12-19_report.md)
+- [PatientAccess IsActive Property Fix Report](cursor-agent/reports/patient_access_isactive_fix_2024-12-19_report.md)
+- [UserService Computed Properties Fix Report](cursor-agent/reports/user_service_computed_properties_fix_2024-12-19_report.md)
+- [Boolean Properties Usage Checklist Report](cursor-agent/reports/boolean_properties_usage_checklist_2024-12-19_report.md)
 - [Architecture Decisions](cursor-agent/decisions/)
 - [Task Tracking](cursor-agent/tasks/)
 
