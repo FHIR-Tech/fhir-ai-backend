@@ -1,175 +1,170 @@
 # FHIR-AI Backend Scripts
 
-This directory contains various utility scripts for the FHIR-AI Backend project, including validation tools, testing scripts, and automation helpers.
+Scripts đơn giản để chạy và test FHIR-AI Backend API.
 
-## Validation Scripts
+## 🚀 Quick Start
 
-### 1. `validate-yaml.py` - YAML Syntax Validation
-Validates all YAML files in the project for syntax correctness.
-
-**Usage:**
+### Start API + Run Tests + Generate Report (Khuyến nghị)
 ```bash
-source .venv/bin/activate
-python3 scripts/validate-yaml.py
+./scripts/start-api-test-report.sh
 ```
+Script này sẽ:
+- Kiểm tra PostgreSQL và database
+- Kill dotnet processes cũ
+- Start API ở background
+- Chạy tất cả test scripts
+- Tạo report Markdown chi tiết
+- Terminal trả về ngay
 
-**Features:**
-- Finds all `.yml` and `.yaml` files
-- Excludes `node_modules` and hidden directories
-- Validates YAML syntax
-- Provides detailed error reporting
-
-### 2. `validate-github-actions.py` - GitHub Actions Validation
-Validates GitHub Actions workflow files for common issues and best practices.
-
-**Usage:**
+### Stop API
 ```bash
-source .venv/bin/activate
-python3 scripts/validate-github-actions.py
+./scripts/stop-api.sh
+```
+Script này sẽ:
+- Kiểm tra API có đang chạy không
+- Dừng API gracefully
+- Kiểm tra ports đã free chưa
+
+## 📋 Prerequisites
+
+### Required Software
+- **PostgreSQL**: Chạy trên localhost:5432
+- **.NET 8**: Để chạy API
+- **Node.js**: Để chạy test scripts
+
+### Database Setup
+- Database: `fhir-ai`
+- Username: `postgres`
+- Password: `Post:!@#4`
+- Host: `localhost:5432`
+
+## 🔧 Configuration
+
+### API Configuration
+- **HTTP Port**: 5000 (redirects to HTTPS)
+- **HTTPS Port**: 5001 (primary)
+- **API Directory**: `src/HealthTech.API`
+- **Test Directory**: `scripts/api`
+
+## 📊 Test Scripts
+
+### Available Test Scripts (15 scripts)
+1. **test-health-api.js** - Health check và routing
+2. **check-swagger-endpoints.js** - Swagger documentation
+3. **test-authentication-endpoints.js** - Authentication endpoints
+4. **test-fhir-endpoints.js** - FHIR endpoints
+5. **comprehensive-api-test.js** - Comprehensive testing
+6. **test-swagger-routing.js** - Swagger UI routing
+7. **test-enhanced-export-bundle.js** - Enhanced export bundle
+8. **test-export-bundle.js** - Export bundle
+9. **test-import-export-bundle.js** - Import/export bundle
+10. **sample-data-api.js** - Sample data generation
+11. **test-authentication-api.js** - Authentication API
+12. **test-login-with-data.js** - Login with data
+13. **create-test-user.js** - Create test user
+14. **seed-test-data.js** - Seed test data
+15. **export-bundle-api.js** - Export bundle API
+
+## 📝 Script Details
+
+### start-api-test-report.sh
+- Kiểm tra PostgreSQL và database
+- Kill dotnet processes cũ
+- Start API ở background
+- Chạy tất cả 15 test scripts
+- Tạo report Markdown chi tiết với timestamp
+- Terminal trả về ngay
+
+### stop-api.sh
+- Kiểm tra API có đang chạy không
+- Dừng API gracefully (SIGTERM trước, SIGKILL sau)
+- Kiểm tra ports đã free chưa
+
+## 🎉 Success Criteria
+
+API được coi là chạy thành công khi:
+- ✅ Health check trả về 200 OK
+- ✅ Swagger UI accessible
+- ✅ Database connected
+- ✅ Tất cả tests pass
+
+## 🔗 Access Information
+
+Khi API chạy thành công:
+- **API Base**: https://localhost:5001
+- **Swagger UI**: https://localhost:5001/swagger/index.html
+- **Health Check**: https://localhost:5001/health
+
+## 📊 Report Files
+
+Reports được tạo trong thư mục `reports/`:
+```
+reports/
+└── api_test_report_YYYYMMDD_HHMMSS.md
 ```
 
-**Features:**
-- Validates workflow structure
-- Checks required fields (`name`, `on`, `jobs`)
-- Validates job and step configurations
-- Handles YAML parsing quirks
+Report bao gồm:
+- Test summary với success rate
+- Detailed test results
+- API status
+- Access information
+- Next steps
 
-### 3. `validate-all.py` - Comprehensive Validation
-Runs all validation checks for the project.
+## 🛠️ Troubleshooting
 
-**Usage:**
+### PostgreSQL Not Running
 ```bash
-source .venv/bin/activate
-python3 scripts/validate-all.py
+# Start PostgreSQL (macOS with Homebrew)
+brew services start postgresql@14
 ```
 
-**Features:**
-- YAML syntax validation
-- GitHub Actions workflow validation
-- .NET solution validation
-- Docker configuration validation
-- Project structure validation
-
-## Setup Requirements
-
-### Python Environment
+### Port Already in Use
 ```bash
-# Create virtual environment
-python3 -m venv .venv
+# Check what's using the port
+lsof -i :5000
+lsof -i :5001
 
-# Activate virtual environment
-source .venv/bin/activate
-
-# Install dependencies
-pip install PyYAML
+# Kill the process
+kill -9 <PID>
 ```
 
-### Required Tools
-- Python 3.8+
-- .NET 8.0+
-- Docker (optional, for Docker validation)
-- Docker Compose (optional, for Docker validation)
-
-## Validation Results
-
-### YAML Files
-- ✅ `.github/workflows/code-quality.yml`
-- ✅ `.github/workflows/dotnet.yml`
-- ✅ `.github/workflows/release.yml`
-- ✅ `.github/workflows/test-simple.yml`
-- ✅ `docker-compose.yml`
-
-### GitHub Actions Workflows
-- ✅ `code-quality.yml` - Quality assurance pipeline
-- ✅ `dotnet.yml` - Main CI/CD pipeline
-- ✅ `release.yml` - Release management
-- ✅ `test-simple.yml` - Simple test workflow
-
-## Common Issues and Solutions
-
-### 1. YAML Parsing Issues
-**Problem:** YAML parser reads `on` as boolean `True`
-**Solution:** Script handles this automatically by checking for both string and boolean values
-
-### 2. Missing Dependencies
-**Problem:** PyYAML not installed
-**Solution:** Install with `pip install PyYAML`
-
-### 3. Virtual Environment
-**Problem:** Python packages not found
-**Solution:** Activate virtual environment with `source .venv/bin/activate`
-
-### 4. Docker Not Available
-**Problem:** Docker commands fail
-**Solution:** Docker is optional for validation. Script will skip Docker checks if not available.
-
-## Integration with CI/CD
-
-These validation scripts can be integrated into the CI/CD pipeline:
-
-```yaml
-- name: Validate YAML files
-  run: |
-    source .venv/bin/activate
-    python3 scripts/validate-yaml.py
-
-- name: Validate GitHub Actions
-  run: |
-    source .venv/bin/activate
-    python3 scripts/validate-github-actions.py
-```
-
-## Extending Validation
-
-To add new validation checks:
-
-1. Create a new Python script in the `scripts/` directory
-2. Follow the naming convention: `validate-*.py`
-3. Return appropriate exit codes (0 for success, 1 for failure)
-4. Add to `validate-all.py` if needed
-
-## Troubleshooting
-
-### Script Not Found
+### API Won't Start
 ```bash
-# Make sure you're in the project root
-cd /path/to/fhir-ai-backend
+# Check if dotnet is installed
+dotnet --version
 
-# Check if scripts exist
-ls -la scripts/
+# Check if project builds
+cd src/HealthTech.API
+dotnet build
 ```
 
-### Permission Denied
+### Tests Failing
 ```bash
-# Make scripts executable
-chmod +x scripts/*.py
+# Check if API is running
+curl -f https://localhost:5001/health
+
+# Check if Node.js is installed
+node --version
+
+# Install missing dependencies
+cd scripts
+npm install
 ```
 
-### Python Path Issues
-```bash
-# Use absolute path
-python3 /path/to/fhir-ai-backend/scripts/validate-yaml.py
-```
+## 📋 Workflow
 
-### Virtual Environment Issues
-```bash
-# Recreate virtual environment
-rm -rf .venv
-python3 -m venv .venv
-source .venv/bin/activate
-pip install PyYAML
-```
+### Development Workflow
+1. **Start & Test**: `./scripts/start-api-test-report.sh`
+2. **Review Report**: `cat reports/api_test_report_*.md`
+3. **Continue Development**: API đang chạy background
+4. **Stop When Done**: `./scripts/stop-api.sh`
 
-## Contributing
-
-When adding new validation scripts:
-
-1. Follow the existing naming conventions
-2. Include proper error handling
-3. Add documentation
-4. Update this README
-5. Test with various scenarios
+### Manual Testing
+1. **Start API**: `./scripts/start-api-test-report.sh`
+2. **Access Swagger**: https://localhost:5001/swagger/index.html
+3. **Test Manually**: Sử dụng Swagger UI
+4. **Stop API**: `./scripts/stop-api.sh`
 
 ---
 
-*These scripts ensure code quality and consistency across the FHIR-AI Backend project.*
+*Scripts được thiết kế để đơn giản và hiệu quả cho development workflow.*

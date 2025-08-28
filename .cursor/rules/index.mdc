@@ -79,6 +79,16 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 - **API Tests**: End-to-end FHIR resource testing
 - **Security Tests**: Authentication and authorization validation
 
+### 5. API Testing & Development Workflow
+- **API Ports**: HTTP 5000 (redirects to HTTPS), HTTPS 5001 (primary)
+- **Database Check**: Always verify PostgreSQL is running before starting API
+- **API Startup**: Use `dotnet run` in `/src/HealthTech.API` directory
+- **Process Management**: Kill existing dotnet processes before restarting
+- **Health Check**: Verify API responds at `https://localhost:5001/health`
+- **Test Scripts**: Use Node.js scripts in `/scripts/api/` directory
+- **SSL Warnings**: Ignore self-signed certificate warnings in development
+- **Swagger UI**: Access at `https://localhost:5001/swagger/index.html`
+
 ## Code Quality Standards
 
 ### 1. Naming Conventions
