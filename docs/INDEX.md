@@ -37,6 +37,7 @@ docs/
 - [Cursor Agent Overview](cursor-agent/README.md)
 - [Reports Directory](cursor-agent/reports/)
 - [Authentication System Implementation Report](cursor-agent/reports/authentication_implementation_2024-12-19_report.md)
+- [Authentication Architecture Refactoring Report](cursor-agent/reports/authentication_architecture_refactoring_2024-12-19_report.md)
 - [Architecture Decisions](cursor-agent/decisions/)
 - [Task Tracking](cursor-agent/tasks/)
 

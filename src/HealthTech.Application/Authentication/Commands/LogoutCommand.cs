@@ -2,29 +2,19 @@ using MediatR;
 using FluentValidation;
 using HealthTech.Application.Common.Interfaces;
 
-namespace HealthTech.Application.FhirResources.Commands.Authentication;
+namespace HealthTech.Application.Authentication.Commands;
 
-/// <summary>
-/// Command for user logout
-/// </summary>
 public record LogoutCommand : IRequest<LogoutResponse>
 {
     public string SessionToken { get; init; } = string.Empty;
-    public string? Reason { get; init; }
 }
 
-/// <summary>
-/// Response for logout command
-/// </summary>
 public record LogoutResponse
 {
     public bool Success { get; init; }
     public string? ErrorMessage { get; init; }
 }
 
-/// <summary>
-/// Validator for logout command
-/// </summary>
 public class LogoutCommandValidator : AbstractValidator<LogoutCommand>
 {
     public LogoutCommandValidator()
@@ -34,9 +24,6 @@ public class LogoutCommandValidator : AbstractValidator<LogoutCommand>
     }
 }
 
-/// <summary>
-/// Handler for logout command
-/// </summary>
 public class LogoutCommandHandler : IRequestHandler<LogoutCommand, LogoutResponse>
 {
     private readonly IUserService _userService;
@@ -50,21 +37,13 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, LogoutRespons
     {
         try
         {
-            // Revoke the session
-            var success = await _userService.RevokeSessionAsync(request.SessionToken, request.Reason);
-
-            if (!success)
-            {
-                return new LogoutResponse
-                {
-                    Success = false,
-                    ErrorMessage = "Session not found or already revoked"
-                };
-            }
-
+            // Invalidate user session
+            var success = await _userService.InvalidateUserSessionAsync(request.SessionToken);
+            
             return new LogoutResponse
             {
-                Success = true
+                Success = success,
+                ErrorMessage = success ? null : "Session not found or already invalidated"
             };
         }
         catch (Exception ex)
@@ -72,7 +51,7 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, LogoutRespons
             return new LogoutResponse
             {
                 Success = false,
-                ErrorMessage = "An error occurred during logout. Please try again."
+                ErrorMessage = "An error occurred during logout"
             };
         }
     }

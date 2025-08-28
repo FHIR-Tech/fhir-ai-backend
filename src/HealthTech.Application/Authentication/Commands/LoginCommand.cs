@@ -2,52 +2,39 @@ using MediatR;
 using FluentValidation;
 using HealthTech.Application.Common.Interfaces;
 using HealthTech.Domain.Entities;
+using HealthTech.Domain.Enums;
+using System.Text.Json;
 
-namespace HealthTech.Application.FhirResources.Commands.Authentication;
+namespace HealthTech.Application.Authentication.Commands;
 
-/// <summary>
-/// Command for user login
-/// </summary>
 public record LoginCommand : IRequest<LoginResponse>
 {
     public string Username { get; init; } = string.Empty;
     public string Password { get; init; } = string.Empty;
     public string? TenantId { get; init; }
-    public string? IpAddress { get; init; }
-    public string? UserAgent { get; init; }
 }
 
-/// <summary>
-/// Response for login command
-/// </summary>
 public record LoginResponse
 {
     public bool Success { get; init; }
-    public string? Token { get; init; }
+    public string? AccessToken { get; init; }
     public string? RefreshToken { get; init; }
-    public DateTime? ExpiresAt { get; init; }
-    public string? ErrorMessage { get; init; }
     public UserInfo? User { get; init; }
+    public string? ErrorMessage { get; init; }
 }
 
-/// <summary>
-/// User information in login response
-/// </summary>
 public record UserInfo
 {
-    public Guid Id { get; init; }
+    public string Id { get; init; } = string.Empty;
     public string Username { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
-    public string Role { get; init; } = string.Empty;
-    public string? FirstName { get; init; }
-    public string? LastName { get; init; }
+    public string FullName { get; init; } = string.Empty;
+    public UserRole Role { get; init; }
     public string? PractitionerId { get; init; }
+    public string TenantId { get; init; } = string.Empty;
     public List<string> Scopes { get; init; } = new();
 }
 
-/// <summary>
-/// Validator for login command
-/// </summary>
 public class LoginCommandValidator : AbstractValidator<LoginCommand>
 {
     public LoginCommandValidator()
@@ -58,13 +45,10 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
 
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Password is required")
-            .MinimumLength(6).WithMessage("Password must be at least 6 characters");
+            .MinimumLength(8).WithMessage("Password must be at least 8 characters");
     }
 }
 
-/// <summary>
-/// Handler for login command
-/// </summary>
 public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 {
     private readonly IUserService _userService;
@@ -86,11 +70,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         try
         {
             // Validate user credentials
-            var user = await _userService.ValidateCredentialsAsync(
-                request.Username, 
-                request.Password, 
-                request.TenantId);
-
+            var user = await _userService.ValidateCredentialsAsync(request.Username, request.Password);
             if (user == null)
             {
                 return new LoginResponse
@@ -120,41 +100,34 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 };
             }
 
-            // Update last login
-            await _userService.UpdateLastLoginAsync(user.Id, request.IpAddress);
-
-            // Generate JWT token
-            var token = await _jwtService.GenerateTokenAsync(user.Id, user.Username, user.Role);
-
-            // Generate refresh token
-            var refreshToken = await _jwtService.GenerateRefreshTokenAsync();
-
-            // Create user session
-            await _userService.CreateSessionAsync(
-                user.Id, 
-                token, 
-                refreshToken, 
-                request.IpAddress, 
-                request.UserAgent);
-
             // Get user scopes
             var scopes = await _userService.GetUserScopesAsync(user.Id);
+
+            // Generate JWT tokens
+            var accessToken = _jwtService.GenerateAccessToken(user, scopes);
+            var refreshToken = _jwtService.GenerateRefreshToken();
+
+            // Create user session
+            await _userService.CreateUserSessionAsync(user.Id, refreshToken);
+
+            // Get user role and practitioner info
+            var userRole = user.Role;
+            var practitionerId = userRole == UserRole.HealthcareProvider ? user.PractitionerId : null;
 
             return new LoginResponse
             {
                 Success = true,
-                Token = token,
+                AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                ExpiresAt = DateTime.UtcNow.AddHours(1), // Token expires in 1 hour
                 User = new UserInfo
                 {
                     Id = user.Id,
                     Username = user.Username,
                     Email = user.Email,
-                    Role = user.Role,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    PractitionerId = user.PractitionerId,
+                    FullName = user.FullName,
+                    Role = userRole,
+                    PractitionerId = practitionerId,
+                    TenantId = user.TenantId,
                     Scopes = scopes.Select(s => s.Scope).ToList()
                 }
             };

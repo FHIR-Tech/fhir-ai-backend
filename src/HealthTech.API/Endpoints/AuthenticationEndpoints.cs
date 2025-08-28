@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using HealthTech.Application.FhirResources.Commands.Authentication;
-using HealthTech.Application.FhirResources.Queries.PatientAccess;
-using HealthTech.Application.FhirResources.Commands.PatientAccess;
+using HealthTech.Application.Authentication.Commands;
+using HealthTech.Application.PatientAccess.Queries;
+using HealthTech.Application.PatientAccess.Commands;
 
 namespace HealthTech.API.Endpoints;
 
