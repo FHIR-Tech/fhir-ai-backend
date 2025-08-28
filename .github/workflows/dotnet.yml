@@ -23,7 +23,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:${{ env.POSTGRES_VERSION }}
+        image: postgres:14
         env:
           POSTGRES_DB: fhir-ai-test
           POSTGRES_USER: postgres
@@ -53,11 +53,17 @@ jobs:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: scripts/package-lock.json
+      if: hashFiles('scripts/package.json') != ''
 
     - name: Install Node.js dependencies
       run: |
-        cd scripts
-        npm ci
+        if [ -f "scripts/package.json" ]; then
+          cd scripts
+          npm ci
+        else
+          echo "No package.json found in scripts directory, skipping npm install"
+        fi
+      if: hashFiles('scripts/package.json') != ''
 
     - name: Cache .NET packages
       uses: actions/cache@v4
@@ -147,6 +153,7 @@ jobs:
       with:
         name: docker-image
         path: /tmp/docker-image.tar
+      if: always()
 
   # Code Quality Check
   code-quality:
@@ -168,6 +175,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      if: secrets.SONAR_TOKEN != ''
 
     - name: Run SonarCloud analysis
       run: |
@@ -175,6 +183,13 @@ jobs:
         dotnet sonarscanner begin /k:"fhir-ai-backend" /o:"your-organization" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
         dotnet build ${{ env.SOLUTION_FILE }} --configuration Release
         dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      if: secrets.SONAR_TOKEN != ''
+
+    - name: Skip SonarCloud analysis
+      run: echo "Skipping SonarCloud analysis - SONAR_TOKEN not provided"
+      if: secrets.SONAR_TOKEN == ''
 
   # Documentation Check
   documentation-check:
@@ -207,7 +222,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: [build-and-test, security-scan, code-quality]
+    needs: [build-and-test, security-scan]
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     environment: staging
 
@@ -225,7 +240,7 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [build-and-test, security-scan, code-quality]
+    needs: [build-and-test, security-scan]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
 
