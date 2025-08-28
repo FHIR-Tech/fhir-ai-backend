@@ -90,7 +90,7 @@ public class GrantPatientAccessCommandHandler : IRequestHandler<GrantPatientAcce
             }
 
             // Verify target user exists and is in same tenant
-            var targetUser = await _userService.GetUserByIdAsync(request.TargetUserId);
+            var targetUser = await _userService.GetUserByIdAsync(Guid.Parse(request.TargetUserId), currentUser.TenantId ?? "default");
             if (targetUser == null)
             {
                 return new GrantPatientAccessResponse

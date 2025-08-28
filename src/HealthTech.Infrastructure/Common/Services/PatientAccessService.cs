@@ -349,4 +349,206 @@ public class PatientAccessService : IPatientAccessService
         _logger.LogInformation("Extended access for user {UserId} to patient {PatientId} until {NewExpiresAt}", userId, patientId, newExpiresAt);
         return true;
     }
+
+    /// <summary>
+    /// Check if user can grant access to patient
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="patientId">Patient ID</param>
+    /// <param name="userRole">User role</param>
+    /// <returns>True if can grant access, false otherwise</returns>
+    public async Task<bool> CanGrantAccessAsync(string userId, string patientId, UserRole userRole)
+    {
+        // System administrators can grant access to any patient
+        if (userRole == UserRole.SystemAdministrator)
+            return true;
+
+        // Healthcare providers can grant access to patients they have access to
+        if (userRole == UserRole.HealthcareProvider)
+        {
+            var hasAccess = await CanAccessPatientAsync(userId, patientId, "patient/*");
+            return hasAccess;
+        }
+
+        // Other roles cannot grant access
+        return false;
+    }
+
+    /// <summary>
+    /// Grant access to patient for user
+    /// </summary>
+    /// <param name="targetUserId">Target user ID</param>
+    /// <param name="patientId">Patient ID</param>
+    /// <param name="accessLevel">Access level</param>
+    /// <param name="grantedBy">User who granted access</param>
+    /// <param name="reason">Reason for granting access</param>
+    /// <param name="expiresAt">When access expires (null = no expiration)</param>
+    /// <returns>Access ID</returns>
+    public async Task<string> GrantAccessAsync(string targetUserId, string patientId, PatientAccessLevel accessLevel, string grantedBy, string? reason = null, DateTime? expiresAt = null)
+    {
+        var patientAccess = await GrantPatientAccessAsync(
+            patientId,
+            targetUserId,
+            accessLevel,
+            grantedBy,
+            reason,
+            expiresAt);
+
+        return patientAccess.Id.ToString();
+    }
+
+    /// <summary>
+    /// Check if user can revoke access to patient
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="accessId">Access ID</param>
+    /// <param name="userRole">User role</param>
+    /// <returns>True if can revoke access, false otherwise</returns>
+    public async Task<bool> CanRevokeAccessAsync(string userId, string accessId, UserRole userRole)
+    {
+        // System administrators can revoke any access
+        if (userRole == UserRole.SystemAdministrator)
+            return true;
+
+        // Get the access record to check ownership
+        var accessRecord = await _context.PatientAccesses
+            .Include(pa => pa.Patient)
+            .FirstOrDefaultAsync(pa => pa.Id.ToString() == accessId && pa.IsActive);
+
+        if (accessRecord == null)
+            return false;
+
+        // Users can revoke access they granted
+        if (accessRecord.GrantedBy == userId)
+            return true;
+
+        // Healthcare providers can revoke access to patients they have access to
+        if (userRole == UserRole.HealthcareProvider)
+        {
+            var hasAccess = await CanAccessPatientAsync(userId, accessRecord.Patient.FhirPatientId, "patient/*");
+            return hasAccess;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Revoke access to patient for user
+    /// </summary>
+    /// <param name="accessId">Access ID</param>
+    /// <param name="revokedBy">User who revoked access</param>
+    /// <param name="reason">Reason for revocation</param>
+    /// <returns>True if revoked, false otherwise</returns>
+    public async Task<bool> RevokeAccessAsync(string accessId, string revokedBy, string? reason = null)
+    {
+        var accessRecord = await _context.PatientAccesses
+            .Include(pa => pa.Patient)
+            .FirstOrDefaultAsync(pa => pa.Id.ToString() == accessId && pa.IsActive);
+
+        if (accessRecord == null)
+            return false;
+
+        return await RevokePatientAccessAsync(
+            accessRecord.Patient.FhirPatientId,
+            accessRecord.UserId.ToString(),
+            revokedBy,
+            reason);
+    }
+
+    /// <summary>
+    /// Check if user can view patient access records
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="patientId">Patient ID</param>
+    /// <param name="userRole">User role</param>
+    /// <returns>True if can view records, false otherwise</returns>
+    public async Task<bool> CanViewAccessRecordsAsync(string userId, string? patientId, UserRole userRole)
+    {
+        // System administrators can view all records
+        if (userRole == UserRole.SystemAdministrator)
+            return true;
+
+        // If specific patient ID is provided, check access to that patient
+        if (!string.IsNullOrEmpty(patientId))
+        {
+            var hasAccess = await CanAccessPatientAsync(userId, patientId, "patient/*");
+            return hasAccess;
+        }
+
+        // Healthcare providers can view records for patients they have access to
+        if (userRole == UserRole.HealthcareProvider)
+            return true;
+
+        // Other roles cannot view access records
+        return false;
+    }
+
+    /// <summary>
+    /// Get patient access records with pagination
+    /// </summary>
+    /// <param name="patientId">Patient ID filter</param>
+    /// <param name="userId">User ID filter</param>
+    /// <param name="accessLevel">Access level filter</param>
+    /// <param name="isActive">Active status filter</param>
+    /// <param name="page">Page number</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>Tuple of access records and total count</returns>
+    public async Task<(List<PatientAccessInfo> AccessRecords, int TotalCount)> GetPatientAccessAsync(
+        string? patientId,
+        string? userId,
+        PatientAccessLevel? accessLevel,
+        bool? isActive,
+        int page,
+        int pageSize)
+    {
+        var query = _context.PatientAccesses
+            .Include(pa => pa.Patient)
+            .Include(pa => pa.User)
+            .AsQueryable();
+
+        // Apply filters
+        if (!string.IsNullOrEmpty(patientId))
+        {
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.FhirPatientId == patientId);
+            if (patient != null)
+                query = query.Where(pa => pa.PatientId == patient.Id);
+        }
+
+        if (!string.IsNullOrEmpty(userId))
+            query = query.Where(pa => pa.UserId.ToString() == userId);
+
+        if (accessLevel.HasValue)
+            query = query.Where(pa => pa.AccessLevel == accessLevel.Value);
+
+        if (isActive.HasValue)
+            query = query.Where(pa => pa.IsActive == isActive.Value);
+
+        // Get total count
+        var totalCount = await query.CountAsync();
+
+        // Apply pagination
+        var accessRecords = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .OrderByDescending(pa => pa.CreatedAt)
+            .ToListAsync();
+
+        // Convert to DTOs
+        var patientAccessInfos = accessRecords.Select(pa => new PatientAccessInfo
+        {
+            Id = pa.Id.ToString(),
+            UserId = pa.UserId.ToString(),
+            UserName = pa.User?.DisplayName ?? "Unknown User",
+            PatientId = pa.Patient?.FhirPatientId ?? "Unknown Patient",
+            PatientName = pa.Patient?.DisplayName ?? "Unknown Patient",
+            AccessLevel = pa.AccessLevel,
+            Reason = pa.Reason,
+            GrantedAt = pa.CreatedAt,
+            GrantedBy = pa.GrantedBy,
+            ExpiresAt = pa.ExpiresAt,
+            IsActive = pa.IsActive
+        }).ToList();
+
+        return (patientAccessInfos, totalCount);
+    }
 }

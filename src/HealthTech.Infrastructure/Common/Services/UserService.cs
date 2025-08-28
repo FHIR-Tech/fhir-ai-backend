@@ -381,4 +381,95 @@ public class UserService : IUserService
         var hashedPassword = HashPassword(password);
         return hashedPassword == hash;
     }
+
+    /// <summary>
+    /// Create user session
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="refreshToken">Refresh token</param>
+    /// <returns>Task</returns>
+    public async Task CreateUserSessionAsync(Guid userId, string refreshToken)
+    {
+        var userSession = new UserSession
+        {
+            UserId = userId,
+            RefreshToken = refreshToken,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(30), // 30 days expiration
+            IsActive = true,
+            TenantId = "default" // TODO: Get from context
+        };
+
+        _context.UserSessions.Add(userSession);
+        await _context.SaveChangesAsync(CancellationToken.None);
+        
+        _logger.LogInformation("Created user session for user {UserId}", userId);
+    }
+
+    /// <summary>
+    /// Invalidate user session
+    /// </summary>
+    /// <param name="sessionToken">Session token to invalidate</param>
+    /// <returns>True if invalidated, false otherwise</returns>
+    public async Task<bool> InvalidateUserSessionAsync(string sessionToken)
+    {
+        var session = await _context.UserSessions
+            .FirstOrDefaultAsync(us => us.RefreshToken == sessionToken && us.IsActive);
+        
+        if (session == null)
+            return false;
+
+        session.IsActive = false;
+        session.ModifiedAt = DateTime.UtcNow;
+        
+        await _context.SaveChangesAsync(CancellationToken.None);
+        
+        _logger.LogInformation("Invalidated user session {SessionId} for user {UserId}", session.Id, session.UserId);
+        return true;
+    }
+
+    /// <summary>
+    /// Validate refresh token and get user session
+    /// </summary>
+    /// <param name="refreshToken">Refresh token to validate</param>
+    /// <returns>User session if valid, null otherwise</returns>
+    public async Task<UserSession?> ValidateRefreshTokenAsync(string refreshToken)
+    {
+        var session = await _context.UserSessions
+            .Include(us => us.User)
+            .FirstOrDefaultAsync(us => 
+                us.RefreshToken == refreshToken && 
+                us.IsActive && 
+                us.ExpiresAt > DateTime.UtcNow);
+
+        if (session == null)
+        {
+            _logger.LogWarning("Invalid or expired refresh token attempted");
+            return null;
+        }
+
+        _logger.LogInformation("Validated refresh token for user {UserId}", session.UserId);
+        return session;
+    }
+
+    /// <summary>
+    /// Update user session with new refresh token
+    /// </summary>
+    /// <param name="sessionId">Session ID</param>
+    /// <param name="newRefreshToken">New refresh token</param>
+    /// <returns>Task</returns>
+    public async Task UpdateUserSessionAsync(Guid sessionId, string newRefreshToken)
+    {
+        var session = await _context.UserSessions.FindAsync(sessionId);
+        if (session == null)
+            throw new ArgumentException($"Session with ID {sessionId} not found", nameof(sessionId));
+
+        session.RefreshToken = newRefreshToken;
+        session.ModifiedAt = DateTime.UtcNow;
+        session.ExpiresAt = DateTime.UtcNow.AddDays(30); // Extend expiration
+
+        await _context.SaveChangesAsync(CancellationToken.None);
+        
+        _logger.LogInformation("Updated user session {SessionId} with new refresh token", sessionId);
+    }
 }

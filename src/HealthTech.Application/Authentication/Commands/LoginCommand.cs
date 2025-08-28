@@ -124,11 +124,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                     Id = user.Id,
                     Username = user.Username,
                     Email = user.Email,
-                    FullName = user.FullName,
+                    FullName = user.DisplayName,
                     Role = userRole,
                     PractitionerId = practitionerId,
                     TenantId = user.TenantId,
-                    Scopes = scopes.Select(s => s.Scope).ToList()
+                    Scopes = scopes.ToList()
                 }
             };
         }

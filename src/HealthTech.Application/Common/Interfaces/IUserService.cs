@@ -139,4 +139,34 @@ public interface IUserService
     /// <param name="scope">Scope to remove</param>
     /// <returns>Task</returns>
     Task RemoveUserScopeAsync(Guid userId, string scope);
+
+    /// <summary>
+    /// Create user session
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="refreshToken">Refresh token</param>
+    /// <returns>Task</returns>
+    Task CreateUserSessionAsync(Guid userId, string refreshToken);
+
+    /// <summary>
+    /// Invalidate user session
+    /// </summary>
+    /// <param name="sessionToken">Session token to invalidate</param>
+    /// <returns>True if invalidated, false otherwise</returns>
+    Task<bool> InvalidateUserSessionAsync(string sessionToken);
+
+    /// <summary>
+    /// Validate refresh token and get user session
+    /// </summary>
+    /// <param name="refreshToken">Refresh token to validate</param>
+    /// <returns>User session if valid, null otherwise</returns>
+    Task<UserSession?> ValidateRefreshTokenAsync(string refreshToken);
+
+    /// <summary>
+    /// Update user session with new refresh token
+    /// </summary>
+    /// <param name="sessionId">Session ID</param>
+    /// <param name="newRefreshToken">New refresh token</param>
+    /// <returns>Task</returns>
+    Task UpdateUserSessionAsync(Guid sessionId, string newRefreshToken);
 }
