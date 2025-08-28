@@ -269,6 +269,9 @@ app.UseAuthorization();
 // Map FHIR endpoints
 app.MapFhirEndpoints();
 
+// Map authentication endpoints
+app.MapAuthenticationEndpoints();
+
 // Map health check
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }))
     .WithName("HealthCheck")
