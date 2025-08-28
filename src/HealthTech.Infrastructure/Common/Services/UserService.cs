@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
+using BCrypt.Net;
 
 namespace HealthTech.Infrastructure.Common.Services;
 
@@ -361,15 +362,13 @@ public class UserService : IUserService
     }
 
     /// <summary>
-    /// Hash password using SHA256
+    /// Hash password using bcrypt
     /// </summary>
     /// <param name="password">Plain text password</param>
     /// <returns>Hashed password</returns>
     private static string HashPassword(string password)
     {
-        using var sha256 = SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hashedBytes);
+        return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
     /// <summary>
@@ -380,8 +379,7 @@ public class UserService : IUserService
     /// <returns>True if password matches hash</returns>
     private static bool VerifyPassword(string password, string hash)
     {
-        var hashedPassword = HashPassword(password);
-        return hashedPassword == hash;
+        return BCrypt.Net.BCrypt.Verify(password, hash);
     }
 
     /// <summary>
