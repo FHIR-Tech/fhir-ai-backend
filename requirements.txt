@@ -1,0 +1,9 @@
+# Python Dependencies for FHIR-AI Backend Validation Scripts
+# Install with: pip install -r requirements.txt
+
+# YAML parsing and validation
+PyYAML>=6.0.0
+
+# Additional validation tools (optional)
+# yamllint>=1.32.0  # Uncomment if yamllint is needed
+# jsonschema>=4.17.0  # Uncomment if JSON schema validation is needed

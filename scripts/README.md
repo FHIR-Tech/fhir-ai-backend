@@ -1,57 +1,175 @@
-# Scripts Directory
+# FHIR-AI Backend Scripts
 
-This directory contains utility scripts, sample data, and tools for the FHIR-AI Backend project.
+This directory contains various utility scripts for the FHIR-AI Backend project, including validation tools, testing scripts, and automation helpers.
 
-## Directory Structure
+## Validation Scripts
 
-### `/samples/` - Sample Data Files
-- **`/bundles/`** - FHIR Bundle sample files
-  - `fhir_bundle_ntkien_2024.json` - Comprehensive FHIR bundle with multiple resources
-- **`/resources/`** - Individual FHIR resource samples
-- **`/test-data/`** - Test data for development and testing
-  - `test_bundle_simple.json` - Simple test bundle for basic functionality
-- **`SAMPLE_VALUES.md`** - Documentation of sample values and data structures
+### 1. `validate-yaml.py` - YAML Syntax Validation
+Validates all YAML files in the project for syntax correctness.
 
-### `/database/` - Database Scripts
-- **`init-db.sql`** - Database initialization script with schema setup
-
-### `/api/` - API Testing Scripts
-- **`sample-data-api.js`** - Node.js script for testing API endpoints with sample data
-```Terminal
-dotnet run --project src/HealthTech.API
-node scripts/api/sample-data-api.js
+**Usage:**
+```bash
+source .venv/bin/activate
+python3 scripts/validate-yaml.py
 ```
 
-### `/deployment/` - Deployment Scripts
-- Deployment automation scripts (to be added)
+**Features:**
+- Finds all `.yml` and `.yaml` files
+- Excludes `node_modules` and hidden directories
+- Validates YAML syntax
+- Provides detailed error reporting
 
-## Usage Guidelines
+### 2. `validate-github-actions.py` - GitHub Actions Validation
+Validates GitHub Actions workflow files for common issues and best practices.
 
-### Sample Data
-- Use descriptive names with date/version: `{resource-type}_{purpose}_{date}.json`
-- Keep sample data realistic but anonymized
-- Document any special requirements or dependencies
+**Usage:**
+```bash
+source .venv/bin/activate
+python3 scripts/validate-github-actions.py
+```
 
-### Scripts
-- All scripts should be executable and well-documented
-- Include error handling and logging
-- Use environment variables for configuration
-- Follow the project's coding standards
+**Features:**
+- Validates workflow structure
+- Checks required fields (`name`, `on`, `jobs`)
+- Validates job and step configurations
+- Handles YAML parsing quirks
 
-### Database Scripts
-- Always backup before running database scripts
-- Test scripts in development environment first
-- Include rollback procedures where possible
+### 3. `validate-all.py` - Comprehensive Validation
+Runs all validation checks for the project.
 
-## Naming Conventions
+**Usage:**
+```bash
+source .venv/bin/activate
+python3 scripts/validate-all.py
+```
 
-- **Files**: `{purpose}_{description}_{date}.{extension}`
-- **Directories**: Use kebab-case for multi-word directories
-- **Scripts**: Use descriptive names that indicate their purpose
+**Features:**
+- YAML syntax validation
+- GitHub Actions workflow validation
+- .NET solution validation
+- Docker configuration validation
+- Project structure validation
 
-## Security Notes
+## Setup Requirements
 
-- Never include real patient data in sample files
-- Use environment variables for sensitive configuration
-- Validate all input data before processing
-- Follow the project's security guidelines
+### Python Environment
+```bash
+# Create virtual environment
+python3 -m venv .venv
+
+# Activate virtual environment
+source .venv/bin/activate
+
+# Install dependencies
+pip install PyYAML
+```
+
+### Required Tools
+- Python 3.8+
+- .NET 8.0+
+- Docker (optional, for Docker validation)
+- Docker Compose (optional, for Docker validation)
+
+## Validation Results
+
+### YAML Files
+- ✅ `.github/workflows/code-quality.yml`
+- ✅ `.github/workflows/dotnet.yml`
+- ✅ `.github/workflows/release.yml`
+- ✅ `.github/workflows/test-simple.yml`
+- ✅ `docker-compose.yml`
+
+### GitHub Actions Workflows
+- ✅ `code-quality.yml` - Quality assurance pipeline
+- ✅ `dotnet.yml` - Main CI/CD pipeline
+- ✅ `release.yml` - Release management
+- ✅ `test-simple.yml` - Simple test workflow
+
+## Common Issues and Solutions
+
+### 1. YAML Parsing Issues
+**Problem:** YAML parser reads `on` as boolean `True`
+**Solution:** Script handles this automatically by checking for both string and boolean values
+
+### 2. Missing Dependencies
+**Problem:** PyYAML not installed
+**Solution:** Install with `pip install PyYAML`
+
+### 3. Virtual Environment
+**Problem:** Python packages not found
+**Solution:** Activate virtual environment with `source .venv/bin/activate`
+
+### 4. Docker Not Available
+**Problem:** Docker commands fail
+**Solution:** Docker is optional for validation. Script will skip Docker checks if not available.
+
+## Integration with CI/CD
+
+These validation scripts can be integrated into the CI/CD pipeline:
+
+```yaml
+- name: Validate YAML files
+  run: |
+    source .venv/bin/activate
+    python3 scripts/validate-yaml.py
+
+- name: Validate GitHub Actions
+  run: |
+    source .venv/bin/activate
+    python3 scripts/validate-github-actions.py
+```
+
+## Extending Validation
+
+To add new validation checks:
+
+1. Create a new Python script in the `scripts/` directory
+2. Follow the naming convention: `validate-*.py`
+3. Return appropriate exit codes (0 for success, 1 for failure)
+4. Add to `validate-all.py` if needed
+
+## Troubleshooting
+
+### Script Not Found
+```bash
+# Make sure you're in the project root
+cd /path/to/fhir-ai-backend
+
+# Check if scripts exist
+ls -la scripts/
+```
+
+### Permission Denied
+```bash
+# Make scripts executable
+chmod +x scripts/*.py
+```
+
+### Python Path Issues
+```bash
+# Use absolute path
+python3 /path/to/fhir-ai-backend/scripts/validate-yaml.py
+```
+
+### Virtual Environment Issues
+```bash
+# Recreate virtual environment
+rm -rf .venv
+python3 -m venv .venv
+source .venv/bin/activate
+pip install PyYAML
+```
+
+## Contributing
+
+When adding new validation scripts:
+
+1. Follow the existing naming conventions
+2. Include proper error handling
+3. Add documentation
+4. Update this README
+5. Test with various scenarios
+
+---
+
+*These scripts ensure code quality and consistency across the FHIR-AI Backend project.*
