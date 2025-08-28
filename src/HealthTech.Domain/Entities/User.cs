@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using HealthTech.Domain.Enums;
 
 namespace HealthTech.Domain.Entities;
@@ -86,6 +87,7 @@ public class User : BaseEntity
     /// <summary>
     /// User's display name (computed property)
     /// </summary>
+    [NotMapped]
     public string DisplayName => $"{FirstName} {LastName}".Trim();
 
     /// <summary>

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HealthTech.Domain.Entities;
 
@@ -100,11 +101,13 @@ public class Patient : BaseEntity
     /// <summary>
     /// Patient's display name (computed property)
     /// </summary>
+    [NotMapped]
     public string DisplayName => $"{FirstName} {LastName}".Trim();
 
     /// <summary>
     /// Patient's age (computed property)
     /// </summary>
+    [NotMapped]
     public int? Age => DateOfBirth?.Year > 0 ? DateTime.Now.Year - DateOfBirth.Value.Year : null;
 
     /// <summary>

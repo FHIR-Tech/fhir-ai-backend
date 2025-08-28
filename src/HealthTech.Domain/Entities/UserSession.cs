@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HealthTech.Domain.Entities;
 
@@ -26,11 +27,7 @@ public class UserSession : BaseEntity
     [MaxLength(500)]
     public string? RefreshToken { get; set; }
 
-    /// <summary>
-    /// When session was created
-    /// </summary>
-    [Required]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
 
     /// <summary>
     /// When session expires
@@ -57,6 +54,7 @@ public class UserSession : BaseEntity
     /// <summary>
     /// Whether session is currently active (computed based on IsRevoked and ExpiresAt)
     /// </summary>
+    [NotMapped]
     public bool IsActive => !IsRevoked && ExpiresAt > DateTime.UtcNow;
 
     /// <summary>

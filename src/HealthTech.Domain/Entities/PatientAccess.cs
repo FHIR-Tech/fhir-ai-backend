@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using HealthTech.Domain.Enums;
 
 namespace HealthTech.Domain.Entities;
@@ -67,6 +68,7 @@ public class PatientAccess : BaseEntity
     /// <summary>
     /// Whether access is currently active (computed based on IsEnabled and ExpiresAt)
     /// </summary>
+    [NotMapped]
     public bool IsActive => IsEnabled && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow);
 
     /// <summary>

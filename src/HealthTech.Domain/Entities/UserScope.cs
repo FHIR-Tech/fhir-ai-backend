@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HealthTech.Domain.Entities;
 
@@ -51,6 +52,7 @@ public class UserScope : BaseEntity
     /// <summary>
     /// Whether scope is currently active (computed based on IsRevoked and ExpiresAt)
     /// </summary>
+    [NotMapped]
     public bool IsActive => !IsRevoked && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow);
 
     /// <summary>

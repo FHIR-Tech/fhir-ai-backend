@@ -71,18 +71,19 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Configure snake_case naming convention
-        foreach (var entity in modelBuilder.Model.GetEntityTypes())
-        {
-            // Configure table names to snake_case
-            entity.SetTableName(ConvertToSnakeCase(entity.GetTableName()));
+        // foreach (var entity in modelBuilder.Model.GetEntityTypes())
+        // {
+        //     // Configure table names to snake_case
+        //     entity.SetTableName(ConvertToSnakeCase(entity.GetTableName()));
             
-            // Configure column names to snake_case
-            foreach (var property in entity.GetProperties())
-            {
-                property.SetColumnName(ConvertToSnakeCase(property.GetColumnName()));
-            }
-        }
-        
+        //     // Configure column names to snake_case
+        //     foreach (var property in entity.GetProperties())
+        //     {
+        //         property.SetColumnName(ConvertToSnakeCase(property.GetColumnName()));
+        //     }
+        // }
+
+        // Apply entity configurations (which handle snake_case naming)
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }

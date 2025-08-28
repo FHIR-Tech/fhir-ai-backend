@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HealthTech.Domain.Entities;
 
@@ -83,6 +84,7 @@ public class PatientConsent : BaseEntity
     /// <summary>
     /// Whether consent is currently valid
     /// </summary>
+    [NotMapped]
     public bool IsValid => IsActive && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow) && RevokedAt == null;
 
     /// <summary>
