@@ -35,6 +35,25 @@ public interface IJwtService
     string GenerateRefreshToken(string userId);
 
     /// <summary>
+    /// Create and store refresh token for user
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="ipAddress">IP address</param>
+    /// <param name="userAgent">User agent</param>
+    /// <param name="expirationHours">Expiration time in hours (default: 24)</param>
+    /// <returns>Refresh token</returns>
+    Task<string> CreateRefreshTokenAsync(string userId, string tenantId, string? ipAddress = null, string? userAgent = null, int expirationHours = 24);
+
+    /// <summary>
+    /// Revoke refresh token
+    /// </summary>
+    /// <param name="refreshToken">Refresh token to revoke</param>
+    /// <param name="reason">Reason for revocation</param>
+    /// <returns>True if revoked successfully, false otherwise</returns>
+    Task<bool> RevokeRefreshTokenAsync(string refreshToken, string? reason = null);
+
+    /// <summary>
     /// Validate JWT token
     /// </summary>
     /// <param name="token">JWT token</param>

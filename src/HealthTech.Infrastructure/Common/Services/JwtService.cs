@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace HealthTech.Infrastructure.Common.Services;
 
@@ -16,6 +17,7 @@ public class JwtService : IJwtService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<JwtService> _logger;
+    private readonly IApplicationDbContext _context;
     private readonly string _secretKey;
     private readonly string _issuer;
     private readonly string _audience;
@@ -26,10 +28,12 @@ public class JwtService : IJwtService
     /// </summary>
     /// <param name="configuration">Configuration</param>
     /// <param name="logger">Logger</param>
-    public JwtService(IConfiguration configuration, ILogger<JwtService> logger)
+    /// <param name="context">Application database context</param>
+    public JwtService(IConfiguration configuration, ILogger<JwtService> logger, IApplicationDbContext context)
     {
         _configuration = configuration;
         _logger = logger;
+        _context = context;
         
         _secretKey = _configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT secret key not configured");
         _issuer = _configuration["JwtSettings:Issuer"] ?? "HealthTech.FHIR-AI";
@@ -104,6 +108,85 @@ public class JwtService : IJwtService
         
         _logger.LogInformation("Generated refresh token for user {UserId}", userId);
         return refreshToken;
+    }
+
+    /// <summary>
+    /// Create and store refresh token for user
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="ipAddress">IP address</param>
+    /// <param name="userAgent">User agent</param>
+    /// <param name="expirationHours">Expiration time in hours (default: 24)</param>
+    /// <returns>Refresh token</returns>
+    public async Task<string> CreateRefreshTokenAsync(string userId, string tenantId, string? ipAddress = null, string? userAgent = null, int expirationHours = 24)
+    {
+        try
+        {
+            // Generate refresh token
+            var refreshToken = GenerateRefreshToken(userId);
+
+            // Create user session
+            var userSession = new HealthTech.Domain.Entities.UserSession
+            {
+                UserId = Guid.Parse(userId),
+                SessionToken = refreshToken, // Using refresh token as session token for simplicity
+                RefreshToken = refreshToken,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(expirationHours),
+                CreatedIpAddress = ipAddress,
+                UserAgent = userAgent,
+                TenantId = tenantId,
+                IsRevoked = false
+            };
+
+            // Save to database
+            _context.UserSessions.Add(userSession);
+            await _context.SaveChangesAsync(CancellationToken.None);
+
+            _logger.LogInformation("Created refresh token session for user {UserId} with expiration {Expiration}", userId, userSession.ExpiresAt);
+            return refreshToken;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating refresh token for user {UserId}", userId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Revoke refresh token
+    /// </summary>
+    /// <param name="refreshToken">Refresh token to revoke</param>
+    /// <param name="reason">Reason for revocation</param>
+    /// <returns>True if revoked successfully, false otherwise</returns>
+    public async Task<bool> RevokeRefreshTokenAsync(string refreshToken, string? reason = null)
+    {
+        try
+        {
+            var userSession = await _context.UserSessions
+                .FirstOrDefaultAsync(s => s.RefreshToken == refreshToken && !s.IsRevoked);
+
+            if (userSession == null)
+            {
+                _logger.LogWarning("Refresh token not found or already revoked: {RefreshToken}", refreshToken);
+                return false;
+            }
+
+            userSession.IsRevoked = true;
+            userSession.RevokedAt = DateTime.UtcNow;
+            userSession.RevocationReason = reason;
+
+            await _context.SaveChangesAsync(CancellationToken.None);
+
+            _logger.LogInformation("Revoked refresh token for user {UserId} with reason: {Reason}", userSession.UserId, reason ?? "No reason provided");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error revoking refresh token: {RefreshToken}", refreshToken);
+            return false;
+        }
     }
 
     /// <summary>
@@ -185,14 +268,46 @@ public class JwtService : IJwtService
     /// <returns>User ID if valid, null otherwise</returns>
     public async Task<string?> ValidateRefreshTokenAsync(string refreshToken)
     {
-        // In a real implementation, this would validate against stored refresh tokens
-        // For now, we'll just check if it's not null or empty
-        if (string.IsNullOrEmpty(refreshToken))
-            return null;
+        try
+        {
+            // Basic validation
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                _logger.LogWarning("Refresh token validation failed: token is null or empty");
+                return null;
+            }
 
-        // TODO: Implement proper refresh token validation against database
-        _logger.LogDebug("Refresh token validation (placeholder implementation)");
-        return null;
+            // Find the user session with the given refresh token
+            var userSession = await _context.UserSessions
+                .FirstOrDefaultAsync(s => s.RefreshToken == refreshToken && 
+                                         !s.IsRevoked &&
+                                         s.ExpiresAt > DateTime.UtcNow);
+
+            if (userSession == null)
+            {
+                _logger.LogWarning("Refresh token validation failed: invalid, revoked, or expired token");
+                return null;
+            }
+
+            // Additional security check: verify session is active
+            if (!userSession.IsActive)
+            {
+                _logger.LogWarning("Refresh token validation failed: session is not active for user {UserId}", userSession.UserId);
+                return null;
+            }
+
+            // Update last accessed timestamp
+            userSession.LastAccessedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync(CancellationToken.None);
+
+            _logger.LogInformation("Refresh token validation successful for user {UserId}", userSession.UserId);
+            return userSession.UserId.ToString();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating refresh token");
+            return null;
+        }
     }
 
     /// <summary>

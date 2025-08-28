@@ -14,16 +14,19 @@ public class PatientAccessService : IPatientAccessService
 {
     private readonly IApplicationDbContext _context;
     private readonly ILogger<PatientAccessService> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="context">Application database context</param>
     /// <param name="logger">Logger</param>
-    public PatientAccessService(IApplicationDbContext context, ILogger<PatientAccessService> logger)
+    /// <param name="currentUserService">Current user service</param>
+    public PatientAccessService(IApplicationDbContext context, ILogger<PatientAccessService> logger, ICurrentUserService currentUserService)
     {
         _context = context;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -147,7 +150,7 @@ public class PatientAccessService : IPatientAccessService
             IsEmergencyAccess = isEmergencyAccess,
             EmergencyJustification = emergencyJustification,
             IsEnabled = true,
-            TenantId = "default" // TODO: Get from context
+            TenantId = _currentUserService.TenantId ?? "default"
         };
 
         _context.PatientAccesses.Add(patientAccess);

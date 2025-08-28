@@ -16,16 +16,19 @@ public class UserService : IUserService
 {
     private readonly IApplicationDbContext _context;
     private readonly ILogger<UserService> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="context">Application database context</param>
     /// <param name="logger">Logger</param>
-    public UserService(IApplicationDbContext context, ILogger<UserService> logger)
+    /// <param name="currentUserService">Current user service</param>
+    public UserService(IApplicationDbContext context, ILogger<UserService> logger, ICurrentUserService currentUserService)
     {
         _context = context;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -331,7 +334,7 @@ public class UserService : IUserService
             GrantedBy = grantedBy,
             ExpiresAt = expiresAt,
             IsRevoked = false,
-            TenantId = "default" // TODO: Get from context
+            TenantId = _currentUserService.TenantId ?? "default"
         };
 
         _context.UserScopes.Add(userScope);
@@ -397,7 +400,7 @@ public class UserService : IUserService
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddDays(30), // 30 days expiration
             IsRevoked = false,
-            TenantId = "default" // TODO: Get from context
+            TenantId = _currentUserService.TenantId ?? "default"
         };
 
         _context.UserSessions.Add(userSession);

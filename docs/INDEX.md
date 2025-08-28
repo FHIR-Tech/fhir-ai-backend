@@ -44,6 +44,8 @@ docs/
 ### Cursor Agent Reports
 - [Cursor Agent Overview](cursor-agent/README.md)
 - [Implementation Report Template](cursor-agent/reports/template_implementation_report.md)
+- [JWT Refresh Token Implementation Report](cursor-agent/reports/jwt_refresh_token_implementation_report.md)
+- [Service Implementation Analysis Report](cursor-agent/reports/service_implementation_analysis_report.md)
 - [GitHub Actions Workflows](cursor-agent/workflows/README.md)
 - [Workflow Fixes](cursor-agent/workflows/FIXES.md)
 
