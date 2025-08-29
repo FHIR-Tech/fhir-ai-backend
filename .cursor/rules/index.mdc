@@ -82,7 +82,7 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 ### 5. API Testing & Development Workflow
 - **API Ports**: HTTP 5000 (redirects to HTTPS), HTTPS 5001 (primary)
 - **Database Check**: Always verify PostgreSQL is running before starting API
-- **API Startup**: Use `dotnet run` in `/src/HealthTech.API` directory
+- **API Startup**: Use `dotnet run` in `/src/HealthTech.API` directory in background mode
 - **Process Management**: Kill existing dotnet processes before restarting
 - **Health Check**: Verify API responds at `https://localhost:5001/health`
 - **Test Scripts**: Use Node.js scripts in `/scripts/api/` directory
@@ -95,15 +95,23 @@ This file defines comprehensive rules for Cursor AI when developing, scaffolding
 - **PascalCase**: Classes, methods, properties
 - **camelCase**: Variables, parameters
 - **UPPER_CASE**: Constants
+- **snake_case**: PostgreSQL database objects (tables, columns, indexes, constraints)
 - **Descriptive Names**: Self-documenting code
 
-### 2. Documentation
+### 2. Code Organization & Structure
+- **Field Grouping**: Group related fields together with logical separation
+- **Method Organization**: Arrange methods in logical order (constructors, properties, public methods, private methods)
+- **Logical Grouping**: Use regions or comments to separate different functional areas
+- **Consistent Ordering**: Maintain consistent field and method ordering across similar classes
+- **Separation of Concerns**: Keep related functionality grouped together
+
+### 3. Documentation
 - **XML Comments**: All public APIs
 - **README**: Comprehensive setup and deployment instructions
 - **Architecture**: Document design decisions and patterns
 - **API Documentation**: OpenAPI specifications
 
-### 3. Project Structure & File Organization
+### 4. Project Structure & File Organization
 
 #### Documentation Structure (`/docs/`)
 ```
@@ -158,13 +166,13 @@ docs/
 - **Logs**: `{session-type}_{date}_{time}.md`
 - **Decisions**: `ADR_{number}_{title}.md`
 
-### 4. Performance Considerations
+### 5. Performance Considerations
 - **Async/Await**: Use throughout for I/O operations
 - **Caching**: Implement appropriate caching strategies
 - **Database Optimization**: Efficient queries and indexing
 - **Memory Management**: Proper disposal of resources
 
-### 5. Cursor Agent Documentation Rules
+### 6. Cursor Agent Documentation Rules
 
 #### When Creating Documentation
 - **Always use templates**: Use `docs/cursor-agent/reports/template_implementation_report.md` for implementation reports

@@ -312,7 +312,7 @@ public class UserService : IUserService
     public async Task<IEnumerable<string>> GetUserScopesAsync(Guid userId)
     {
         return await _context.UserScopes
-            .Where(us => us.UserId == userId && us.IsActive)
+            .Where(us => us.UserId == userId && !us.IsRevoked && (us.ExpiresAt == null || us.ExpiresAt > DateTime.UtcNow))
             .Select(us => us.Scope)
             .ToListAsync();
     }
@@ -393,14 +393,24 @@ public class UserService : IUserService
     /// <returns>Task</returns>
     public async Task CreateUserSessionAsync(Guid userId, string refreshToken)
     {
+        // Get user to get tenant ID
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException($"User with ID {userId} not found");
+        }
+
         var userSession = new UserSession
         {
             UserId = userId,
+            SessionToken = refreshToken, // Use refresh token as session token for now
             RefreshToken = refreshToken,
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddDays(30), // 30 days expiration
             IsRevoked = false,
-            TenantId = _currentUserService.TenantId ?? "default"
+            TenantId = user.TenantId, // Use user's tenant ID
+            CreatedBy = userId.ToString(), // Set CreatedBy to the user ID
+            IsDeleted = false // Set IsDeleted to false
         };
 
         _context.UserSessions.Add(userSession);

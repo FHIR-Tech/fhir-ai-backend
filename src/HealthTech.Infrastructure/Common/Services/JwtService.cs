@@ -137,7 +137,9 @@ public class JwtService : IJwtService
                 CreatedIpAddress = ipAddress,
                 UserAgent = userAgent,
                 TenantId = tenantId,
-                IsRevoked = false
+                IsRevoked = false,
+                CreatedBy = userId, // Set CreatedBy to the user ID
+                IsDeleted = false // Set IsDeleted to false
             };
 
             // Save to database

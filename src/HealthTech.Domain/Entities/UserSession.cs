@@ -27,8 +27,6 @@ public class UserSession : BaseEntity
     [MaxLength(500)]
     public string? RefreshToken { get; set; }
 
-
-
     /// <summary>
     /// When session expires
     /// </summary>

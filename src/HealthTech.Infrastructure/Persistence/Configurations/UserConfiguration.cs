@@ -24,14 +24,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.LastName).HasColumnName("last_name").HasMaxLength(100);
         builder.Property(u => u.PractitionerId).HasColumnName("practitioner_id").HasMaxLength(100);
 
-
         builder.Property(u => u.LastLoginAt).HasColumnName("last_login_at");
+        builder.Property(u => u.LastLoginIp).HasColumnName("last_login_ip");
         builder.Property(u => u.FailedLoginAttempts).HasColumnName("failed_login_attempts").HasDefaultValue(0);
         builder.Property(u => u.LockedUntil).HasColumnName("locked_until");
         builder.Property(u => u.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
         builder.Property(u => u.ModifiedAt).HasColumnName("modified_at");
         builder.Property(u => u.CreatedBy).HasColumnName("created_by");
         builder.Property(u => u.ModifiedBy).HasColumnName("modified_by");
+        builder.Property(u => u.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
+        builder.Property(u => u.DeletedAt).HasColumnName("deleted_at");
+        builder.Property(u => u.DeletedBy).HasColumnName("deleted_by");
+        builder.Property(u => u.Version).HasColumnName("version").HasDefaultValue(1);
 
         // Constraints
         builder.HasIndex(u => new { u.TenantId, u.Username }).IsUnique().HasDatabaseName("uk_users_tenant_username");
