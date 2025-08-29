@@ -35,26 +35,37 @@ This document defines the **immutable Healthcare Data Pattern standards** for th
 
 ### FHIR Resource Structure
 
-#### Domain Entity with FHIR Compliance
+#### FHIR R4B Resource Implementation
 ```csharp
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
+using System.Text.Json;
+
 public class Patient : BaseEntity
 {
     // ========================================
-    // FHIR RESOURCE IDENTIFIERS
+    // FHIR R4B RESOURCE STORAGE
     // ========================================
     
     /// <summary>
-    /// FHIR resource identifier
+    /// FHIR R4B Patient resource as JSONB
     /// </summary>
+    [Column(TypeName = "jsonb")]
+    public JsonDocument FhirResource { get; set; } = JsonDocument.Parse("{}");
+    
+    /// <summary>
+    /// FHIR resource ID (from FHIR resource)
+    /// </summary>
+    [MaxLength(64)]
     public string FhirId { get; set; } = string.Empty;
     
     /// <summary>
-    /// FHIR resource version
+    /// FHIR resource version (from FHIR resource)
     /// </summary>
     public int FhirVersion { get; set; } = 1;
     
     /// <summary>
-    /// FHIR resource last updated timestamp
+    /// FHIR resource last updated (from FHIR resource)
     /// </summary>
     public DateTime FhirLastUpdated { get; set; } = DateTime.UtcNow;
     
@@ -236,20 +247,41 @@ public class Patient : BaseEntity
     public DateTime? LastAccessedAt { get; set; }
     
     // ========================================
-    // ADDITIONAL DATA FIELDS
+    // FHIR R4B HELPER METHODS
     // ========================================
     
     /// <summary>
-    /// FHIR resource as JSONB for full FHIR compliance
+    /// Get FHIR R4B Patient resource
     /// </summary>
-    [Column(TypeName = "jsonb")]
-    public JsonDocument? FhirResource { get; set; }
+    [NotMapped]
+    public Hl7.Fhir.Model.Patient? FhirPatient
+    {
+        get
+        {
+            try
+            {
+                if (FhirResource == null) return null;
+                var jsonString = FhirResource.RootElement.GetRawText();
+                return FhirJsonParser.ParseResourceFromJson<Hl7.Fhir.Model.Patient>(jsonString);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    }
     
     /// <summary>
-    /// Custom extensions and additional data
+    /// Set FHIR R4B Patient resource
     /// </summary>
-    [Column(TypeName = "jsonb")]
-    public JsonDocument? Extensions { get; set; }
+    public void SetFhirPatient(Hl7.Fhir.Model.Patient patient)
+    {
+        var jsonString = FhirJsonSerializer.SerializeToString(patient);
+        FhirResource = JsonDocument.Parse(jsonString);
+        FhirId = patient.Id ?? string.Empty;
+        FhirVersion = patient.Meta?.VersionId != null ? int.Parse(patient.Meta.VersionId) : 1;
+        FhirLastUpdated = patient.Meta?.LastUpdated?.ToDateTime() ?? DateTime.UtcNow;
+    }
     
     // ========================================
     // COMPUTED PROPERTIES
@@ -316,61 +348,233 @@ public class Patient : BaseEntity
 }
 ```
 
-### Healthcare Data DTOs
+### FHIR R4B Endpoint Implementation
 
-#### Patient DTO with Healthcare Context
+#### FHIR Patient Endpoint (Minimal API)
 ```csharp
-public record PatientDto
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
+using Microsoft.AspNetCore.Mvc;
+
+public static class PatientEndpoints
 {
-    public Guid Id { get; init; }
-    public string FhirId { get; init; } = string.Empty;
-    public int FhirVersion { get; init; }
-    public DateTime FhirLastUpdated { get; init; }
-    public string FirstName { get; init; } = string.Empty;
-    public string LastName { get; init; } = string.Empty;
-    public string FullName { get; init; } = string.Empty;
-    public DateTime DateOfBirth { get; init; }
-    public int Age { get; init; }
-    public string Gender { get; init; } = string.Empty;
-    public string? Email { get; init; }
-    public string? PhoneNumber { get; init; }
-    public string? FullAddress { get; init; }
-    public string? MedicalRecordNumber { get; init; }
-    public InsuranceInfo? Insurance { get; init; }
-    public EmergencyContact? EmergencyContact { get; init; }
-    public List<Allergy> Allergies { get; init; } = new();
-    public List<Medication> Medications { get; init; } = new();
-    public string Status { get; init; } = string.Empty;
-    public bool IsDeceased { get; init; }
-    public DateTime? DeceasedDate { get; init; }
-    public string ConsentStatus { get; init; } = string.Empty;
-    public DateTime? ConsentDate { get; init; }
-    public string DataClassification { get; init; } = string.Empty;
-    public DateTime CreatedAt { get; init; }
-    public DateTime? UpdatedAt { get; init; }
-    public DateTime? LastAccessedAt { get; init; }
+    public static void MapPatientEndpoints(this WebApplication app)
+    {
+        var group = app.MapGroup("/fhir/Patient")
+            .WithTags("FHIR Patient")
+            .WithOpenApi();
+
+        // GET /fhir/Patient/{id} - Read Patient
+        group.MapGet("/{id}", async (
+            string id,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
+        {
+            var query = new GetPatientQuery { FhirId = id };
+            var result = await mediator.Send(query, cancellationToken);
+            
+            if (!result.IsSuccess)
+                return Results.NotFound(new OperationOutcome
+                {
+                    Issue = new List<OperationOutcome.IssueComponent>
+                    {
+                        new()
+                        {
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.NotFound,
+                            Diagnostics = result.Error
+                        }
+                    }
+                });
+
+            return Results.Ok(result.Value);
+        })
+        .WithName("GetPatient")
+        .WithSummary("Read Patient")
+        .WithDescription("Retrieve a Patient resource by ID")
+        .Produces<Patient>(200)
+        .Produces<OperationOutcome>(404);
+
+        // POST /fhir/Patient - Create Patient
+        group.MapPost("/", async (
+            [FromBody] Patient patient,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
+        {
+            var command = new CreatePatientCommand { FhirPatient = patient };
+            var result = await mediator.Send(command, cancellationToken);
+            
+            if (!result.IsSuccess)
+                return Results.BadRequest(new OperationOutcome
+                {
+                    Issue = new List<OperationOutcome.IssueComponent>
+                    {
+                        new()
+                        {
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.Invalid,
+                            Diagnostics = result.Error
+                        }
+                    }
+                });
+
+            return Results.Created($"/fhir/Patient/{result.Value.Id}", result.Value);
+        })
+        .WithName("CreatePatient")
+        .WithSummary("Create Patient")
+        .WithDescription("Create a new Patient resource")
+        .Produces<Patient>(201)
+        .Produces<OperationOutcome>(400);
+
+        // PUT /fhir/Patient/{id} - Update Patient
+        group.MapPut("/{id}", async (
+            string id,
+            [FromBody] Patient patient,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
+        {
+            var command = new UpdatePatientCommand 
+            { 
+                FhirId = id, 
+                FhirPatient = patient 
+            };
+            var result = await mediator.Send(command, cancellationToken);
+            
+            if (!result.IsSuccess)
+                return Results.BadRequest(new OperationOutcome
+                {
+                    Issue = new List<OperationOutcome.IssueComponent>
+                    {
+                        new()
+                        {
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.Invalid,
+                            Diagnostics = result.Error
+                        }
+                    }
+                });
+
+            return Results.Ok(result.Value);
+        })
+        .WithName("UpdatePatient")
+        .WithSummary("Update Patient")
+        .WithDescription("Update an existing Patient resource")
+        .Produces<Patient>(200)
+        .Produces<OperationOutcome>(400);
+
+        // DELETE /fhir/Patient/{id} - Delete Patient
+        group.MapDelete("/{id}", async (
+            string id,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
+        {
+            var command = new DeletePatientCommand { FhirId = id };
+            var result = await mediator.Send(command, cancellationToken);
+            
+            if (!result.IsSuccess)
+                return Results.NotFound(new OperationOutcome
+                {
+                    Issue = new List<OperationOutcome.IssueComponent>
+                    {
+                        new()
+                        {
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.NotFound,
+                            Diagnostics = result.Error
+                        }
+                    }
+                });
+
+            return Results.NoContent();
+        })
+        .WithName("DeletePatient")
+        .WithSummary("Delete Patient")
+        .WithDescription("Delete a Patient resource")
+        .Produces(204)
+        .Produces<OperationOutcome>(404);
+
+        // GET /fhir/Patient - Search Patients
+        group.MapGet("/", async (
+            [FromQuery] string? name,
+            [FromQuery] string? identifier,
+            [FromQuery] string? birthdate,
+            [FromQuery] string? gender,
+            [FromQuery] int? _count,
+            [FromQuery] string? _offset,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
+        {
+            var query = new SearchPatientsQuery
+            {
+                Name = name,
+                Identifier = identifier,
+                Birthdate = birthdate,
+                Gender = gender,
+                Count = _count ?? 10,
+                Offset = _offset
+            };
+            
+            var result = await mediator.Send(query, cancellationToken);
+            
+            if (!result.IsSuccess)
+                return Results.BadRequest(new OperationOutcome
+                {
+                    Issue = new List<OperationOutcome.IssueComponent>
+                    {
+                        new()
+                        {
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.Invalid,
+                            Diagnostics = result.Error
+                        }
+                    }
+                });
+
+            return Results.Ok(result.Value);
+        })
+        .WithName("SearchPatients")
+        .WithSummary("Search Patients")
+        .WithDescription("Search for Patient resources")
+        .Produces<Bundle>(200)
+        .Produces<OperationOutcome>(400);
+    }
 }
 
-public record CreatePatientRequest
+### FHIR R4B Commands and Queries
+
+#### FHIR Patient Commands
+```csharp
+using Hl7.Fhir.Model;
+
+public record CreatePatientCommand : IRequest<Result<Patient>>
 {
-    public string FirstName { get; init; } = string.Empty;
-    public string LastName { get; init; } = string.Empty;
-    public DateTime DateOfBirth { get; init; }
-    public Gender Gender { get; init; }
-    public string? Email { get; init; }
-    public string? PhoneNumber { get; init; }
-    public string? AddressLine1 { get; init; }
-    public string? AddressLine2 { get; init; }
-    public string? City { get; init; }
-    public string? State { get; init; }
-    public string? PostalCode { get; init; }
-    public string? Country { get; init; }
-    public string? MedicalRecordNumber { get; init; }
-    public InsuranceInfo? Insurance { get; init; }
-    public EmergencyContact? EmergencyContact { get; init; }
-    public List<Allergy> Allergies { get; init; } = new();
-    public List<Medication> Medications { get; init; } = new();
-    public ConsentStatus ConsentStatus { get; init; } = ConsentStatus.Pending;
+    public Hl7.Fhir.Model.Patient FhirPatient { get; init; } = new();
+}
+
+public record UpdatePatientCommand : IRequest<Result<Patient>>
+{
+    public string FhirId { get; init; } = string.Empty;
+    public Hl7.Fhir.Model.Patient FhirPatient { get; init; } = new();
+}
+
+public record DeletePatientCommand : IRequest<Result<bool>>
+{
+    public string FhirId { get; init; } = string.Empty;
+}
+
+public record GetPatientQuery : IRequest<Result<Patient>>
+{
+    public string FhirId { get; init; } = string.Empty;
+}
+
+public record SearchPatientsQuery : IRequest<Result<Bundle>>
+{
+    public string? Name { get; init; }
+    public string? Identifier { get; init; }
+    public string? Birthdate { get; init; }
+    public string? Gender { get; init; }
+    public int Count { get; init; } = 10;
+    public string? Offset { get; init; }
 }
 ```
 
@@ -456,143 +660,232 @@ public record Medication
 }
 ```
 
-### Healthcare Data Repository
+### FHIR R4B Repository Pattern
 
 ```csharp
 public interface IPatientRepository
 {
-    Task<Patient?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    // FHIR CRUD Operations
     Task<Patient?> GetByFhirIdAsync(string fhirId, CancellationToken cancellationToken = default);
-    Task<Patient?> GetByMedicalRecordNumberAsync(string mrn, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Patient>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Patient>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default);
     Task<Patient> AddAsync(Patient patient, CancellationToken cancellationToken = default);
     Task<Patient> UpdateAsync(Patient patient, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default);
-    Task<bool> ExistsByMedicalRecordNumberAsync(string mrn, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Patient>> GetPatientsWithAllergiesAsync(CancellationToken cancellationToken = default);
-    Task<IEnumerable<Patient>> GetPatientsByAgeRangeAsync(int minAge, int maxAge, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Patient>> GetPatientsByStatusAsync(PatientStatus status, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Patient>> GetPatientsByConsentStatusAsync(ConsentStatus consentStatus, CancellationToken cancellationToken = default);
+    Task DeleteAsync(string fhirId, CancellationToken cancellationToken = default);
+    
+    // FHIR Search Operations
+    Task<IEnumerable<Patient>> SearchAsync(
+        string? name = null,
+        string? identifier = null,
+        string? birthdate = null,
+        string? gender = null,
+        int count = 10,
+        string? offset = null,
+        CancellationToken cancellationToken = default);
+    
+    // FHIR History Operations
+    Task<IEnumerable<Patient>> GetHistoryAsync(string fhirId, CancellationToken cancellationToken = default);
+    
+    // FHIR Validation
+    Task<bool> ValidateFhirResourceAsync(Hl7.Fhir.Model.Patient patient, CancellationToken cancellationToken = default);
+    
+    // Multi-tenancy
+    Task<IEnumerable<Patient>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }
-```
 
-### Healthcare Data Validation
+### FHIR R4B Validation
 
 ```csharp
-public class CreatePatientRequestValidator : AbstractValidator<CreatePatientRequest>
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Validation;
+
+public class CreatePatientCommandValidator : AbstractValidator<CreatePatientCommand>
 {
-    public CreatePatientRequestValidator()
+    private readonly FhirValidator _fhirValidator;
+
+    public CreatePatientCommandValidator(FhirValidator fhirValidator)
     {
-        RuleFor(x => x.FirstName)
-            .NotEmpty()
-            .WithMessage("First name is required")
-            .MaximumLength(100)
-            .WithMessage("First name cannot exceed 100 characters");
+        _fhirValidator = fhirValidator;
 
-        RuleFor(x => x.LastName)
-            .NotEmpty()
-            .WithMessage("Last name is required")
-            .MaximumLength(100)
-            .WithMessage("Last name cannot exceed 100 characters");
+        RuleFor(x => x.FhirPatient)
+            .NotNull()
+            .WithMessage("FHIR Patient resource is required")
+            .MustAsync(ValidateFhirPatientAsync)
+            .WithMessage("Invalid FHIR Patient resource");
 
-        RuleFor(x => x.DateOfBirth)
-            .NotEmpty()
-            .WithMessage("Date of birth is required")
-            .LessThan(DateTime.UtcNow)
-            .WithMessage("Date of birth must be in the past")
-            .GreaterThan(DateTime.UtcNow.AddYears(-150))
-            .WithMessage("Date of birth cannot be more than 150 years ago");
+        RuleFor(x => x.FhirPatient.Id)
+            .Empty()
+            .WithMessage("Patient ID should not be provided for create operations");
 
-        RuleFor(x => x.Gender)
-            .IsInEnum()
-            .WithMessage("Invalid gender value");
+        RuleFor(x => x.FhirPatient.Meta)
+            .Null()
+            .WithMessage("Patient Meta should not be provided for create operations");
+    }
 
-        RuleFor(x => x.Email)
-            .EmailAddress()
-            .When(x => !string.IsNullOrEmpty(x.Email))
-            .WithMessage("Invalid email format");
+    private async Task<bool> ValidateFhirPatientAsync(Hl7.Fhir.Model.Patient patient, CancellationToken cancellationToken)
+    {
+        if (patient == null) return false;
 
-        RuleFor(x => x.PhoneNumber)
-            .Matches(@"^\+?[1-9]\d{1,14}$")
-            .When(x => !string.IsNullOrEmpty(x.PhoneNumber))
-            .WithMessage("Invalid phone number format");
-
-        RuleFor(x => x.MedicalRecordNumber)
-            .MaximumLength(50)
-            .When(x => !string.IsNullOrEmpty(x.MedicalRecordNumber))
-            .WithMessage("Medical record number cannot exceed 50 characters");
-
-        RuleFor(x => x.Allergies)
-            .ForEach(allergy =>
-            {
-                allergy.SetValidator(new AllergyValidator());
-            });
-
-        RuleFor(x => x.Medications)
-            .ForEach(medication =>
-            {
-                medication.SetValidator(new MedicationValidator());
-            });
+        try
+        {
+            var result = await _fhirValidator.ValidateAsync(patient, cancellationToken);
+            return result.IsValid;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
 
-public class AllergyValidator : AbstractValidator<Allergy>
+public class UpdatePatientCommandValidator : AbstractValidator<UpdatePatientCommand>
 {
-    public AllergyValidator()
+    private readonly FhirValidator _fhirValidator;
+
+    public UpdatePatientCommandValidator(FhirValidator fhirValidator)
     {
-        RuleFor(x => x.Substance)
-            .NotEmpty()
-            .WithMessage("Allergy substance is required")
-            .MaximumLength(200)
-            .WithMessage("Allergy substance cannot exceed 200 characters");
+        _fhirValidator = fhirValidator;
 
-        RuleFor(x => x.Reaction)
+        RuleFor(x => x.FhirId)
             .NotEmpty()
-            .WithMessage("Allergy reaction is required")
-            .MaximumLength(500)
-            .WithMessage("Allergy reaction cannot exceed 500 characters");
+            .WithMessage("FHIR ID is required for update operations");
 
-        RuleFor(x => x.Severity)
-            .NotEmpty()
-            .WithMessage("Allergy severity is required")
-            .Must(severity => new[] { "Mild", "Moderate", "Severe" }.Contains(severity))
-            .WithMessage("Allergy severity must be Mild, Moderate, or Severe");
+        RuleFor(x => x.FhirPatient)
+            .NotNull()
+            .WithMessage("FHIR Patient resource is required")
+            .MustAsync(ValidateFhirPatientAsync)
+            .WithMessage("Invalid FHIR Patient resource");
+
+        RuleFor(x => x.FhirPatient.Id)
+            .Equal(x => x.FhirId)
+            .WithMessage("Patient ID must match the URL parameter");
+
+        RuleFor(x => x.FhirPatient.Meta)
+            .NotNull()
+            .WithMessage("Patient Meta is required for update operations");
+    }
+
+    private async Task<bool> ValidateFhirPatientAsync(Hl7.Fhir.Model.Patient patient, CancellationToken cancellationToken)
+    {
+        if (patient == null) return false;
+
+        try
+        {
+            var result = await _fhirValidator.ValidateAsync(patient, cancellationToken);
+            return result.IsValid;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
 
-public class MedicationValidator : AbstractValidator<Medication>
+### FHIR R4B Handler Implementation
+
+```csharp
+public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand, Result<Patient>>
 {
-    public MedicationValidator()
+    private readonly IPatientRepository _repository;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<CreatePatientCommandHandler> _logger;
+
+    public CreatePatientCommandHandler(
+        IPatientRepository repository,
+        ICurrentUserService currentUserService,
+        ILogger<CreatePatientCommandHandler> logger)
     {
-        RuleFor(x => x.Name)
-            .NotEmpty()
-            .WithMessage("Medication name is required")
-            .MaximumLength(200)
-            .WithMessage("Medication name cannot exceed 200 characters");
+        _repository = repository;
+        _currentUserService = currentUserService;
+        _logger = logger;
+    }
 
-        RuleFor(x => x.Dosage)
-            .NotEmpty()
-            .WithMessage("Medication dosage is required")
-            .MaximumLength(100)
-            .WithMessage("Medication dosage cannot exceed 100 characters");
+    public async Task<Result<Patient>> Handle(CreatePatientCommand request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Generate FHIR ID if not provided
+            if (string.IsNullOrEmpty(request.FhirPatient.Id))
+            {
+                request.FhirPatient.Id = Guid.NewGuid().ToString();
+            }
 
-        RuleFor(x => x.Frequency)
-            .NotEmpty()
-            .WithMessage("Medication frequency is required")
-            .MaximumLength(100)
-            .WithMessage("Medication frequency cannot exceed 100 characters");
+            // Set FHIR Meta
+            request.FhirPatient.Meta = new Meta
+            {
+                VersionId = "1",
+                LastUpdated = DateTimeOffset.UtcNow,
+                Profile = new[] { "http://hl7.org/fhir/StructureDefinition/Patient" }
+            };
 
-        RuleFor(x => x.StartDate)
-            .LessThanOrEqualTo(DateTime.UtcNow)
-            .When(x => x.StartDate.HasValue)
-            .WithMessage("Medication start date cannot be in the future");
+            // Create domain entity
+            var patient = new Patient
+            {
+                Id = Guid.NewGuid(),
+                TenantId = _currentUserService.TenantId,
+                CreatedBy = _currentUserService.UserId,
+                CreatedAt = DateTime.UtcNow
+            };
 
-        RuleFor(x => x.EndDate)
-            .GreaterThan(x => x.StartDate)
-            .When(x => x.StartDate.HasValue && x.EndDate.HasValue)
-            .WithMessage("Medication end date must be after start date");
+            // Set FHIR resource
+            patient.SetFhirPatient(request.FhirPatient);
+
+            // Save to database
+            var savedPatient = await _repository.AddAsync(patient, cancellationToken);
+
+            _logger.LogInformation("Created FHIR Patient {FhirId} for tenant {TenantId}", 
+                savedPatient.FhirId, _currentUserService.TenantId);
+
+            return Result<Patient>.Success(savedPatient.FhirPatient);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating FHIR Patient");
+            return Result<Patient>.Failure("Failed to create patient");
+        }
+    }
+}
+
+public class GetPatientQueryHandler : IRequestHandler<GetPatientQuery, Result<Patient>>
+{
+    private readonly IPatientRepository _repository;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<GetPatientQueryHandler> _logger;
+
+    public GetPatientQueryHandler(
+        IPatientRepository repository,
+        ICurrentUserService currentUserService,
+        ILogger<GetPatientQueryHandler> logger)
+    {
+        _repository = repository;
+        _currentUserService = currentUserService;
+        _logger = logger;
+    }
+
+    public async Task<Result<Patient>> Handle(GetPatientQuery request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var patient = await _repository.GetByFhirIdAsync(request.FhirId, cancellationToken);
+            
+            if (patient == null)
+            {
+                return Result<Patient>.Failure("Patient not found");
+            }
+
+            // Check tenant access
+            if (patient.TenantId != _currentUserService.TenantId)
+            {
+                _logger.LogWarning("User {UserId} attempted to access patient {FhirId} from different tenant {TenantId}", 
+                    _currentUserService.UserId, request.FhirId, patient.TenantId);
+                return Result<Patient>.Failure("Access denied");
+            }
+
+            return Result<Patient>.Success(patient.FhirPatient);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving FHIR Patient {FhirId}", request.FhirId);
+            return Result<Patient>.Failure("Failed to retrieve patient");
+        }
     }
 }
 ```
@@ -712,40 +1005,44 @@ public class HealthcareDataAuditService
 
 ## File Organization
 
-### Healthcare Data Structure
+### FHIR R4B Structure
 ```
 HealthTech.Domain/
 ├── Entities/
-│   ├── Patient.cs
-│   ├── Observation.cs
-│   ├── Condition.cs
-│   ├── Encounter.cs
-│   └── {HealthcareEntity}.cs
-├── ValueObjects/
-│   ├── InsuranceInfo.cs
-│   ├── EmergencyContact.cs
-│   ├── Allergy.cs
-│   ├── Medication.cs
-│   └── {HealthcareValueObject}.cs
-├── Enums/
-│   ├── Gender.cs
-│   ├── PatientStatus.cs
-│   ├── ConsentStatus.cs
-│   ├── DataClassification.cs
-│   └── {HealthcareEnum}.cs
+│   └── FhirResource.cs               # FHIR R4B entities
+├── Repositories/
+│   └── IFhirResourceRepository.cs    # FHIR repository interfaces
 └── Services/
-    ├── IHealthcareDataSecurityService.cs
-    ├── IHealthcareDataAuditService.cs
-    └── I{HealthcareService}.cs
+    ├── IFhirValidationService.cs     # FHIR R4B validation service
+    ├── IFhirSecurityService.cs       # FHIR security service
+    └── IFhirAuditService.cs          # FHIR audit service
+
+HealthTech.Application/
+├── FhirResources/
+└── Common/
+    ├── FhirValidation/
+    │   ├── FhirValidator.cs          # FHIR R4B validator
+    │   └── FhirValidationBehavior.cs # FHIR validation behavior
+    └── FhirSecurity/
+        ├── FhirSecurityService.cs    # FHIR security service
+        └── FhirAuditService.cs       # FHIR audit service
+
+HealthTech.API/
+├── Endpoints/
+│   └── FhirEndpoints.cs              # FHIR endpoints
+└── Middleware/
+    ├── FhirExceptionMiddleware.cs    # FHIR error handling
+    └── FhirSecurityMiddleware.cs     # FHIR security middleware
 ```
 
-## Immutable Healthcare Data Standards (Never Change)
+## Immutable FHIR R4B Standards (Never Change)
 
-### 1. FHIR Compliance (Immutable Rule)
-- **FHIR Resources**: All healthcare data must be FHIR-compliant
-- **Resource Types**: Use standard FHIR resource types
-- **Data Types**: Use FHIR data types
-- **Extensions**: Use FHIR extensions for custom data
+### 1. FHIR R4B Compliance (Immutable Rule)
+- **FHIR R4B Resources**: All healthcare data must use Hl7.Fhir.R4B
+- **Resource Types**: Use standard FHIR R4B resource types (Patient, Observation, etc.)
+- **Data Types**: Use FHIR R4B data types (HumanName, Address, ContactPoint, etc.)
+- **Extensions**: Use FHIR R4B extensions for custom data
+- **Local SDK**: Use local Hl7.Fhir.R4B SDK (readonly clone)
 
 ### 2. Healthcare Data Security (Immutable Rule)
 - **PHI Protection**: Personal Health Information must be encrypted
@@ -772,35 +1069,46 @@ HealthTech.Domain/
 - **Access Logging**: Log all access to healthcare data
 - **Data Retention**: Implement appropriate data retention policies
 
-### 6. Healthcare Data Validation (Immutable Rule)
-- **Medical Validation**: Validate medical data according to standards
-- **Age Validation**: Validate patient age and date of birth
-- **Contact Validation**: Validate contact information
-- **Medical Record Validation**: Validate medical record numbers
+### 6. FHIR R4B Endpoint Standards (Immutable Rule)
+- **FHIR Endpoints**: Use Minimal API endpoints with FHIR R4B resources
+- **Route Structure**: Follow FHIR standard routes (/fhir/{ResourceType})
+- **HTTP Methods**: Use standard FHIR HTTP methods (GET, POST, PUT, DELETE)
+- **Response Format**: Return FHIR R4B resources or OperationOutcome
+- **Search Parameters**: Implement FHIR standard search parameters
+- **Versioning**: Support FHIR resource versioning
+- **History**: Support FHIR resource history endpoints
 
 ## Anti-Patterns to Avoid (Never Allowed)
 
-1. **Non-FHIR Data**: Storing healthcare data in non-FHIR format
-2. **No Security**: Healthcare data without proper security measures
-3. **No Audit Trail**: Healthcare data access without logging
-4. **No Consent**: Using healthcare data without patient consent
-5. **Cross-Tenant Leakage**: Healthcare data accessible across tenants
-6. **No Validation**: Healthcare data without proper validation
-7. **No Versioning**: Healthcare data without version control
-8. **No Encryption**: PHI stored without encryption
-9. **No Access Control**: Healthcare data without access controls
-10. **No Data Classification**: Healthcare data without sensitivity classification
+1. **Non-FHIR R4B Data**: Storing healthcare data in non-FHIR R4B format
+2. **Controller Pattern**: Using controllers instead of Minimal API endpoints
+3. **Non-FHIR Routes**: Using non-standard FHIR route patterns
+4. **Non-FHIR Responses**: Returning non-FHIR R4B resources or DTOs
+5. **No FHIR Validation**: Healthcare data without FHIR R4B validation
+6. **No Security**: Healthcare data without proper security measures
+7. **No Audit Trail**: Healthcare data access without logging
+8. **No Consent**: Using healthcare data without patient consent
+9. **Cross-Tenant Leakage**: Healthcare data accessible across tenants
+10. **No Versioning**: Healthcare data without FHIR versioning
+11. **No Encryption**: PHI stored without encryption
+12. **No Access Control**: Healthcare data without access controls
+13. **No Data Classification**: Healthcare data without sensitivity classification
+14. **External FHIR SDK**: Using external FHIR SDK instead of local clone
 
 ## Validation Checklist (Must Pass Always)
 
-- [ ] All healthcare data is FHIR-compliant
+- [ ] All healthcare data uses FHIR R4B format
+- [ ] FHIR endpoints follow standard FHIR route patterns
+- [ ] FHIR R4B validation is implemented
+- [ ] Minimal API endpoints are used (not controllers)
+- [ ] FHIR R4B resources are returned (not DTOs)
+- [ ] Local Hl7.Fhir.R4B SDK is used
 - [ ] PHI is properly encrypted
 - [ ] Access controls are implemented
 - [ ] Audit trail is maintained
 - [ ] Patient consent is tracked
-- [ ] Data is properly validated
 - [ ] Multi-tenancy is enforced
-- [ ] Data versioning is implemented
+- [ ] FHIR versioning is implemented
 - [ ] Data classification is applied
 - [ ] Security measures are in place
 
@@ -824,4 +1132,4 @@ HealthTech.Domain/
 
 ---
 
-**This document defines the immutable Healthcare Data Pattern standards that should NEVER change, ensuring consistency, security, and compliance across the FHIR-AI Backend project.**
+**This document defines the immutable FHIR R4B Pattern standards that should NEVER change, ensuring strict compliance with HL7 FHIR standards and consistency across the FHIR-AI Backend project.**
