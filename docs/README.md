@@ -49,6 +49,8 @@ HealthTech.API/          # HTTP endpoints (depends on Application + Infrastructu
 - **Queries**: Read operations
 - **Separate Models**: Command and Query models are distinct
 - **MediatR**: For command/query handling
+- **Immutable Records**: All commands and queries use records with init-only properties
+- **Result Pattern**: Consistent error handling with Result<T> pattern
 
 #### 5. Repository Pattern
 - **Domain**: Defines repository interfaces
@@ -74,6 +76,8 @@ HealthTech.API/          # HTTP endpoints (depends on Application + Infrastructu
 - [ ] Testing covers all business logic
 
 **For complete Clean Architecture implementation details, see `/cursor-agent/CURSOR_AI_RULES.md`**
+
+**For complete CQRS Pattern implementation details, see `/architecture/CQRS_PATTERN_REFERENCE.md`**
 
 ## Documentation Standards
 
