@@ -4,8 +4,9 @@ using HealthTech.Application.Authentication.Commands.Login;
 using HealthTech.Application.Authentication.Commands.Logout;
 using HealthTech.Application.Authentication.Commands.RefreshToken;
 using HealthTech.Application.Authentication.DTOs;
-using HealthTech.Application.PatientAccess.Queries;
-using HealthTech.Application.PatientAccess.Commands;
+using HealthTech.Application.PatientAccess.Queries.GetPatientAccess;
+using HealthTech.Application.PatientAccess.Commands.GrantPatientAccess;
+using HealthTech.Application.PatientAccess.Commands.RevokePatientAccess;
 using HealthTech.Domain.Enums;
 
 namespace HealthTech.API.Endpoints;
@@ -105,13 +106,13 @@ public static class AuthenticationEndpoints
         {
             var response = await mediator.Send(command);
 
-            if (!response.Success)
+            if (!response.IsSuccess)
             {
                 return Results.BadRequest(new ProblemDetails
                 {
                     Title = "Login failed",
-                    Detail = response.ErrorMessage,
-                    Status = 400
+                    Detail = response.Message,
+                    Status = response.StatusCode
                 });
             }
 
@@ -140,13 +141,13 @@ public static class AuthenticationEndpoints
         {
             var response = await mediator.Send(command);
 
-            if (!response.Success)
+            if (!response.IsSuccess)
             {
                 return Results.BadRequest(new ProblemDetails
                 {
                     Title = "Token refresh failed",
-                    Detail = response.ErrorMessage,
-                    Status = 400
+                    Detail = response.Message,
+                    Status = response.StatusCode
                 });
             }
 
@@ -191,13 +192,13 @@ public static class AuthenticationEndpoints
 
             var response = await mediator.Send(command);
 
-            if (!response.Success)
+            if (!response.IsSuccess)
             {
                 return Results.BadRequest(new ProblemDetails
                 {
                     Title = "Logout failed",
-                    Detail = response.ErrorMessage,
-                    Status = 400
+                    Detail = response.Message,
+                    Status = response.StatusCode
                 });
             }
 
@@ -226,13 +227,13 @@ public static class AuthenticationEndpoints
         {
             var response = await mediator.Send(command);
 
-            if (!response.Success)
+            if (!response.IsSuccess)
             {
                 return Results.BadRequest(new ProblemDetails
                 {
                     Title = "Grant patient access failed",
-                    Detail = response.ErrorMessage,
-                    Status = 400
+                    Detail = response.Message,
+                    Status = response.StatusCode
                 });
             }
 
@@ -261,13 +262,13 @@ public static class AuthenticationEndpoints
         {
             var response = await mediator.Send(command);
 
-            if (!response.Success)
+            if (!response.IsSuccess)
             {
                 return Results.BadRequest(new ProblemDetails
                 {
                     Title = "Revoke patient access failed",
-                    Detail = response.ErrorMessage,
-                    Status = 400
+                    Detail = response.Message,
+                    Status = response.StatusCode
                 });
             }
 
@@ -310,19 +311,19 @@ public static class AuthenticationEndpoints
                 UserId = userId,
                 AccessLevel = accessLevel,
                 IsActive = isActive,
-                Page = page,
+                PageNumber = page,
                 PageSize = pageSize
             };
 
             var response = await mediator.Send(query);
 
-            if (!response.Success)
+            if (!response.IsSuccess)
             {
                 return Results.BadRequest(new ProblemDetails
                 {
                     Title = "Get patient access failed",
-                    Detail = response.ErrorMessage,
-                    Status = 400
+                    Detail = response.Message,
+                    Status = response.StatusCode
                 });
             }
 

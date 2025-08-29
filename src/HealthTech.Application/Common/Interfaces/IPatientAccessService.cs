@@ -1,4 +1,5 @@
 using HealthTech.Application.PatientAccess.Queries;
+using HealthTech.Application.PatientAccess.Queries.GetPatientAccess;
 using HealthTech.Domain.Entities;
 using HealthTech.Domain.Enums;
 
