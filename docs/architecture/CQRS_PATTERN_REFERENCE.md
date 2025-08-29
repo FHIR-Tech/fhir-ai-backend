@@ -30,397 +30,236 @@ This document defines the **immutable CQRS (Command Query Responsibility Segrega
 - **Pipeline Behaviors**: Cross-cutting concerns via behaviors
 - **Assembly Registration**: Automatic registration via MediatR
 
-## Implementation Patterns
+## Official I/O Patterns
 
-### Command Pattern
+### 1. CQRS I/O (Greg Young)
 
-#### Command Structure
+**Base Command Pattern**:
 ```csharp
-public record CreatePatientCommand : IRequest<Result<PatientDto>>
+public abstract class BaseCommand<TResponse> : IRequest<TResponse>
 {
-    public string FirstName { get; init; }
-    public string LastName { get; init; }
-    public DateTime DateOfBirth { get; init; }
-    public string Email { get; init; }
-    public string PhoneNumber { get; init; }
+    public Guid CommandId { get; set; } = Guid.NewGuid();
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public string? CorrelationId { get; set; }
+    public string? UserId { get; set; }
 }
 ```
 
-#### Command Handler Structure
+**Base Query Pattern**:
 ```csharp
-public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand, Result<PatientDto>>
+public abstract class BaseQuery<TResponse> : IRequest<TResponse>
 {
-    private readonly IPatientRepository _repository;
-    private readonly ICurrentUserService _currentUserService;
-    private readonly ILogger<CreatePatientCommandHandler> _logger;
+    public Guid QueryId { get; set; } = Guid.NewGuid();
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public string? CorrelationId { get; set; }
+    public string? UserId { get; set; }
+}
 
-    public CreatePatientCommandHandler(
-        IPatientRepository repository,
-        ICurrentUserService currentUserService,
-        ILogger<CreatePatientCommandHandler> logger)
-    {
-        _repository = repository;
-        _currentUserService = currentUserService;
-        _logger = logger;
-    }
-
-    public async Task<Result<PatientDto>> Handle(CreatePatientCommand request, CancellationToken cancellationToken)
-    {
-        try
-        {
-            // Business logic validation
-            if (await _repository.ExistsByEmailAsync(request.Email, cancellationToken))
-            {
-                return Result<PatientDto>.Failure("Patient with this email already exists");
-            }
-
-            // Create domain entity
-            var patient = new Patient
-            {
-                Id = Guid.NewGuid(),
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                DateOfBirth = request.DateOfBirth,
-                Email = request.Email,
-                PhoneNumber = request.PhoneNumber,
-                CreatedBy = _currentUserService.UserId,
-                CreatedAt = DateTime.UtcNow,
-                TenantId = _currentUserService.TenantId
-            };
-
-            // Persist to database
-            var createdPatient = await _repository.AddAsync(patient, cancellationToken);
-
-            // Map to DTO
-            var patientDto = new PatientDto
-            {
-                Id = createdPatient.Id,
-                FirstName = createdPatient.FirstName,
-                LastName = createdPatient.LastName,
-                DateOfBirth = createdPatient.DateOfBirth,
-                Email = createdPatient.Email,
-                PhoneNumber = createdPatient.PhoneNumber
-            };
-
-            _logger.LogInformation("Patient created successfully: {PatientId}", createdPatient.Id);
-            return Result<PatientDto>.Success(patientDto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating patient");
-            return Result<PatientDto>.Failure("Failed to create patient");
-        }
-    }
+public abstract class BasePagedQuery<TResponse> : BaseQuery<TResponse>
+{
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+    public string? SortBy { get; set; }
+    public string SortOrder { get; set; } = "asc";
+    public string? SearchTerm { get; set; }
+    public Dictionary<string, string>? Filters { get; set; }
 }
 ```
 
-#### Command Validator Structure
+**CQRS Response Patterns**:
 ```csharp
-public class CreatePatientCommandValidator : AbstractValidator<CreatePatientCommand>
+public abstract class BaseCommandResponse
 {
-    public CreatePatientCommandValidator()
-    {
-        RuleFor(x => x.FirstName)
-            .NotEmpty()
-            .WithMessage("First name is required")
-            .MaximumLength(100)
-            .WithMessage("First name cannot exceed 100 characters");
-
-        RuleFor(x => x.LastName)
-            .NotEmpty()
-            .WithMessage("Last name is required")
-            .MaximumLength(100)
-            .WithMessage("Last name cannot exceed 100 characters");
-
-        RuleFor(x => x.DateOfBirth)
-            .NotEmpty()
-            .WithMessage("Date of birth is required")
-            .LessThan(DateTime.UtcNow)
-            .WithMessage("Date of birth must be in the past");
-
-        RuleFor(x => x.Email)
-            .NotEmpty()
-            .WithMessage("Email is required")
-            .EmailAddress()
-            .WithMessage("Invalid email format")
-            .MaximumLength(255)
-            .WithMessage("Email cannot exceed 255 characters");
-
-        RuleFor(x => x.PhoneNumber)
-            .NotEmpty()
-            .WithMessage("Phone number is required")
-            .Matches(@"^\+?[1-9]\d{1,14}$")
-            .WithMessage("Invalid phone number format");
-    }
-}
-```
-
-### Query Pattern
-
-#### Query Structure
-```csharp
-public record GetPatientQuery : IRequest<Result<PatientDto>>
-{
-    public Guid Id { get; init; }
+    public bool IsSuccess { get; set; }
+    public string? Message { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public Guid CommandId { get; set; }
+    public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
 }
 
-public record GetPatientListQuery : IRequest<Result<PaginatedResult<PatientDto>>>
+public abstract class BaseQueryResponse
 {
-    public int PageNumber { get; init; } = 1;
-    public int PageSize { get; init; } = 10;
-    public string? SearchTerm { get; init; }
-    public string? SortBy { get; init; }
-    public bool IsAscending { get; init; } = true;
+    public bool IsSuccess { get; set; }
+    public string? Message { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public Guid QueryId { get; set; }
+    public DateTime RetrievedAt { get; set; } = DateTime.UtcNow;
 }
-```
 
-#### Query Handler Structure
-```csharp
-public class GetPatientQueryHandler : IRequestHandler<GetPatientQuery, Result<PatientDto>>
-{
-    private readonly IPatientRepository _repository;
-    private readonly ILogger<GetPatientQueryHandler> _logger;
-
-    public GetPatientQueryHandler(
-        IPatientRepository repository,
-        ILogger<GetPatientQueryHandler> logger)
-    {
-        _repository = repository;
-        _logger = logger;
-    }
-
-    public async Task<Result<PatientDto>> Handle(GetPatientQuery request, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var patient = await _repository.GetByIdAsync(request.Id, cancellationToken);
-            
-            if (patient == null)
-            {
-                return Result<PatientDto>.Failure("Patient not found");
-            }
-
-            var patientDto = new PatientDto
-            {
-                Id = patient.Id,
-                FirstName = patient.FirstName,
-                LastName = patient.LastName,
-                DateOfBirth = patient.DateOfBirth,
-                Email = patient.Email,
-                PhoneNumber = patient.PhoneNumber
-            };
-
-            return Result<PatientDto>.Success(patientDto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving patient with ID: {PatientId}", request.Id);
-            return Result<PatientDto>.Failure("Failed to retrieve patient");
-        }
-    }
-}
-```
-
-#### List Query Handler Structure
-```csharp
-public class GetPatientListQueryHandler : IRequestHandler<GetPatientListQuery, Result<PaginatedResult<PatientDto>>>
-{
-    private readonly IPatientRepository _repository;
-    private readonly ILogger<GetPatientListQueryHandler> _logger;
-
-    public GetPatientListQueryHandler(
-        IPatientRepository repository,
-        ILogger<GetPatientListQueryHandler> logger)
-    {
-        _repository = repository;
-        _logger = logger;
-    }
-
-    public async Task<Result<PaginatedResult<PatientDto>>> Handle(GetPatientListQuery request, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var (patients, totalCount) = await _repository.GetPaginatedAsync(
-                request.PageNumber,
-                request.PageSize,
-                request.SearchTerm,
-                request.SortBy,
-                request.IsAscending,
-                cancellationToken);
-
-            var patientDtos = patients.Select(p => new PatientDto
-            {
-                Id = p.Id,
-                FirstName = p.FirstName,
-                LastName = p.LastName,
-                DateOfBirth = p.DateOfBirth,
-                Email = p.Email,
-                PhoneNumber = p.PhoneNumber
-            }).ToList();
-
-            var result = new PaginatedResult<PatientDto>
-            {
-                Items = patientDtos,
-                TotalCount = totalCount,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize,
-                TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize)
-            };
-
-            return Result<PaginatedResult<PatientDto>>.Success(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving patient list");
-            return Result<PaginatedResult<PatientDto>>.Failure("Failed to retrieve patient list");
-        }
-    }
-}
-```
-
-## Result Pattern
-
-### Result Structure
-```csharp
-public class Result<T>
-{
-    public bool IsSuccess { get; }
-    public T? Value { get; }
-    public string? Error { get; }
-    public List<string>? ValidationErrors { get; }
-
-    private Result(bool isSuccess, T? value, string? error, List<string>? validationErrors)
-    {
-        IsSuccess = isSuccess;
-        Value = value;
-        Error = error;
-        ValidationErrors = validationErrors;
-    }
-
-    public static Result<T> Success(T value) => new(true, value, null, null);
-    public static Result<T> Failure(string error) => new(false, default, error, null);
-    public static Result<T> ValidationFailure(List<string> errors) => new(false, default, null, errors);
-}
-```
-
-### Paginated Result Structure
-```csharp
-public class PaginatedResult<T>
+public class PagedQueryResponse<T> : BaseQueryResponse
 {
     public List<T> Items { get; set; } = new();
     public int TotalCount { get; set; }
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
     public int TotalPages { get; set; }
-    public bool HasPreviousPage => PageNumber > 1;
-    public bool HasNextPage => PageNumber < TotalPages;
+    public bool HasPreviousPage { get; set; }
+    public bool HasNextPage { get; set; }
 }
 ```
+
+### 2. MediatR I/O (Jimmy Bogard)
+
+**Base Request Pattern**:
+```csharp
+public abstract class BaseRequest<TResponse> : IRequest<TResponse>
+{
+    public Guid RequestId { get; set; } = Guid.NewGuid();
+    public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
+    public string? CorrelationId { get; set; }
+    public string? UserId { get; set; }
+    public string? TenantId { get; set; }
+}
+
+public abstract class BasePagedRequest<TResponse> : BaseRequest<TResponse>
+{
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+    public string? SortBy { get; set; }
+    public string SortOrder { get; set; } = "asc";
+    public string? SearchTerm { get; set; }
+    public Dictionary<string, object>? Filters { get; set; }
+}
+```
+
+**MediatR Response Pattern**:
+```csharp
+public abstract class BaseResponse
+{
+    public bool IsSuccess { get; set; }
+    public string? Message { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public Guid RequestId { get; set; }
+    public DateTime RespondedAt { get; set; } = DateTime.UtcNow;
+    public int StatusCode { get; set; } = 200;
+}
+
+public class PagedResponse<T> : BaseResponse
+{
+    public List<T> Items { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int PageNumber { get; set; }
+    public int PageSize { get; set; }
+    public int TotalPages { get; set; }
+    public bool HasPreviousPage { get; set; }
+    public bool HasNextPage { get; set; }
+}
+```
+
+### 3. FluentValidation I/O (Official)
+
+**Base Validator Pattern**:
+```csharp
+public abstract class BaseValidator<T> : AbstractValidator<T>
+{
+    protected BaseValidator()
+    {
+        // Common validation rules
+        When(x => x is BaseRequest request, () =>
+        {
+            RuleFor(x => ((BaseRequest)x).RequestId)
+                .NotEmpty()
+                .WithMessage("Request ID is required");
+        });
+    }
+}
+
+public class PaginationValidator : AbstractValidator<BasePagedRequest<object>>
+{
+    public PaginationValidator()
+    {
+        RuleFor(x => x.PageNumber)
+            .GreaterThan(0)
+            .WithMessage("Page number must be greater than 0");
+
+        RuleFor(x => x.PageSize)
+            .InclusiveBetween(1, 1000)
+            .WithMessage("Page size must be between 1 and 1000");
+
+        RuleFor(x => x.SortOrder)
+            .Must(x => x?.ToLower() == "asc" || x?.ToLower() == "desc")
+            .WithMessage("Sort order must be 'asc' or 'desc'");
+    }
+}
+```
+
+## Implementation Patterns
+
+### Command Pattern
+
+**Command Structure**:
+- Implement `IRequest<TResponse>`
+- Use immutable records with init-only properties
+- Include validation using FluentValidation
+- Return `Result<T>` or specific response types
+
+**Command Handler Structure**:
+- Implement `IRequestHandler<TRequest, TResponse>`
+- Handle single write operation
+- Include business logic validation
+- Persist changes to database
+- Map to DTO for response
+
+**Command Validator Structure**:
+- Extend `AbstractValidator<T>`
+- Validate all input parameters
+- Include business rule validation
+- Provide clear error messages
+
+### Query Pattern
+
+**Query Structure**:
+- Implement `IRequest<TResponse>`
+- Use immutable records with init-only properties
+- Include pagination, sorting, and filtering parameters
+- Return `Result<T>` or specific response types
+
+**Query Handler Structure**:
+- Implement `IRequestHandler<TRequest, TResponse>`
+- Handle single read operation
+- Apply filters and pagination
+- Map to DTO for response
+- No state modifications
+
+**List Query Handler Structure**:
+- Handle paginated queries
+- Apply sorting and filtering
+- Calculate pagination metadata
+- Return paged response
+
+## Result Pattern
+
+**Result Structure**:
+- Use `Result<T>` for consistent error handling
+- Include success/failure status
+- Provide error messages and validation errors
+- Support pagination for list operations
+
+**Paginated Result Structure**:
+- Include items collection
+- Provide total count and pagination metadata
+- Support previous/next page navigation
+- Include page size and current page information
 
 ## Cross-Cutting Concerns
 
 ### Validation Behavior
-```csharp
-public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
-{
-    private readonly IEnumerable<IValidator<TRequest>> _validators;
-
-    public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
-    {
-        _validators = validators;
-    }
-
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
-    {
-        if (!_validators.Any()) return await next();
-
-        var context = new ValidationContext<TRequest>(request);
-        var validationResults = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(context, cancellationToken)));
-        var failures = validationResults.SelectMany(r => r.Errors).Where(f => f != null).ToList();
-
-        if (failures.Count != 0)
-        {
-            var errors = failures.Select(f => f.ErrorMessage).ToList();
-            throw new ValidationException(failures);
-        }
-
-        return await next();
-    }
-}
-```
+- Automatically validate all requests
+- Provide detailed validation error messages
+- Support multiple validators per request
+- Handle validation exceptions gracefully
 
 ### Logging Behavior
-```csharp
-public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
-{
-    private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
-
-    public LoggingBehavior(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
-    {
-        _logger = logger;
-    }
-
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Handling {RequestName} with {@Request}", typeof(TRequest).Name, request);
-        
-        var sw = Stopwatch.StartNew();
-        var response = await next();
-        sw.Stop();
-
-        _logger.LogInformation("Handled {RequestName} in {ElapsedMilliseconds}ms", typeof(TRequest).Name, sw.ElapsedMilliseconds);
-        
-        return response;
-    }
-}
-```
+- Log all requests and responses
+- Include correlation IDs for tracing
+- Avoid logging sensitive information
+- Include performance metrics
 
 ### Caching Behavior
-```csharp
-public class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
-{
-    private readonly IDistributedCache _cache;
-    private readonly ILogger<CachingBehavior<TRequest, TResponse>> _logger;
-
-    public CachingBehavior(IDistributedCache cache, ILogger<CachingBehavior<TRequest, TResponse>> logger)
-    {
-        _cache = cache;
-        _logger = logger;
-    }
-
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
-    {
-        // Only cache queries, not commands
-        if (request is not IRequest<TResponse> query) return await next();
-
-        var cacheKey = $"{typeof(TRequest).Name}_{JsonSerializer.Serialize(request)}";
-        var cachedResponse = await _cache.GetStringAsync(cacheKey, cancellationToken);
-
-        if (!string.IsNullOrEmpty(cachedResponse))
-        {
-            _logger.LogInformation("Returning cached response for {RequestName}", typeof(TRequest).Name);
-            return JsonSerializer.Deserialize<TResponse>(cachedResponse)!;
-        }
-
-        var response = await next();
-
-        // Cache successful responses for 5 minutes
-        if (response is Result<TResponse> result && result.IsSuccess)
-        {
-            var options = new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-            };
-            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(response), options, cancellationToken);
-        }
-
-        return response;
-    }
-}
-```
+- Cache query results only
+- Use appropriate cache keys
+- Include cache invalidation strategies
+- Respect cache headers and TTL
 
 ## File Organization
 
@@ -480,190 +319,129 @@ services.AddFluentValidationAutoValidation();
 
 ## Testing Structure
 
-### Command Handler Tests
-```csharp
-public class CreatePatientCommandHandlerTests
-{
-    private readonly Mock<IPatientRepository> _repositoryMock;
-    private readonly Mock<ICurrentUserService> _currentUserServiceMock;
-    private readonly Mock<ILogger<CreatePatientCommandHandler>> _loggerMock;
-    private readonly CreatePatientCommandHandler _handler;
-
-    public CreatePatientCommandHandlerTests()
-    {
-        _repositoryMock = new Mock<IPatientRepository>();
-        _currentUserServiceMock = new Mock<ICurrentUserService>();
-        _loggerMock = new Mock<ILogger<CreatePatientCommandHandler>>();
-        _handler = new CreatePatientCommandHandler(_repositoryMock.Object, _currentUserServiceMock.Object, _loggerMock.Object);
-    }
-
-    [Fact]
-    public async Task Handle_ValidCommand_ReturnsSuccessResult()
-    {
-        // Arrange
-        var command = new CreatePatientCommand
-        {
-            FirstName = "John",
-            LastName = "Doe",
-            DateOfBirth = DateTime.UtcNow.AddYears(-30),
-            Email = "john.doe@example.com",
-            PhoneNumber = "+1234567890"
-        };
-
-        _currentUserServiceMock.Setup(x => x.UserId).Returns(Guid.NewGuid());
-        _currentUserServiceMock.Setup(x => x.TenantId).Returns(Guid.NewGuid());
-        _repositoryMock.Setup(x => x.ExistsByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        var expectedPatient = new Patient { Id = Guid.NewGuid() };
-        _repositoryMock.Setup(x => x.AddAsync(It.IsAny<Patient>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedPatient);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(expectedPatient.Id, result.Value.Id);
-    }
-}
+**Command Handler Tests**:
+```
+HealthTech.Application.Tests/
+├── {Feature}/
+│   ├── Commands/
+│   └── Validators/
 ```
 
-### Query Handler Tests
-```csharp
-public class GetPatientQueryHandlerTests
-{
-    private readonly Mock<IPatientRepository> _repositoryMock;
-    private readonly Mock<ILogger<GetPatientQueryHandler>> _loggerMock;
-    private readonly GetPatientQueryHandler _handler;
-
-    public GetPatientQueryHandlerTests()
-    {
-        _repositoryMock = new Mock<IPatientRepository>();
-        _loggerMock = new Mock<ILogger<GetPatientQueryHandler>>();
-        _handler = new GetPatientQueryHandler(_repositoryMock.Object, _loggerMock.Object);
-    }
-
-    [Fact]
-    public async Task Handle_ExistingPatient_ReturnsSuccessResult()
-    {
-        // Arrange
-        var patientId = Guid.NewGuid();
-        var query = new GetPatientQuery { Id = patientId };
-
-        var expectedPatient = new Patient
-        {
-            Id = patientId,
-            FirstName = "John",
-            LastName = "Doe",
-            DateOfBirth = DateTime.UtcNow.AddYears(-30),
-            Email = "john.doe@example.com",
-            PhoneNumber = "+1234567890"
-        };
-
-        _repositoryMock.Setup(x => x.GetByIdAsync(patientId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedPatient);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(expectedPatient.Id, result.Value.Id);
-        Assert.Equal(expectedPatient.FirstName, result.Value.FirstName);
-    }
-}
+**Query Handler Tests**:
+```
+HealthTech.Application.Tests/
+├── {Feature}/
+│   ├── Queries/
+│   └── Validators/
 ```
 
-## Immutable CQRS Standards (Never Change)
+## Immutable Standards (Never Change)
 
 ### 1. Command Query Separation (Immutable Rule)
-- **Commands**: Write operations only (Create, Update, Delete)
-- **Queries**: Read operations only (Get, List, Search)
-- **No Shared State**: Commands and Queries don't share models
+- **Commands**: Write operations only
+- **Queries**: Read operations only
 - **Separate Models**: Command and Query models are distinct
+- **No Shared State**: Commands and Queries don't share models
 
-### 2. Handler Responsibility (Immutable Rule)
-- **Single Operation**: One handler = one operation
-- **No Mixed Operations**: Commands don't read, Queries don't write
+### 2. Single Responsibility (Immutable Rule)
+- **Command Handlers**: Handle single write operation
+- **Query Handlers**: Handle single read operation
+- **No Mixed Operations**: One handler = one operation
 - **Clear Intent**: Handler purpose is immediately clear
-- **Single Repository**: Each handler uses one repository
 
 ### 3. Immutability (Immutable Rule)
-- **Records**: Use records for all commands and queries
-- **Init-Only Properties**: All properties are init-only
+- **Commands**: Immutable records with init-only properties
+- **Queries**: Immutable records with init-only properties
+- **DTOs**: Immutable records for data transfer
 - **No Side Effects**: Queries never modify state
-- **Immutable DTOs**: All DTOs are immutable
 
-### 4. Validation Strategy (Immutable Rule)
-- **Command Validation**: Validate all commands
-- **Query Validation**: Validate complex queries
-- **FluentValidation**: Use FluentValidation for all validation
-- **Pipeline Behavior**: Validation via pipeline behavior
+### 4. MediatR Integration (Immutable Rule)
+- **IRequest<T>**: All commands and queries implement IRequest
+- **IRequestHandler<TRequest, TResponse>**: All handlers implement IRequestHandler
+- **Pipeline Behaviors**: Cross-cutting concerns via behaviors
+- **Assembly Registration**: Automatic registration via MediatR
 
-### 5. Error Handling (Immutable Rule)
-- **Result Pattern**: Use Result<T> for all responses
-- **Consistent Errors**: Standardized error messages
-- **Logging**: Log all errors appropriately
-- **No Exceptions**: Don't throw exceptions for business logic
+### 5. Validation Strategy (Immutable Rule)
+- **Input Validation**: At Application layer boundaries
+- **Business Validation**: In Domain layer
+- **FluentValidation**: For all input validation
+- **Clear Messages**: User-friendly error messages
 
-### 6. Performance (Immutable Rule)
-- **Async/Await**: Use throughout for I/O operations
-- **Caching**: Cache query results appropriately
-- **Pagination**: Use pagination for large datasets
-- **Projection**: Use DTOs to limit data transfer
+### 6. Error Handling Strategy (Immutable Rule)
+- **Result Pattern**: Consistent error handling
+- **Validation Errors**: Detailed validation feedback
+- **Business Errors**: Domain-specific error messages
+- **Technical Errors**: Infrastructure error handling
 
-### 7. Testing (Immutable Rule)
-- **Unit Tests**: Test all handlers in isolation
-- **Mock Dependencies**: Mock all external dependencies
-- **Test Coverage**: Aim for >80% test coverage
-- **Integration Tests**: Test complete workflows
+### 7. Pagination Strategy (Immutable Rule)
+- **Standard Parameters**: PageNumber, PageSize, SortBy, SortOrder
+- **Metadata**: TotalCount, TotalPages, HasPreviousPage, HasNextPage
+- **Validation**: Page size limits and validation
+- **Performance**: Efficient pagination queries
+
+### 8. Logging Strategy (Immutable Rule)
+- **Request Logging**: All incoming requests
+- **Response Logging**: All outgoing responses
+- **Correlation IDs**: For request tracing
+- **Sensitive Data**: Never log sensitive information
+
+### 9. Caching Strategy (Immutable Rule)
+- **Query Caching**: Cache read operations only
+- **Cache Keys**: Appropriate cache key generation
+- **Cache Invalidation**: Proper cache invalidation
+- **Cache Headers**: Respect cache control headers
+
+### 10. Testing Strategy (Immutable Rule)
+- **Unit Tests**: Test handlers in isolation
+- **Integration Tests**: Test with real dependencies
+- **Validation Tests**: Test all validation rules
+- **Performance Tests**: Test pagination and caching
 
 ## Anti-Patterns to Avoid (Never Allowed)
 
-1. **Mixed Operations**: Commands that read data, Queries that write data
-2. **Shared Models**: Using the same model for commands and queries
-3. **Mutable Commands**: Commands with settable properties
-4. **Side Effects in Queries**: Queries that modify state
-5. **Complex Handlers**: Handlers with multiple responsibilities
-6. **Direct Repository Access**: Bypassing handlers in API layer
-7. **No Validation**: Commands or queries without validation
-8. **Exception Throwing**: Throwing exceptions for business logic
-9. **Synchronous Operations**: Using sync methods in async contexts
-10. **No Error Handling**: Not handling errors in handlers
+1. **Mixed Operations**: Commands that read data, queries that modify state
+2. **Shared Models**: Commands and queries sharing the same model
+3. **Fat Handlers**: Handlers with too many responsibilities
+4. **Direct Repository Access**: Bypassing handlers for data access
+5. **Synchronous Operations**: Blocking operations in async handlers
+6. **Hardcoded Values**: Magic numbers and hardcoded strings
+7. **Missing Validation**: Requests without proper validation
+8. **Poor Error Handling**: Inconsistent error responses
+9. **Inefficient Queries**: N+1 queries and poor pagination
+10. **Missing Logging**: Operations without proper logging
 
 ## Validation Checklist (Must Pass Always)
 
-- [ ] Commands only perform write operations
+- [ ] Commands and queries are properly separated
 - [ ] Queries only perform read operations
-- [ ] All commands and queries use records
-- [ ] All properties are init-only
-- [ ] All commands have validators
-- [ ] All handlers return Result<T>
-- [ ] All handlers are async
-- [ ] All handlers have proper error handling
-- [ ] All handlers have unit tests
-- [ ] No shared models between commands and queries
+- [ ] All handlers implement single responsibility
+- [ ] All requests have proper validation
+- [ ] All responses follow consistent patterns
+- [ ] Pagination is properly implemented
+- [ ] Error handling is consistent
+- [ ] Logging covers all operations
+- [ ] Caching is implemented for queries
+- [ ] Testing covers all scenarios
+- [ ] Performance is optimized
 
 ## Performance Considerations
 
 1. **Async/Await**: Use throughout for I/O operations
-2. **Caching**: Implement appropriate caching for queries
-3. **Pagination**: Use pagination for large datasets
+2. **Pagination**: Implement efficient pagination
+3. **Caching**: Cache query results appropriately
 4. **Projection**: Use DTOs to limit data transfer
 5. **Indexing**: Proper database indexing for queries
-6. **Connection Pooling**: Efficient database connection management
+6. **Connection Pooling**: Efficient database connections management
 
 ## Security Implementation
 
-1. **Authorization**: Check permissions in handlers
-2. **Input Validation**: Validate all inputs thoroughly
-3. **Audit Logging**: Log all command operations
-4. **Data Encryption**: Encrypt sensitive data
-5. **Rate Limiting**: Implement rate limiting for commands
-6. **Tenant Isolation**: Ensure proper tenant isolation
+1. **Input Validation**: Comprehensive validation at all layers
+2. **Authorization**: Proper authorization checks
+3. **Audit Logging**: Track all data modifications
+4. **Data Protection**: Sensitive data encryption
+5. **Rate Limiting**: API rate limiting for commands
+6. **Correlation IDs**: Request tracing for security
+7. **Tenant Isolation**: Ensure proper tenant isolation
 
 ---
 

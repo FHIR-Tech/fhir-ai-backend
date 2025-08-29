@@ -84,6 +84,17 @@ Khi thêm tài liệu mới:
   - **API Layer Pattern Recognition**: FHIR → Minimal API, Business → Controller
   - **Automatic Pattern Application**: Dựa trên trigger keywords
   - **Quality Gates Enhancement**: Pattern validation và FHIR compliance
+- **2025-08-28**: Cập nhật Clean Architecture Reference
+  - **Loại bỏ ví dụ hardcode**: Tập trung vào nguyên tắc cốt lõi
+  - **Thêm Official I/O Patterns**: Từ Uncle Bob, Greg Young, Jimmy Bogard, FluentValidation
+  - **Chuẩn hóa Base Request/Response**: PageNumber, PageSize, SortBy, SortOrder, SearchTerm
+  - **Cải tiến Implementation Patterns**: Mô tả tổng quát thay vì code cụ thể
+- **2025-08-28**: Cập nhật CQRS Pattern Reference
+  - **Loại bỏ ví dụ hardcode**: Tập trung vào nguyên tắc CQRS
+  - **Thêm Official I/O Patterns**: Từ Greg Young và Jimmy Bogard
+  - **Chuẩn hóa Command/Query Patterns**: BaseCommand, BaseQuery, BasePagedQuery
+  - **Cải tiến Response Patterns**: BaseCommandResponse, BaseQueryResponse, PagedQueryResponse
+  - **Thêm FluentValidation Standards**: BaseValidator, PaginationValidator
 
 ---
 

@@ -53,30 +53,21 @@ This document defines the **immutable Clean Architecture standards** for the FHI
 ```
 HealthTech.Domain/
 ├── Entities/
-│   ├── BaseEntity.cs
-│   ├── Patient.cs
 │   └── {EntityName}.cs
 ├── ValueObjects/
-│   ├── Email.cs
 │   └── {ValueObjectName}.cs
 ├── Aggregates/
-│   ├── PatientAggregate.cs
-│   └── {AggregateName}.cs
+│   └── {AggregateName}Aggregate.cs
 ├── Repositories/
-│   ├── IPatientRepository.cs
 │   └── I{EntityName}Repository.cs
 ├── Services/
-│   ├── IPatientDomainService.cs
-│   └── I{DomainServiceName}.cs
+│   └── I{ServiceName}Service.cs
 ├── Events/
-│   ├── PatientCreatedEvent.cs
-│   └── {EventName}.cs
+│   └── {EventName}Event.cs
 ├── Enums/
-│   ├── PatientStatus.cs
 │   └── {EnumName}.cs
 └── Exceptions/
-    ├── DomainException.cs
-    └── {ExceptionName}.cs
+    └── {ExceptionName}Exception.cs
 ```
 
 ### Application Layer (Business Use Cases)
@@ -150,10 +141,8 @@ HealthTech.Infrastructure/
 ├── Persistence/
 │   ├── ApplicationDbContext.cs
 │   ├── Configurations/
-│   │   ├── PatientConfiguration.cs
 │   │   └── {Entity}Configuration.cs
 │   ├── Repositories/
-│   │   ├── PatientRepository.cs
 │   │   └── {Entity}Repository.cs
 │   └── Migrations/
 ├── Authentication/
@@ -161,7 +150,6 @@ HealthTech.Infrastructure/
 │   ├── CurrentUserService.cs
 │   └── AuthorizationService.cs
 ├── External/
-│   ├── FhirApiClient.cs
 │   └── {ExternalService}Client.cs
 ├── Caching/
 │   ├── RedisCacheService.cs
@@ -169,7 +157,8 @@ HealthTech.Infrastructure/
 ├── Logging/
 │   └── SerilogService.cs
 ├── FileStorage/
-│   └── AzureBlobStorageService.cs
+│   ├── AzureBlobStorageService.cs
+│   └── {FileStorageName}Service.cs
 └── DependencyInjection.cs
 ```
 
@@ -190,11 +179,9 @@ HealthTech.Infrastructure/
 ```
 HealthTech.API/
 ├── Endpoints/
-│   ├── PatientEndpoints.cs
 │   └── {Entity}Endpoints.cs
 ├── Controllers/
-│   ├── HealthController.cs
-│   └── {ControllerName}.cs
+│   └── {ControllerName}Controller.cs
 ├── Middleware/
 │   ├── ExceptionHandlingMiddleware.cs
 │   ├── RequestLoggingMiddleware.cs
@@ -211,162 +198,226 @@ HealthTech.API/
 └── Program.cs
 ```
 
+## Official I/O Patterns
+
+### 1. Clean Architecture I/O (Uncle Bob)
+
+**Base Request Pattern**:
+```csharp
+public abstract class BaseRequest
+{
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+    public string? SortBy { get; set; }
+    public string SortOrder { get; set; } = "asc";
+    public string? SearchTerm { get; set; }
+}
+```
+
+**Base Response Pattern**:
+```csharp
+public abstract class BaseResponse
+{
+    public bool IsSuccess { get; set; }
+    public string? Message { get; set; }
+    public int StatusCode { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+}
+```
+
+### 2. CQRS I/O (Greg Young)
+
+**Base Command Pattern**:
+```csharp
+public abstract class BaseCommand<TResponse> : IRequest<TResponse>
+{
+    public Guid CommandId { get; set; } = Guid.NewGuid();
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public string? CorrelationId { get; set; }
+    public string? UserId { get; set; }
+}
+```
+
+**Base Query Pattern**:
+```csharp
+public abstract class BasePagedQuery<TResponse> : BaseQuery<TResponse>
+{
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+    public string? SortBy { get; set; }
+    public string SortOrder { get; set; } = "asc";
+    public string? SearchTerm { get; set; }
+    public Dictionary<string, string>? Filters { get; set; }
+}
+```
+
+**CQRS Response Patterns**:
+```csharp
+public abstract class BaseCommandResponse
+{
+    public bool IsSuccess { get; set; }
+    public string? Message { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public Guid CommandId { get; set; }
+    public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class PagedQueryResponse<T> : BaseQueryResponse
+{
+    public List<T> Items { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int PageNumber { get; set; }
+    public int PageSize { get; set; }
+    public int TotalPages { get; set; }
+    public bool HasPreviousPage { get; set; }
+    public bool HasNextPage { get; set; }
+}
+```
+
+### 3. MediatR I/O (Jimmy Bogard)
+
+**Base Request Pattern**:
+```csharp
+public abstract class BaseRequest<TResponse> : IRequest<TResponse>
+{
+    public Guid RequestId { get; set; } = Guid.NewGuid();
+    public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
+    public string? CorrelationId { get; set; }
+    public string? UserId { get; set; }
+    public string? TenantId { get; set; }
+}
+
+public abstract class BasePagedRequest<TResponse> : BaseRequest<TResponse>
+{
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+    public string? SortBy { get; set; }
+    public string SortOrder { get; set; } = "asc";
+    public string? SearchTerm { get; set; }
+    public Dictionary<string, object>? Filters { get; set; }
+}
+```
+
+**MediatR Response Pattern**:
+```csharp
+public abstract class BaseResponse
+{
+    public bool IsSuccess { get; set; }
+    public string? Message { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public Guid RequestId { get; set; }
+    public DateTime RespondedAt { get; set; } = DateTime.UtcNow;
+    public int StatusCode { get; set; } = 200;
+}
+
+public class PagedResponse<T> : BaseResponse
+{
+    public List<T> Items { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int PageNumber { get; set; }
+    public int PageSize { get; set; }
+    public int TotalPages { get; set; }
+    public bool HasPreviousPage { get; set; }
+    public bool HasNextPage { get; set; }
+}
+```
+
+### 4. FluentValidation I/O (Official)
+
+**Base Validator Pattern**:
+```csharp
+public abstract class BaseValidator<T> : AbstractValidator<T>
+{
+    protected BaseValidator()
+    {
+        // Common validation rules
+        When(x => x is BaseRequest request, () =>
+        {
+            RuleFor(x => ((BaseRequest)x).RequestId)
+                .NotEmpty()
+                .WithMessage("Request ID is required");
+        });
+    }
+}
+
+public class PaginationValidator : AbstractValidator<BasePagedRequest<object>>
+{
+    public PaginationValidator()
+    {
+        RuleFor(x => x.PageNumber)
+            .GreaterThan(0)
+            .WithMessage("Page number must be greater than 0");
+
+        RuleFor(x => x.PageSize)
+            .InclusiveBetween(1, 1000)
+            .WithMessage("Page size must be between 1 and 1000");
+
+        RuleFor(x => x.SortOrder)
+            .Must(x => x?.ToLower() == "asc" || x?.ToLower() == "desc")
+            .WithMessage("Sort order must be 'asc' or 'desc'");
+    }
+}
+```
+
 ## Implementation Patterns
 
 ### CQRS Pattern
 
 **Commands** (Write Operations):
-```csharp
-public record CreatePatientCommand : IRequest<Result<PatientDto>>
-{
-    public string FirstName { get; init; }
-    public string LastName { get; init; }
-    public DateTime DateOfBirth { get; init; }
-}
-
-public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand, Result<PatientDto>>
-{
-    private readonly IPatientRepository _repository;
-    private readonly ICurrentUserService _currentUserService;
-
-    public async Task<Result<PatientDto>> Handle(CreatePatientCommand request, CancellationToken cancellationToken)
-    {
-        // Business logic implementation
-    }
-}
-```
+- Implement `IRequest<TResponse>`
+- Use immutable records with init-only properties
+- Include validation using FluentValidation
+- Return `Result<T>` or specific response types
 
 **Queries** (Read Operations):
-```csharp
-public record GetPatientQuery : IRequest<Result<PatientDto>>
-{
-    public Guid Id { get; init; }
-}
-
-public class GetPatientQueryHandler : IRequestHandler<GetPatientQuery, Result<PatientDto>>
-{
-    private readonly IPatientRepository _repository;
-
-    public async Task<Result<PatientDto>> Handle(GetPatientQuery request, CancellationToken cancellationToken)
-    {
-        // Query implementation
-    }
-}
-```
+- Implement `IRequest<TResponse>`
+- Use immutable records with init-only properties
+- Include pagination, sorting, and filtering parameters
+- Return `Result<T>` or specific response types
 
 ### Repository Pattern
 
 **Domain Interface**:
-```csharp
-public interface IPatientRepository
-{
-    Task<Patient> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Patient>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<Patient> AddAsync(Patient patient, CancellationToken cancellationToken = default);
-    Task<Patient> UpdateAsync(Patient patient, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
-}
-```
+- Define in Domain layer
+- Include async methods with CancellationToken
+- Focus on business operations, not technical details
 
 **Infrastructure Implementation**:
-```csharp
-public class PatientRepository : IPatientRepository
-{
-    private readonly ApplicationDbContext _context;
-
-    public PatientRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
-    public async Task<Patient> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await _context.Patients.FindAsync(new object[] { id }, cancellationToken);
-    }
-
-    // Other implementations...
-}
-```
+- Implement in Infrastructure layer
+- Use framework-specific code (EF Core, etc.)
+- Handle technical concerns (connection, transactions)
 
 ### Validation Pattern
 
-```csharp
-public class CreatePatientCommandValidator : AbstractValidator<CreatePatientCommand>
-{
-    public CreatePatientCommandValidator()
-    {
-        RuleFor(x => x.FirstName)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(x => x.LastName)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(x => x.DateOfBirth)
-            .NotEmpty()
-            .LessThan(DateTime.UtcNow);
-    }
-}
-```
+- Use FluentValidation for all input validation
+- Validate at Application layer boundaries
+- Include business rule validation in Domain layer
+- Provide clear, user-friendly error messages
 
 ### Result Pattern
 
-```csharp
-public class Result<T>
-{
-    public bool IsSuccess { get; }
-    public T Value { get; }
-    public string Error { get; }
-    public List<string> ValidationErrors { get; }
-
-    public static Result<T> Success(T value) => new(true, value, null, null);
-    public static Result<T> Failure(string error) => new(false, default, error, null);
-    public static Result<T> ValidationFailure(List<string> errors) => new(false, default, null, errors);
-}
-```
+- Use `Result<T>` for consistent error handling
+- Include success/failure status
+- Provide error messages and validation errors
+- Support pagination for list operations
 
 ### Cross-Cutting Concerns
 
 **Logging Behavior**:
-```csharp
-public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
-{
-    private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
-
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Handling {RequestName}", typeof(TRequest).Name);
-        var response = await next();
-        _logger.LogInformation("Handled {RequestName}", typeof(TRequest).Name);
-        return response;
-    }
-}
-```
+- Log all requests and responses
+- Include correlation IDs for tracing
+- Avoid logging sensitive information
 
 **Validation Behavior**:
-```csharp
-public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
-{
-    private readonly IEnumerable<IValidator<TRequest>> _validators;
+- Automatically validate all requests
+- Provide detailed validation error messages
+- Support multiple validators per request
 
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
-    {
-        if (!_validators.Any()) return await next();
-
-        var context = new ValidationContext<TRequest>(request);
-        var validationResults = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(context, cancellationToken)));
-        var failures = validationResults.SelectMany(r => r.Errors).Where(f => f != null).ToList();
-
-        if (failures.Count != 0)
-            throw new ValidationException(failures);
-
-        return await next();
-    }
-}
-```
+**Caching Behavior**:
+- Cache query results only
+- Use appropriate cache keys
+- Include cache invalidation strategies
 
 ## Dependency Injection Configuration
 
@@ -411,10 +462,9 @@ HealthTech.Application.Tests/
 ```
 HealthTech.API.Tests/
 ├── Endpoints/
-│   ├── PatientEndpointsTests.cs
 │   └── {Entity}EndpointsTests.cs
 ├── Controllers/
-│   └── HealthControllerTests.cs
+│   └── {ControllerName}ControllerTests.cs
 └── TestBase.cs
 ```
 
