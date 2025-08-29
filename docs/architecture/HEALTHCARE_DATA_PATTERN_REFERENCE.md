@@ -41,14 +41,17 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using System.Text.Json;
 
-public class Patient : BaseEntity
+/// <summary>
+/// Generic FHIR R4B Resource Entity - Base structure for all FHIR resources
+/// </summary>
+public abstract class FhirResourceEntity : BaseEntity
 {
     // ========================================
-    // FHIR R4B RESOURCE STORAGE
+    // FHIR R4B RESOURCE STORAGE (IMMUTABLE)
     // ========================================
     
     /// <summary>
-    /// FHIR R4B Patient resource as JSONB
+    /// FHIR R4B resource as JSONB (stores complete FHIR resource)
     /// </summary>
     [Column(TypeName = "jsonb")]
     public JsonDocument FhirResource { get; set; } = JsonDocument.Parse("{}");
@@ -58,6 +61,12 @@ public class Patient : BaseEntity
     /// </summary>
     [MaxLength(64)]
     public string FhirId { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// FHIR resource type (from FHIR resource)
+    /// </summary>
+    [MaxLength(50)]
+    public string ResourceType { get; set; } = string.Empty;
     
     /// <summary>
     /// FHIR resource version (from FHIR resource)
@@ -70,191 +79,33 @@ public class Patient : BaseEntity
     public DateTime FhirLastUpdated { get; set; } = DateTime.UtcNow;
     
     // ========================================
-    // CORE IDENTITY FIELDS
-    // ========================================
-    
-    /// <summary>
-    /// Patient's first name
-    /// </summary>
-    [Required]
-    [MaxLength(100)]
-    public string FirstName { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Patient's last name
-    /// </summary>
-    [Required]
-    [MaxLength(100)]
-    public string LastName { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Patient's date of birth
-    /// </summary>
-    [Required]
-    public DateTime DateOfBirth { get; set; }
-    
-    /// <summary>
-    /// Patient's gender
-    /// </summary>
-    public Gender Gender { get; set; }
-    
-    // ========================================
-    // CONTACT INFORMATION
-    // ========================================
-    
-    /// <summary>
-    /// Patient's email address
-    /// </summary>
-    [EmailAddress]
-    [MaxLength(255)]
-    public string? Email { get; set; }
-    
-    /// <summary>
-    /// Patient's phone number
-    /// </summary>
-    [MaxLength(20)]
-    public string? PhoneNumber { get; set; }
-    
-    // ========================================
-    // ADDRESS INFORMATION
-    // ========================================
-    
-    /// <summary>
-    /// Patient's address line 1
-    /// </summary>
-    [MaxLength(255)]
-    public string? AddressLine1 { get; set; }
-    
-    /// <summary>
-    /// Patient's address line 2
-    /// </summary>
-    [MaxLength(255)]
-    public string? AddressLine2 { get; set; }
-    
-    /// <summary>
-    /// Patient's city
-    /// </summary>
-    [MaxLength(100)]
-    public string? City { get; set; }
-    
-    /// <summary>
-    /// Patient's state/province
-    /// </summary>
-    [MaxLength(100)]
-    public string? State { get; set; }
-    
-    /// <summary>
-    /// Patient's postal code
-    /// </summary>
-    [MaxLength(20)]
-    public string? PostalCode { get; set; }
-    
-    /// <summary>
-    /// Patient's country
-    /// </summary>
-    [MaxLength(100)]
-    public string? Country { get; set; }
-    
-    // ========================================
-    // HEALTHCARE SPECIFIC FIELDS
-    // ========================================
-    
-    /// <summary>
-    /// Patient's medical record number
-    /// </summary>
-    [MaxLength(50)]
-    public string? MedicalRecordNumber { get; set; }
-    
-    /// <summary>
-    /// Patient's insurance information
-    /// </summary>
-    [Column(TypeName = "jsonb")]
-    public InsuranceInfo? Insurance { get; set; }
-    
-    /// <summary>
-    /// Patient's emergency contact information
-    /// </summary>
-    [Column(TypeName = "jsonb")]
-    public EmergencyContact? EmergencyContact { get; set; }
-    
-    /// <summary>
-    /// Patient's allergies
-    /// </summary>
-    [Column(TypeName = "jsonb")]
-    public List<Allergy> Allergies { get; set; } = new();
-    
-    /// <summary>
-    /// Patient's medications
-    /// </summary>
-    [Column(TypeName = "jsonb")]
-    public List<Medication> Medications { get; set; } = new();
-    
-    // ========================================
-    // STATUS & CONFIGURATION FIELDS
-    // ========================================
-    
-    /// <summary>
-    /// Patient's status
-    /// </summary>
-    public PatientStatus Status { get; set; } = PatientStatus.Active;
-    
-    /// <summary>
-    /// Patient's deceased status
-    /// </summary>
-    public bool IsDeceased { get; set; } = false;
-    
-    /// <summary>
-    /// Patient's deceased date
-    /// </summary>
-    public DateTime? DeceasedDate { get; set; }
-    
-    // ========================================
     // SECURITY & ACCESS FIELDS
     // ========================================
     
     /// <summary>
-    /// Patient's consent status
+    /// Data classification level
+    /// </summary>
+    public DataClassification DataClassification { get; set; } = DataClassification.PHI;
+    
+    /// <summary>
+    /// Consent status for this resource
     /// </summary>
     public ConsentStatus ConsentStatus { get; set; } = ConsentStatus.Pending;
     
     /// <summary>
-    /// Patient's consent date
+    /// Consent date
     /// </summary>
     public DateTime? ConsentDate { get; set; }
     
-    /// <summary>
-    /// Patient's data classification
-    /// </summary>
-    public DataClassification DataClassification { get; set; } = DataClassification.PHI;
-    
     // ========================================
-    // TIMING FIELDS
+    // FHIR R4B HELPER METHODS (GENERIC)
     // ========================================
     
     /// <summary>
-    /// When the patient record was created
-    /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
-    /// <summary>
-    /// When the patient record was last updated
-    /// </summary>
-    public DateTime? UpdatedAt { get; set; }
-    
-    /// <summary>
-    /// When the patient record was last accessed
-    /// </summary>
-    public DateTime? LastAccessedAt { get; set; }
-    
-    // ========================================
-    // FHIR R4B HELPER METHODS
-    // ========================================
-    
-    /// <summary>
-    /// Get FHIR R4B Patient resource
+    /// Get FHIR R4B resource as generic Resource
     /// </summary>
     [NotMapped]
-    public Hl7.Fhir.Model.Patient? FhirPatient
+    public Hl7.Fhir.Model.Resource? FhirResourceObject
     {
         get
         {
@@ -262,7 +113,7 @@ public class Patient : BaseEntity
             {
                 if (FhirResource == null) return null;
                 var jsonString = FhirResource.RootElement.GetRawText();
-                return FhirJsonParser.ParseResourceFromJson<Hl7.Fhir.Model.Patient>(jsonString);
+                return FhirJsonParser.ParseResourceFromJson<Hl7.Fhir.Model.Resource>(jsonString);
             }
             catch
             {
@@ -272,79 +123,66 @@ public class Patient : BaseEntity
     }
     
     /// <summary>
+    /// Set FHIR R4B resource (generic method)
+    /// </summary>
+    public void SetFhirResource(Hl7.Fhir.Model.Resource resource)
+    {
+        var jsonString = FhirJsonSerializer.SerializeToString(resource);
+        FhirResource = JsonDocument.Parse(jsonString);
+        FhirId = resource.Id ?? string.Empty;
+        ResourceType = resource.TypeName;
+        FhirVersion = resource.Meta?.VersionId != null ? int.Parse(resource.Meta.VersionId) : 1;
+        FhirLastUpdated = resource.Meta?.LastUpdated?.ToDateTime() ?? DateTime.UtcNow;
+    }
+    
+    /// <summary>
+    /// Get FHIR R4B resource as specific type
+    /// </summary>
+    public T? GetFhirResource<T>() where T : Hl7.Fhir.Model.Resource
+    {
+        try
+        {
+            if (FhirResource == null) return null;
+            var jsonString = FhirResource.RootElement.GetRawText();
+            return FhirJsonParser.ParseResourceFromJson<T>(jsonString);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+    
+    /// <summary>
+    /// Set FHIR R4B resource as specific type
+    /// </summary>
+    public void SetFhirResource<T>(T resource) where T : Hl7.Fhir.Model.Resource
+    {
+        SetFhirResource((Hl7.Fhir.Model.Resource)resource);
+    }
+}
+
+/// <summary>
+/// Example: Patient FHIR Resource Entity (extends generic structure)
+/// </summary>
+public class Patient : FhirResourceEntity
+{
+    // ========================================
+    // PATIENT-SPECIFIC HELPER METHODS
+    // ========================================
+    
+    /// <summary>
+    /// Get FHIR R4B Patient resource
+    /// </summary>
+    [NotMapped]
+    public Hl7.Fhir.Model.Patient? FhirPatient => GetFhirResource<Hl7.Fhir.Model.Patient>();
+    
+    /// <summary>
     /// Set FHIR R4B Patient resource
     /// </summary>
     public void SetFhirPatient(Hl7.Fhir.Model.Patient patient)
     {
-        var jsonString = FhirJsonSerializer.SerializeToString(patient);
-        FhirResource = JsonDocument.Parse(jsonString);
-        FhirId = patient.Id ?? string.Empty;
-        FhirVersion = patient.Meta?.VersionId != null ? int.Parse(patient.Meta.VersionId) : 1;
-        FhirLastUpdated = patient.Meta?.LastUpdated?.ToDateTime() ?? DateTime.UtcNow;
+        SetFhirResource(patient);
     }
-    
-    // ========================================
-    // COMPUTED PROPERTIES
-    // ========================================
-    
-    /// <summary>
-    /// Patient's full name
-    /// </summary>
-    [NotMapped]
-    public string FullName => $"{FirstName} {LastName}".Trim();
-    
-    /// <summary>
-    /// Patient's age
-    /// </summary>
-    [NotMapped]
-    public int Age
-    {
-        get
-        {
-            var today = DateTime.Today;
-            var age = today.Year - DateOfBirth.Year;
-            if (DateOfBirth.Date > today.AddYears(-age)) age--;
-            return age;
-        }
-    }
-    
-    /// <summary>
-    /// Patient's full address
-    /// </summary>
-    [NotMapped]
-    public string FullAddress
-    {
-        get
-        {
-            var parts = new List<string>();
-            if (!string.IsNullOrEmpty(AddressLine1)) parts.Add(AddressLine1);
-            if (!string.IsNullOrEmpty(AddressLine2)) parts.Add(AddressLine2);
-            if (!string.IsNullOrEmpty(City)) parts.Add(City);
-            if (!string.IsNullOrEmpty(State)) parts.Add(State);
-            if (!string.IsNullOrEmpty(PostalCode)) parts.Add(PostalCode);
-            if (!string.IsNullOrEmpty(Country)) parts.Add(Country);
-            return string.Join(", ", parts);
-        }
-    }
-    
-    // ========================================
-    // NAVIGATION PROPERTIES
-    // ========================================
-    
-    /// <summary>
-    /// Patient's observations
-    /// </summary>
-    public virtual ICollection<Observation> Observations { get; set; } = new List<Observation>();
-    
-    /// <summary>
-    /// Patient's conditions
-    /// </summary>
-    public virtual ICollection<Condition> Conditions { get; set; } = new List<Condition>();
-    
-    /// <summary>
-    /// Patient's encounters
-    /// </summary>
-    public virtual ICollection<Encounter> Encounters { get; set; } = new List<Encounter>();
 }
 ```
 
@@ -1175,7 +1013,8 @@ public class HealthcareDataAuditService
 ```
 HealthTech.Domain/
 ├── Entities/
-│   └── FhirResource.cs               # FHIR R4B entities
+│   ├── FhirResource.cs               # Base FHIR R4B entity (abstract)
+│   └── {OtherFhirResources}.cs       # Other FHIR resource entities
 ├── Repositories/
 │   └── IFhirResourceRepository.cs    # FHIR repository interfaces
 └── Services/
@@ -1186,26 +1025,34 @@ HealthTech.Domain/
 HealthTech.Application/
 ├── FhirResources/
 │   ├── Commands/
-│   │   ├── CreateFhirResourceCommand.cs
-│   │   ├── UpdateFhirResourceCommand.cs
-│   │   ├── DeleteFhirResourceCommand.cs
-│   │   ├── CreateFhirResourceCommandHandler.cs
-│   │   ├── UpdateFhirResourceCommandHandler.cs
-│   │   ├── DeleteFhirResourceCommandHandler.cs
-│   │   ├── CreateFhirResourceCommandValidator.cs
-│   │   └── UpdateFhirResourceCommandValidator.cs
+│   │   ├── CreateFhirResource/
+│   │   │   ├── CreateFhirResourceCommand.cs
+│   │   │   ├── CreateFhirResourceCommandHandler.cs
+│   │   │   └── CreateFhirResourceCommandValidator.cs
+│   │   ├── UpdateFhirResource/
+│   │   │   ├── UpdateFhirResourceCommand.cs
+│   │   │   ├── UpdateFhirResourceCommandHandler.cs
+│   │   │   └── UpdateFhirResourceCommandValidator.cs
+│   │   └── DeleteFhirResource/
+│   │       ├── DeleteFhirResourceCommand.cs
+│   │       └── DeleteFhirResourceCommandHandler.cs
 │   ├── Queries/
-│   │   ├── GetFhirResourceQuery.cs
-│   │   ├── SearchFhirResourcesQuery.cs
-│   │   ├── GetFhirResourceHistoryQuery.cs
-│   │   ├── GetFhirResourceQueryHandler.cs
-│   │   ├── SearchFhirResourcesQueryHandler.cs
-│   │   └── GetFhirResourceHistoryQueryHandler.cs
+│   │   ├── GetFhirResource/
+│   │   │   ├── GetFhirResourceQuery.cs
+│   │   │   └── GetFhirResourceQueryHandler.cs
+│   │   ├── SearchFhirResources/
+│   │   │   ├── SearchFhirResourcesQuery.cs
+│   │   │   └── SearchFhirResourcesQueryHandler.cs
+│   │   └── GetFhirResourceHistory/
+│   │       ├── GetFhirResourceHistoryQuery.cs
+│   │       └── GetFhirResourceHistoryQueryHandler.cs
 │   └── Operations/
-│       ├── ImportFhirBundleCommand.cs
-│       ├── ExportFhirBundleQuery.cs
-│       ├── ImportFhirBundleCommandHandler.cs
-│       └── ExportFhirBundleQueryHandler.cs
+│       ├── ImportFhirBundle/
+│       │   ├── ImportFhirBundleCommand.cs
+│       │   └── ImportFhirBundleCommandHandler.cs
+│       └── ExportFhirBundle/
+│           ├── ExportFhirBundleQuery.cs
+│           └── ExportFhirBundleQueryHandler.cs
 └── Common/
     ├── FhirValidation/
     │   ├── FhirValidator.cs          # FHIR R4B validator
@@ -1216,7 +1063,8 @@ HealthTech.Application/
 
 HealthTech.API/
 ├── Endpoints/
-│   └── FhirEndpoints.cs              # FHIR standard endpoints (generic)
+│   ├── FhirEndpoints.cs              # FHIR standard endpoints (generic)
+│   └── {CustomEndpoints}.cs          # Custom non-FHIR endpoints
 └── Middleware/
     ├── FhirExceptionMiddleware.cs    # FHIR error handling
     └── FhirSecurityMiddleware.cs     # FHIR security middleware
@@ -1265,47 +1113,114 @@ HealthTech.API/
 - **Versioning**: Support FHIR resource versioning
 - **History**: Support FHIR resource history endpoints
 
-### 7. FHIR Route Standards (Immutable Rule)
+### 7. FHIR Route Standards (Immutable Rule) - Based on HL7 FHIR Specification
+Based on the [HL7 FHIR HTTP specification](https://hl7.org/fhir/http.html), the following standards are **MANDATORY**:
+
+#### 7.1 URL Structure Standards
 - **Base Path**: All FHIR endpoints must start with `/fhir`
-- **Resource Endpoints**: `/fhir/{resourceType}` for resource operations
+- **Service Base URL**: `http{s}://server{/path}/fhir`
+- **Resource Endpoints**: `/fhir/{resourceType}` for resource type operations
 - **Instance Endpoints**: `/fhir/{resourceType}/{id}` for specific resource instances
 - **History Endpoints**: `/fhir/{resourceType}/{id}/_history` for resource version history
 - **System Endpoints**: `/fhir/$operation` for system-wide operations
 - **Resource Type Endpoints**: `/fhir/{resourceType}/$operation` for resource-type specific operations
 
+#### 7.2 Special Character Standards (Immutable)
+- **Underscore (`_`)**: Used to disambiguate reserved names from other names
+  - `_history`: System-wide history and search interactions
+  - `_search`: System-wide search interactions
+  - `_history` on resource instances: Resource version history
+- **Dollar Sign (`$`)**: Used as prefix for RPC-like operation names
+  - `$operation`: System-wide operations
+  - `{resourceType}/$operation`: Resource-type specific operations
+  - `{resourceType}/{id}/$operation`: Instance-specific operations
+
+#### 7.3 HTTP Method Standards
+- **GET**: Read operations (read, vread, search, history, capabilities)
+- **POST**: Create operations and complex searches
+- **PUT**: Update operations (update, patch)
+- **DELETE**: Delete operations
+- **PATCH**: Partial update operations
+
+#### 7.4 URL Encoding Standards
+- **UTF-8 Encoding**: All URLs must be UTF-8 encoded
+- **Percent-Encoding**: Required for special characters per RFC 3986
+- **Case Sensitivity**: All URLs are case sensitive
+- **Query Parameters**: Must follow FHIR search parameter standards
+
+#### 7.5 Search Parameter Standards
+- **Standard Parameters**: `_count`, `_offset`, `_sort`, `_summary`
+- **Resource-Specific Parameters**: Defined per resource type
+- **Modifier Parameters**: Use `:`
+- **Chain Parameters**: Use `.`
+- **Composite Parameters**: Use `$`
+
+#### 7.6 Response Format Standards
+- **Content-Type**: `application/fhir+json` for FHIR JSON
+- **Accept Header**: Client specifies preferred format
+- **OperationOutcome**: Standard error response format
+- **Bundle**: Standard response format for search results
+
 ## Anti-Patterns to Avoid (Never Allowed)
 
+### FHIR R4B Compliance Anti-Patterns
 1. **Non-FHIR R4B Data**: Storing healthcare data in non-FHIR R4B format
-2. **Controller Pattern**: Using controllers instead of Minimal API endpoints
-3. **Non-FHIR Routes**: Using non-standard FHIR route patterns
-4. **Non-FHIR Responses**: Returning non-FHIR R4B resources or DTOs
-5. **No FHIR Validation**: Healthcare data without FHIR R4B validation
-6. **No Security**: Healthcare data without proper security measures
-7. **No Audit Trail**: Healthcare data access without logging
-8. **No Consent**: Using healthcare data without patient consent
-9. **Cross-Tenant Leakage**: Healthcare data accessible across tenants
-10. **No Versioning**: Healthcare data without FHIR versioning
-11. **No Encryption**: PHI stored without encryption
-12. **No Access Control**: Healthcare data without access controls
-13. **No Data Classification**: Healthcare data without sensitivity classification
-14. **External FHIR SDK**: Using external FHIR SDK instead of local clone
+2. **External FHIR SDK**: Using external FHIR SDK instead of local clone
+3. **Non-FHIR Responses**: Returning non-FHIR R4B resources or DTOs
+4. **No FHIR Validation**: Healthcare data without FHIR R4B validation
+
+### FHIR Route Standards Anti-Patterns
+5. **Controller Pattern**: Using controllers instead of Minimal API endpoints
+6. **Non-FHIR Routes**: Using non-standard FHIR route patterns
+7. **Incorrect Special Characters**: Using `_` or `$` incorrectly in URLs
+8. **Non-Standard HTTP Methods**: Using non-FHIR HTTP methods
+9. **Incorrect URL Encoding**: Not following UTF-8 and percent-encoding standards
+10. **Non-Standard Search Parameters**: Using non-FHIR search parameter formats
+
+### Security & Compliance Anti-Patterns
+11. **No Security**: Healthcare data without proper security measures
+12. **No Audit Trail**: Healthcare data access without logging
+13. **No Consent**: Using healthcare data without patient consent
+14. **Cross-Tenant Leakage**: Healthcare data accessible across tenants
+15. **No Encryption**: PHI stored without encryption
+16. **No Access Control**: Healthcare data without access controls
+17. **No Data Classification**: Healthcare data without sensitivity classification
+
+### Data Integrity Anti-Patterns
+18. **No Versioning**: Healthcare data without FHIR versioning
+19. **Mutable History**: Modifying healthcare data history
+20. **No Reference Integrity**: Not maintaining referential integrity across FHIR resources
 
 ## Validation Checklist (Must Pass Always)
 
+### FHIR R4B Compliance
 - [ ] All healthcare data uses FHIR R4B format
-- [ ] FHIR endpoints follow standard FHIR route patterns
+- [ ] Local Hl7.Fhir.R4B SDK is used (not external)
 - [ ] FHIR R4B validation is implemented
-- [ ] Minimal API endpoints are used (not controllers)
 - [ ] FHIR R4B resources are returned (not DTOs)
-- [ ] Local Hl7.Fhir.R4B SDK is used
+
+### FHIR Route Standards Compliance
+- [ ] FHIR endpoints follow standard FHIR route patterns
+- [ ] Minimal API endpoints are used (not controllers)
+- [ ] Special characters `_` and `$` are used correctly
+- [ ] HTTP methods follow FHIR standards (GET, POST, PUT, DELETE, PATCH)
+- [ ] URL encoding follows UTF-8 and percent-encoding standards
+- [ ] Search parameters follow FHIR standards (`_count`, `_offset`, etc.)
+- [ ] Content-Type uses `application/fhir+json` for FHIR responses
+
+### Security & Compliance
 - [ ] PHI is properly encrypted
 - [ ] Access controls are implemented
 - [ ] Audit trail is maintained
 - [ ] Patient consent is tracked
 - [ ] Multi-tenancy is enforced
-- [ ] FHIR versioning is implemented
 - [ ] Data classification is applied
 - [ ] Security measures are in place
+
+### Data Integrity
+- [ ] FHIR versioning is implemented
+- [ ] Resource history is immutable
+- [ ] Reference integrity is maintained across FHIR resources
 
 ## Performance Considerations
 
