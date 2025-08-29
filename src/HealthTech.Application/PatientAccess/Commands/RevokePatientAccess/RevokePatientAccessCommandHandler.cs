@@ -1,32 +1,7 @@
 using MediatR;
-using FluentValidation;
 using HealthTech.Application.Common.Interfaces;
 
-namespace HealthTech.Application.PatientAccess.Commands;
-
-public record RevokePatientAccessCommand : IRequest<RevokePatientAccessResponse>
-{
-    public string AccessId { get; init; } = string.Empty;
-    public string? Reason { get; init; }
-}
-
-public record RevokePatientAccessResponse
-{
-    public bool Success { get; init; }
-    public string? ErrorMessage { get; init; }
-}
-
-public class RevokePatientAccessCommandValidator : AbstractValidator<RevokePatientAccessCommand>
-{
-    public RevokePatientAccessCommandValidator()
-    {
-        RuleFor(x => x.AccessId)
-            .NotEmpty().WithMessage("Access ID is required");
-
-        RuleFor(x => x.Reason)
-            .MaximumLength(500).WithMessage("Reason cannot exceed 500 characters");
-    }
-}
+namespace HealthTech.Application.PatientAccess.Commands.RevokePatientAccess;
 
 public class RevokePatientAccessCommandHandler : IRequestHandler<RevokePatientAccessCommand, RevokePatientAccessResponse>
 {
@@ -50,8 +25,9 @@ public class RevokePatientAccessCommandHandler : IRequestHandler<RevokePatientAc
             {
                 return new RevokePatientAccessResponse
                 {
-                    Success = false,
-                    ErrorMessage = "User not authenticated"
+                    IsSuccess = false,
+                    Message = "User not authenticated",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -65,8 +41,9 @@ public class RevokePatientAccessCommandHandler : IRequestHandler<RevokePatientAc
             {
                 return new RevokePatientAccessResponse
                 {
-                    Success = false,
-                    ErrorMessage = "Insufficient permissions to revoke patient access"
+                    IsSuccess = false,
+                    Message = "Insufficient permissions to revoke patient access",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -78,16 +55,18 @@ public class RevokePatientAccessCommandHandler : IRequestHandler<RevokePatientAc
 
             return new RevokePatientAccessResponse
             {
-                Success = success,
-                ErrorMessage = success ? null : "Access not found or already revoked"
+                IsSuccess = success,
+                Message = success ? "Patient access revoked successfully" : "Access not found or already revoked",
+                RequestId = request.RequestId
             };
         }
         catch (Exception ex)
         {
             return new RevokePatientAccessResponse
             {
-                Success = false,
-                ErrorMessage = "An error occurred while revoking patient access"
+                IsSuccess = false,
+                Message = "An error occurred while revoking patient access",
+                RequestId = request.RequestId
             };
         }
     }

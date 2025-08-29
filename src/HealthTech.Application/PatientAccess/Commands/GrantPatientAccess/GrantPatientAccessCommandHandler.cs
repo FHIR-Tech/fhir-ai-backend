@@ -1,48 +1,7 @@
 using MediatR;
-using FluentValidation;
 using HealthTech.Application.Common.Interfaces;
-using HealthTech.Domain.Entities;
-using HealthTech.Domain.Enums;
 
-namespace HealthTech.Application.PatientAccess.Commands;
-
-public record GrantPatientAccessCommand : IRequest<GrantPatientAccessResponse>
-{
-    public string TargetUserId { get; init; } = string.Empty;
-    public string PatientId { get; init; } = string.Empty;
-    public PatientAccessLevel AccessLevel { get; init; }
-    public string? Reason { get; init; }
-    public DateTime? ExpiresAt { get; init; }
-}
-
-public record GrantPatientAccessResponse
-{
-    public bool Success { get; init; }
-    public string? AccessId { get; init; }
-    public string? ErrorMessage { get; init; }
-}
-
-public class GrantPatientAccessCommandValidator : AbstractValidator<GrantPatientAccessCommand>
-{
-    public GrantPatientAccessCommandValidator()
-    {
-        RuleFor(x => x.TargetUserId)
-            .NotEmpty().WithMessage("Target user ID is required");
-
-        RuleFor(x => x.PatientId)
-            .NotEmpty().WithMessage("Patient ID is required");
-
-        RuleFor(x => x.AccessLevel)
-            .IsInEnum().WithMessage("Invalid access level");
-
-        RuleFor(x => x.Reason)
-            .MaximumLength(500).WithMessage("Reason cannot exceed 500 characters");
-
-        RuleFor(x => x.ExpiresAt)
-            .GreaterThan(DateTime.UtcNow).When(x => x.ExpiresAt.HasValue)
-            .WithMessage("Expiration date must be in the future");
-    }
-}
+namespace HealthTech.Application.PatientAccess.Commands.GrantPatientAccess;
 
 public class GrantPatientAccessCommandHandler : IRequestHandler<GrantPatientAccessCommand, GrantPatientAccessResponse>
 {
@@ -69,8 +28,9 @@ public class GrantPatientAccessCommandHandler : IRequestHandler<GrantPatientAcce
             {
                 return new GrantPatientAccessResponse
                 {
-                    Success = false,
-                    ErrorMessage = "User not authenticated"
+                    IsSuccess = false,
+                    Message = "User not authenticated",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -84,8 +44,9 @@ public class GrantPatientAccessCommandHandler : IRequestHandler<GrantPatientAcce
             {
                 return new GrantPatientAccessResponse
                 {
-                    Success = false,
-                    ErrorMessage = "Insufficient permissions to grant patient access"
+                    IsSuccess = false,
+                    Message = "Insufficient permissions to grant patient access",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -95,8 +56,9 @@ public class GrantPatientAccessCommandHandler : IRequestHandler<GrantPatientAcce
             {
                 return new GrantPatientAccessResponse
                 {
-                    Success = false,
-                    ErrorMessage = "Target user not found"
+                    IsSuccess = false,
+                    Message = "Target user not found",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -104,8 +66,9 @@ public class GrantPatientAccessCommandHandler : IRequestHandler<GrantPatientAcce
             {
                 return new GrantPatientAccessResponse
                 {
-                    Success = false,
-                    ErrorMessage = "Cannot grant access to user from different tenant"
+                    IsSuccess = false,
+                    Message = "Cannot grant access to user from different tenant",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -120,7 +83,9 @@ public class GrantPatientAccessCommandHandler : IRequestHandler<GrantPatientAcce
 
             return new GrantPatientAccessResponse
             {
-                Success = true,
+                IsSuccess = true,
+                Message = "Patient access granted successfully",
+                RequestId = request.RequestId,
                 AccessId = accessId
             };
         }
@@ -128,8 +93,9 @@ public class GrantPatientAccessCommandHandler : IRequestHandler<GrantPatientAcce
         {
             return new GrantPatientAccessResponse
             {
-                Success = false,
-                ErrorMessage = "An error occurred while granting patient access"
+                IsSuccess = false,
+                Message = "An error occurred while granting patient access",
+                RequestId = request.RequestId
             };
         }
     }

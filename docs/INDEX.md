@@ -52,6 +52,7 @@ docs/
 - [JWT Refresh Token Implementation Report](cursor-agent/reports/jwt_refresh_token_implementation_report.md)
 - [Service Implementation Analysis Report](cursor-agent/reports/service_implementation_analysis_report.md)
 - [Authentication Restructure Report](cursor-agent/reports/authentication_restructure_20250128_report.md)
+- [PatientAccess Restructure Report](cursor-agent/reports/patient_access_restructure_20250128_report.md)
 - [GitHub Actions Workflows](cursor-agent/workflows/README.md)
 - [Workflow Fixes](cursor-agent/workflows/FIXES.md)
 
@@ -108,6 +109,12 @@ Khi thêm tài liệu mới:
   - **Pipeline Behaviors**: ValidationBehavior, LoggingBehavior, CachingBehavior
   - **Validator Base Classes**: BaseValidator, PaginationValidator
   - **Authentication Restructure**: Updated all commands and queries to follow MediatR I/O Pattern
+  - **Directory Structure**: Reorganized according to established patterns
+- **2025-01-28**: PatientAccess Module Restructure
+  - **Feature-based Organization**: Each command/query in its own directory
+  - **Base Class Inheritance**: All commands inherit from BaseRequest, queries from BasePagedRequest
+  - **Response Standardization**: All responses inherit from BaseResponse or PagedResponse
+  - **Validation Consistency**: All validators inherit from BaseValidator
   - **Directory Structure**: Reorganized according to established patterns
 
 ---
