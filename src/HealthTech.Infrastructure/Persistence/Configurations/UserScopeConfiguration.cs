@@ -28,7 +28,7 @@ public class UserScopeConfiguration : IEntityTypeConfiguration<UserScope>
         builder.Property(us => us.DeletedAt).HasColumnName("deleted_at");
         builder.Property(us => us.DeletedBy).HasColumnName("deleted_by");
         builder.Property(us => us.Version).HasColumnName("version").HasDefaultValue(1);
-        builder.Property(us => us.CreatedBy).HasColumnName("createdby");
+        builder.Property(us => us.CreatedBy).HasColumnName("created_by");
 
         // Constraints
         builder.HasIndex(us => new { us.UserId, us.Scope }).IsUnique().HasDatabaseName("uk_user_scopes_unique");
