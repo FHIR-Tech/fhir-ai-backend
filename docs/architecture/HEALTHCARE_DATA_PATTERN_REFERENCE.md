@@ -350,231 +350,310 @@ public class Patient : BaseEntity
 
 ### FHIR R4B Endpoint Implementation
 
-#### FHIR Patient Endpoint (Minimal API)
+#### FHIR Standard Endpoint Implementation
 ```csharp
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
-public static class PatientEndpoints
+public static class FhirEndpoints
 {
-    public static void MapPatientEndpoints(this WebApplication app)
+    public static void MapFhirEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/fhir/Patient")
-            .WithTags("FHIR Patient")
-            .WithOpenApi();
+        var group = app.MapGroup("/fhir")
+            .WithTags("FHIR")
+            .WithOpenApi()
+            .RequireAuthorization();
 
-        // GET /fhir/Patient/{id} - Read Patient
-        group.MapGet("/{id}", async (
-            string id,
-            IMediator mediator,
-            CancellationToken cancellationToken) =>
+        // ========================================
+        // FHIR STANDARD RESOURCE ENDPOINTS
+        // ========================================
+
+        // GET /fhir/{resourceType} - Search Resources
+        group.MapGet("/{resourceType}", async (
+            string resourceType,
+            ISender sender,
+            CancellationToken cancellationToken,
+            int skip = 0,
+            int take = 100) =>
         {
-            var query = new GetPatientQuery { FhirId = id };
-            var result = await mediator.Send(query, cancellationToken);
-            
-            if (!result.IsSuccess)
-                return Results.NotFound(new OperationOutcome
-                {
-                    Issue = new List<OperationOutcome.IssueComponent>
-                    {
-                        new()
-                        {
-                            Severity = OperationOutcome.IssueSeverity.Error,
-                            Code = OperationOutcome.IssueType.NotFound,
-                            Diagnostics = result.Error
-                        }
-                    }
-                });
-
-            return Results.Ok(result.Value);
-        })
-        .WithName("GetPatient")
-        .WithSummary("Read Patient")
-        .WithDescription("Retrieve a Patient resource by ID")
-        .Produces<Patient>(200)
-        .Produces<OperationOutcome>(404);
-
-        // POST /fhir/Patient - Create Patient
-        group.MapPost("/", async (
-            [FromBody] Patient patient,
-            IMediator mediator,
-            CancellationToken cancellationToken) =>
-        {
-            var command = new CreatePatientCommand { FhirPatient = patient };
-            var result = await mediator.Send(command, cancellationToken);
-            
-            if (!result.IsSuccess)
-                return Results.BadRequest(new OperationOutcome
-                {
-                    Issue = new List<OperationOutcome.IssueComponent>
-                    {
-                        new()
-                        {
-                            Severity = OperationOutcome.IssueSeverity.Error,
-                            Code = OperationOutcome.IssueType.Invalid,
-                            Diagnostics = result.Error
-                        }
-                    }
-                });
-
-            return Results.Created($"/fhir/Patient/{result.Value.Id}", result.Value);
-        })
-        .WithName("CreatePatient")
-        .WithSummary("Create Patient")
-        .WithDescription("Create a new Patient resource")
-        .Produces<Patient>(201)
-        .Produces<OperationOutcome>(400);
-
-        // PUT /fhir/Patient/{id} - Update Patient
-        group.MapPut("/{id}", async (
-            string id,
-            [FromBody] Patient patient,
-            IMediator mediator,
-            CancellationToken cancellationToken) =>
-        {
-            var command = new UpdatePatientCommand 
+            var searchQuery = new SearchFhirResourcesQuery 
             { 
-                FhirId = id, 
-                FhirPatient = patient 
+                ResourceType = resourceType,
+                Skip = skip,
+                Take = take
             };
-            var result = await mediator.Send(command, cancellationToken);
-            
-            if (!result.IsSuccess)
-                return Results.BadRequest(new OperationOutcome
-                {
-                    Issue = new List<OperationOutcome.IssueComponent>
-                    {
-                        new()
-                        {
-                            Severity = OperationOutcome.IssueSeverity.Error,
-                            Code = OperationOutcome.IssueType.Invalid,
-                            Diagnostics = result.Error
-                        }
-                    }
-                });
-
-            return Results.Ok(result.Value);
+            var result = await sender.Send(searchQuery, cancellationToken);
+            return Results.Ok(result);
         })
-        .WithName("UpdatePatient")
-        .WithSummary("Update Patient")
-        .WithDescription("Update an existing Patient resource")
-        .Produces<Patient>(200)
-        .Produces<OperationOutcome>(400);
+        .WithName("SearchFhirResources")
+        .WithSummary("Search FHIR resources by type")
+        .WithDescription("Search for FHIR resources of the specified type");
 
-        // DELETE /fhir/Patient/{id} - Delete Patient
-        group.MapDelete("/{id}", async (
+        // GET /fhir/{resourceType}/{id} - Read Resource
+        group.MapGet("/{resourceType}/{id}", async (
+            string resourceType,
             string id,
-            IMediator mediator,
+            ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var command = new DeletePatientCommand { FhirId = id };
-            var result = await mediator.Send(command, cancellationToken);
+            var query = new GetFhirResourceQuery { ResourceType = resourceType, FhirId = id };
+            var result = await sender.Send(query, cancellationToken);
             
-            if (!result.IsSuccess)
-                return Results.NotFound(new OperationOutcome
-                {
-                    Issue = new List<OperationOutcome.IssueComponent>
-                    {
-                        new()
-                        {
-                            Severity = OperationOutcome.IssueSeverity.Error,
-                            Code = OperationOutcome.IssueType.NotFound,
-                            Diagnostics = result.Error
-                        }
-                    }
-                });
-
-            return Results.NoContent();
+            if (result == null)
+                return Results.NotFound();
+                
+            return Results.Ok(result);
         })
-        .WithName("DeletePatient")
-        .WithSummary("Delete Patient")
-        .WithDescription("Delete a Patient resource")
-        .Produces(204)
-        .Produces<OperationOutcome>(404);
+        .WithName("GetFhirResource")
+        .WithSummary("Get FHIR resource by ID")
+        .WithDescription("Retrieve a specific FHIR resource by type and ID");
 
-        // GET /fhir/Patient - Search Patients
-        group.MapGet("/", async (
-            [FromQuery] string? name,
-            [FromQuery] string? identifier,
-            [FromQuery] string? birthdate,
-            [FromQuery] string? gender,
-            [FromQuery] int? _count,
-            [FromQuery] string? _offset,
-            IMediator mediator,
+        // POST /fhir/{resourceType} - Create Resource
+        group.MapPost("/{resourceType}", async (
+            string resourceType,
+            CreateFhirResourceCommand command,
+            ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var query = new SearchPatientsQuery
+            var createCommand = command with { ResourceType = resourceType };
+            var result = await sender.Send(createCommand, cancellationToken);
+            return Results.Created($"/fhir/{resourceType}/{result.FhirId}", result);
+        })
+        .WithName("CreateFhirResource")
+        .WithSummary("Create FHIR resource")
+        .WithDescription("Create a new FHIR resource of the specified type");
+
+        // PUT /fhir/{resourceType}/{id} - Update Resource
+        group.MapPut("/{resourceType}/{id}", async (
+            string resourceType,
+            string id,
+            UpdateFhirResourceCommand command,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var updateCommand = command with { ResourceType = resourceType, FhirId = id };
+            var result = await sender.Send(updateCommand, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("UpdateFhirResource")
+        .WithSummary("Update FHIR resource")
+        .WithDescription("Update an existing FHIR resource");
+
+        // DELETE /fhir/{resourceType}/{id} - Delete Resource
+        group.MapDelete("/{resourceType}/{id}", async (
+            string resourceType,
+            string id,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var command = new DeleteFhirResourceCommand { ResourceType = resourceType, FhirId = id };
+            var result = await sender.Send(command, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("DeleteFhirResource")
+        .WithSummary("Delete FHIR resource")
+        .WithDescription("Delete a FHIR resource");
+
+        // ========================================
+        // FHIR STANDARD HISTORY ENDPOINTS
+        // ========================================
+
+        // GET /fhir/{resourceType}/{id}/_history - Resource History
+        group.MapGet("/{resourceType}/{id}/_history", async (
+            string resourceType,
+            string id,
+            ISender sender,
+            CancellationToken cancellationToken,
+            int maxVersions = 100) =>
+        {
+            var query = new GetFhirResourceHistoryQuery 
+            { 
+                ResourceType = resourceType, 
+                FhirId = id,
+                MaxVersions = maxVersions
+            };
+            var result = await sender.Send(query, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("GetFhirResourceHistory")
+        .WithSummary("Get FHIR resource history")
+        .WithDescription("Get version history for a specific FHIR resource");
+
+        // ========================================
+        // FHIR STANDARD SYSTEM OPERATIONS ($)
+        // ========================================
+
+        // POST /fhir/$auto-detect-type - Auto-detect Resource Type
+        group.MapPost("/$auto-detect-type", async (
+            CreateFhirResourceCommand command,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(command, cancellationToken);
+            return Results.Created($"/fhir/{command.ResourceType}/{result.FhirId}", result);
+        })
+        .WithName("CreateFhirResourceAutoDetect")
+        .WithSummary("Create FHIR resource with auto-detected type")
+        .WithDescription("Create a FHIR resource with automatic resource type detection");
+
+        // POST /fhir/$import-bundle - Import FHIR Bundle
+        group.MapPost("/$import-bundle", async (
+            HttpContext httpContext,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            // Implementation for importing FHIR bundles
+            var command = new ImportFhirBundleCommand();
+            var result = await sender.Send(command, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("ImportFhirBundle")
+        .WithSummary("Import FHIR Bundle (HL7 Standard)")
+        .WithDescription("Import a FHIR Bundle containing multiple resources");
+
+        // GET /fhir/$export-bundle - Export FHIR Bundle
+        group.MapGet("/$export-bundle", async (
+            ISender sender,
+            CancellationToken cancellationToken,
+            string? resourceType = null,
+            string? fhirIds = null,
+            int maxResources = 1000,
+            string bundleType = "collection",
+            bool includeHistory = false,
+            int maxHistoryVersions = 10,
+            bool includeDeleted = false,
+            string format = "json") =>
+        {
+            var query = new ExportFhirBundleQuery
             {
-                Name = name,
-                Identifier = identifier,
-                Birthdate = birthdate,
-                Gender = gender,
-                Count = _count ?? 10,
-                Offset = _offset
+                ResourceType = resourceType,
+                FhirIds = !string.IsNullOrEmpty(fhirIds) ? fhirIds.Split(',', StringSplitOptions.RemoveEmptyEntries) : null,
+                MaxResources = maxResources,
+                BundleType = bundleType,
+                IncludeHistory = includeHistory,
+                MaxHistoryVersions = maxHistoryVersions,
+                IncludeDeleted = includeDeleted,
+                Format = format
             };
             
-            var result = await mediator.Send(query, cancellationToken);
-            
-            if (!result.IsSuccess)
-                return Results.BadRequest(new OperationOutcome
-                {
-                    Issue = new List<OperationOutcome.IssueComponent>
-                    {
-                        new()
-                        {
-                            Severity = OperationOutcome.IssueSeverity.Error,
-                            Code = OperationOutcome.IssueType.Invalid,
-                            Diagnostics = result.Error
-                        }
-                    }
-                });
-
-            return Results.Ok(result.Value);
+            var result = await sender.Send(query, cancellationToken);
+            return Results.Content(result.BundleJson, "application/json");
         })
-        .WithName("SearchPatients")
-        .WithSummary("Search Patients")
-        .WithDescription("Search for Patient resources")
-        .Produces<Bundle>(200)
-        .Produces<OperationOutcome>(400);
+        .WithName("ExportFhirBundle")
+        .WithSummary("Export FHIR resources as a bundle")
+        .WithDescription("Export FHIR resources as a Bundle in various formats");
+
+        // POST /fhir/$export-bundle - Export FHIR Bundle (Complex Queries)
+        group.MapPost("/$export-bundle", async (
+            ExportFhirBundleQuery query,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(query, cancellationToken);
+            return Results.Content(result.BundleJson, "application/json");
+        })
+        .WithName("ExportFhirBundlePost")
+        .WithSummary("Export FHIR resources as a bundle (POST method for complex queries)")
+        .WithDescription("Export FHIR resources as a Bundle using POST for complex query parameters");
     }
 }
 
 ### FHIR R4B Commands and Queries
 
-#### FHIR Patient Commands
+#### FHIR Standard Commands and Queries
 ```csharp
 using Hl7.Fhir.Model;
 
-public record CreatePatientCommand : IRequest<Result<Patient>>
+// ========================================
+// FHIR RESOURCE COMMANDS
+// ========================================
+
+public record CreateFhirResourceCommand : IRequest<Resource>
 {
-    public Hl7.Fhir.Model.Patient FhirPatient { get; init; } = new();
+    public string ResourceType { get; init; } = string.Empty;
+    public JsonDocument FhirResource { get; init; } = JsonDocument.Parse("{}");
 }
 
-public record UpdatePatientCommand : IRequest<Result<Patient>>
+public record UpdateFhirResourceCommand : IRequest<Resource>
 {
+    public string ResourceType { get; init; } = string.Empty;
     public string FhirId { get; init; } = string.Empty;
-    public Hl7.Fhir.Model.Patient FhirPatient { get; init; } = new();
+    public JsonDocument FhirResource { get; init; } = JsonDocument.Parse("{}");
 }
 
-public record DeletePatientCommand : IRequest<Result<bool>>
+public record DeleteFhirResourceCommand : IRequest<bool>
 {
+    public string ResourceType { get; init; } = string.Empty;
     public string FhirId { get; init; } = string.Empty;
 }
 
-public record GetPatientQuery : IRequest<Result<Patient>>
+// ========================================
+// FHIR RESOURCE QUERIES
+// ========================================
+
+public record GetFhirResourceQuery : IRequest<Resource?>
 {
+    public string ResourceType { get; init; } = string.Empty;
     public string FhirId { get; init; } = string.Empty;
 }
 
-public record SearchPatientsQuery : IRequest<Result<Bundle>>
+public record SearchFhirResourcesQuery : IRequest<Bundle>
 {
-    public string? Name { get; init; }
-    public string? Identifier { get; init; }
-    public string? Birthdate { get; init; }
-    public string? Gender { get; init; }
-    public int Count { get; init; } = 10;
-    public string? Offset { get; init; }
+    public string ResourceType { get; init; } = string.Empty;
+    public int Skip { get; init; } = 0;
+    public int Take { get; init; } = 100;
+    public Dictionary<string, string> SearchParameters { get; init; } = new();
+}
+
+public record GetFhirResourceHistoryQuery : IRequest<Bundle>
+{
+    public string ResourceType { get; init; } = string.Empty;
+    public string FhirId { get; init; } = string.Empty;
+    public int MaxVersions { get; init; } = 100;
+}
+
+// ========================================
+// FHIR SYSTEM OPERATIONS
+// ========================================
+
+public record ImportFhirBundleCommand : IRequest<Bundle>
+{
+    public string BundleJson { get; init; } = string.Empty;
+    public bool ValidateResources { get; init; } = true;
+    public string? Description { get; init; }
+}
+
+public record ExportFhirBundleQuery : IRequest<ExportFhirBundleResult>
+{
+    public string? ResourceType { get; init; }
+    public string[]? FhirIds { get; init; }
+    public int MaxResources { get; init; } = 1000;
+    public string BundleType { get; init; } = "collection";
+    public bool IncludeHistory { get; init; } = false;
+    public int MaxHistoryVersions { get; init; } = 10;
+    public bool IncludeDeleted { get; init; } = false;
+    public string Format { get; init; } = "json";
+    
+    // Time-based filtering parameters
+    public DateTime? StartDate { get; init; }
+    public DateTime? EndDate { get; init; }
+    public string? TimePeriod { get; init; }
+    public int? TimePeriodCount { get; init; }
+    public string? ObservationCode { get; init; }
+    public string? ObservationSystem { get; init; }
+    public string? PatientId { get; init; }
+    public int? MaxObservationsPerPatient { get; init; }
+    public string SortOrder { get; init; } = "desc";
+    public bool LatestOnly { get; init; } = false;
+}
+
+public record ExportFhirBundleResult
+{
+    public string BundleJson { get; init; } = string.Empty;
+    public int ResourceCount { get; init; }
+    public string BundleType { get; init; } = string.Empty;
+    public DateTime ExportedAt { get; init; } = DateTime.UtcNow;
 }
 ```
 
@@ -663,32 +742,64 @@ public record Medication
 ### FHIR R4B Repository Pattern
 
 ```csharp
-public interface IPatientRepository
+public interface IFhirResourceRepository
 {
-    // FHIR CRUD Operations
-    Task<Patient?> GetByFhirIdAsync(string fhirId, CancellationToken cancellationToken = default);
-    Task<Patient> AddAsync(Patient patient, CancellationToken cancellationToken = default);
-    Task<Patient> UpdateAsync(Patient patient, CancellationToken cancellationToken = default);
-    Task DeleteAsync(string fhirId, CancellationToken cancellationToken = default);
+    // ========================================
+    // FHIR CRUD OPERATIONS
+    // ========================================
     
-    // FHIR Search Operations
-    Task<IEnumerable<Patient>> SearchAsync(
-        string? name = null,
-        string? identifier = null,
-        string? birthdate = null,
-        string? gender = null,
-        int count = 10,
-        string? offset = null,
+    Task<Resource?> GetByFhirIdAsync(string resourceType, string fhirId, CancellationToken cancellationToken = default);
+    Task<Resource> AddAsync(string resourceType, Resource resource, CancellationToken cancellationToken = default);
+    Task<Resource> UpdateAsync(string resourceType, string fhirId, Resource resource, CancellationToken cancellationToken = default);
+    Task DeleteAsync(string resourceType, string fhirId, CancellationToken cancellationToken = default);
+    
+    // ========================================
+    // FHIR SEARCH OPERATIONS
+    // ========================================
+    
+    Task<Bundle> SearchAsync(
+        string resourceType,
+        Dictionary<string, string> searchParameters,
+        int skip = 0,
+        int take = 100,
         CancellationToken cancellationToken = default);
     
-    // FHIR History Operations
-    Task<IEnumerable<Patient>> GetHistoryAsync(string fhirId, CancellationToken cancellationToken = default);
+    // ========================================
+    // FHIR HISTORY OPERATIONS
+    // ========================================
     
-    // FHIR Validation
-    Task<bool> ValidateFhirResourceAsync(Hl7.Fhir.Model.Patient patient, CancellationToken cancellationToken = default);
+    Task<Bundle> GetHistoryAsync(
+        string resourceType, 
+        string fhirId, 
+        int maxVersions = 100,
+        CancellationToken cancellationToken = default);
     
-    // Multi-tenancy
-    Task<IEnumerable<Patient>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
+    // ========================================
+    // FHIR BUNDLE OPERATIONS
+    // ========================================
+    
+    Task<Bundle> ImportBundleAsync(Bundle bundle, bool validateResources = true, CancellationToken cancellationToken = default);
+    Task<Bundle> ExportBundleAsync(
+        string? resourceType = null,
+        string[]? fhirIds = null,
+        int maxResources = 1000,
+        string bundleType = "collection",
+        bool includeHistory = false,
+        int maxHistoryVersions = 10,
+        bool includeDeleted = false,
+        CancellationToken cancellationToken = default);
+    
+    // ========================================
+    // FHIR VALIDATION
+    // ========================================
+    
+    Task<bool> ValidateFhirResourceAsync(Resource resource, CancellationToken cancellationToken = default);
+    
+    // ========================================
+    // MULTI-TENANCY
+    // ========================================
+    
+    Task<IEnumerable<Resource>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }
 
 ### FHIR R4B Validation
@@ -697,36 +808,50 @@ public interface IPatientRepository
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Validation;
 
-public class CreatePatientCommandValidator : AbstractValidator<CreatePatientCommand>
+public class CreateFhirResourceCommandValidator : AbstractValidator<CreateFhirResourceCommand>
 {
     private readonly FhirValidator _fhirValidator;
 
-    public CreatePatientCommandValidator(FhirValidator fhirValidator)
+    public CreateFhirResourceCommandValidator(FhirValidator fhirValidator)
     {
         _fhirValidator = fhirValidator;
 
-        RuleFor(x => x.FhirPatient)
+        RuleFor(x => x.ResourceType)
+            .NotEmpty()
+            .WithMessage("Resource type is required")
+            .Must(IsValidFhirResourceType)
+            .WithMessage("Invalid FHIR resource type");
+
+        RuleFor(x => x.FhirResource)
             .NotNull()
-            .WithMessage("FHIR Patient resource is required")
-            .MustAsync(ValidateFhirPatientAsync)
-            .WithMessage("Invalid FHIR Patient resource");
+            .WithMessage("FHIR resource is required")
+            .MustAsync(ValidateFhirResourceAsync)
+            .WithMessage("Invalid FHIR resource");
 
-        RuleFor(x => x.FhirPatient.Id)
+        RuleFor(x => x.FhirResource.RootElement.GetProperty("id").GetString())
             .Empty()
-            .WithMessage("Patient ID should not be provided for create operations");
+            .When(x => x.FhirResource.RootElement.TryGetProperty("id", out _))
+            .WithMessage("Resource ID should not be provided for create operations");
 
-        RuleFor(x => x.FhirPatient.Meta)
+        RuleFor(x => x.FhirResource.RootElement.GetProperty("meta").GetString())
             .Null()
-            .WithMessage("Patient Meta should not be provided for create operations");
+            .When(x => x.FhirResource.RootElement.TryGetProperty("meta", out _))
+            .WithMessage("Resource Meta should not be provided for create operations");
     }
 
-    private async Task<bool> ValidateFhirPatientAsync(Hl7.Fhir.Model.Patient patient, CancellationToken cancellationToken)
+    private bool IsValidFhirResourceType(string resourceType)
     {
-        if (patient == null) return false;
+        var validTypes = new[] { "Patient", "Observation", "Condition", "Encounter", "Medication", "Procedure" };
+        return validTypes.Contains(resourceType);
+    }
 
+    private async Task<bool> ValidateFhirResourceAsync(JsonDocument resource, CancellationToken cancellationToken)
+    {
         try
         {
-            var result = await _fhirValidator.ValidateAsync(patient, cancellationToken);
+            var jsonString = resource.RootElement.GetRawText();
+            var fhirResource = FhirJsonParser.ParseResourceFromJson<Resource>(jsonString);
+            var result = await _fhirValidator.ValidateAsync(fhirResource, cancellationToken);
             return result.IsValid;
         }
         catch
@@ -736,40 +861,54 @@ public class CreatePatientCommandValidator : AbstractValidator<CreatePatientComm
     }
 }
 
-public class UpdatePatientCommandValidator : AbstractValidator<UpdatePatientCommand>
+public class UpdateFhirResourceCommandValidator : AbstractValidator<UpdateFhirResourceCommand>
 {
     private readonly FhirValidator _fhirValidator;
 
-    public UpdatePatientCommandValidator(FhirValidator fhirValidator)
+    public UpdateFhirResourceCommandValidator(FhirValidator fhirValidator)
     {
         _fhirValidator = fhirValidator;
+
+        RuleFor(x => x.ResourceType)
+            .NotEmpty()
+            .WithMessage("Resource type is required")
+            .Must(IsValidFhirResourceType)
+            .WithMessage("Invalid FHIR resource type");
 
         RuleFor(x => x.FhirId)
             .NotEmpty()
             .WithMessage("FHIR ID is required for update operations");
 
-        RuleFor(x => x.FhirPatient)
+        RuleFor(x => x.FhirResource)
             .NotNull()
-            .WithMessage("FHIR Patient resource is required")
-            .MustAsync(ValidateFhirPatientAsync)
-            .WithMessage("Invalid FHIR Patient resource");
+            .WithMessage("FHIR resource is required")
+            .MustAsync(ValidateFhirResourceAsync)
+            .WithMessage("Invalid FHIR resource");
 
-        RuleFor(x => x.FhirPatient.Id)
+        RuleFor(x => x.FhirResource.RootElement.GetProperty("id").GetString())
             .Equal(x => x.FhirId)
-            .WithMessage("Patient ID must match the URL parameter");
+            .When(x => x.FhirResource.RootElement.TryGetProperty("id", out _))
+            .WithMessage("Resource ID must match the URL parameter");
 
-        RuleFor(x => x.FhirPatient.Meta)
+        RuleFor(x => x.FhirResource.RootElement.GetProperty("meta").GetString())
             .NotNull()
-            .WithMessage("Patient Meta is required for update operations");
+            .When(x => x.FhirResource.RootElement.TryGetProperty("meta", out _))
+            .WithMessage("Resource Meta is required for update operations");
     }
 
-    private async Task<bool> ValidateFhirPatientAsync(Hl7.Fhir.Model.Patient patient, CancellationToken cancellationToken)
+    private bool IsValidFhirResourceType(string resourceType)
     {
-        if (patient == null) return false;
+        var validTypes = new[] { "Patient", "Observation", "Condition", "Encounter", "Medication", "Procedure" };
+        return validTypes.Contains(resourceType);
+    }
 
+    private async Task<bool> ValidateFhirResourceAsync(JsonDocument resource, CancellationToken cancellationToken)
+    {
         try
         {
-            var result = await _fhirValidator.ValidateAsync(patient, cancellationToken);
+            var jsonString = resource.RootElement.GetRawText();
+            var fhirResource = FhirJsonParser.ParseResourceFromJson<Resource>(jsonString);
+            var result = await _fhirValidator.ValidateAsync(fhirResource, cancellationToken);
             return result.IsValid;
         }
         catch
@@ -782,109 +921,136 @@ public class UpdatePatientCommandValidator : AbstractValidator<UpdatePatientComm
 ### FHIR R4B Handler Implementation
 
 ```csharp
-public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand, Result<Patient>>
+public class CreateFhirResourceCommandHandler : IRequestHandler<CreateFhirResourceCommand, Resource>
 {
-    private readonly IPatientRepository _repository;
+    private readonly IFhirResourceRepository _repository;
     private readonly ICurrentUserService _currentUserService;
-    private readonly ILogger<CreatePatientCommandHandler> _logger;
+    private readonly ILogger<CreateFhirResourceCommandHandler> _logger;
 
-    public CreatePatientCommandHandler(
-        IPatientRepository repository,
+    public CreateFhirResourceCommandHandler(
+        IFhirResourceRepository repository,
         ICurrentUserService currentUserService,
-        ILogger<CreatePatientCommandHandler> logger)
+        ILogger<CreateFhirResourceCommandHandler> logger)
     {
         _repository = repository;
         _currentUserService = currentUserService;
         _logger = logger;
     }
 
-    public async Task<Result<Patient>> Handle(CreatePatientCommand request, CancellationToken cancellationToken)
+    public async Task<Resource> Handle(CreateFhirResourceCommand request, CancellationToken cancellationToken)
     {
         try
         {
+            // Parse FHIR resource from JSON
+            var jsonString = request.FhirResource.RootElement.GetRawText();
+            var fhirResource = FhirJsonParser.ParseResourceFromJson<Resource>(jsonString);
+
             // Generate FHIR ID if not provided
-            if (string.IsNullOrEmpty(request.FhirPatient.Id))
+            if (string.IsNullOrEmpty(fhirResource.Id))
             {
-                request.FhirPatient.Id = Guid.NewGuid().ToString();
+                fhirResource.Id = Guid.NewGuid().ToString();
             }
 
             // Set FHIR Meta
-            request.FhirPatient.Meta = new Meta
+            fhirResource.Meta = new Meta
             {
                 VersionId = "1",
                 LastUpdated = DateTimeOffset.UtcNow,
-                Profile = new[] { "http://hl7.org/fhir/StructureDefinition/Patient" }
+                Profile = new[] { $"http://hl7.org/fhir/StructureDefinition/{request.ResourceType}" }
             };
-
-            // Create domain entity
-            var patient = new Patient
-            {
-                Id = Guid.NewGuid(),
-                TenantId = _currentUserService.TenantId,
-                CreatedBy = _currentUserService.UserId,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            // Set FHIR resource
-            patient.SetFhirPatient(request.FhirPatient);
 
             // Save to database
-            var savedPatient = await _repository.AddAsync(patient, cancellationToken);
+            var savedResource = await _repository.AddAsync(request.ResourceType, fhirResource, cancellationToken);
 
-            _logger.LogInformation("Created FHIR Patient {FhirId} for tenant {TenantId}", 
-                savedPatient.FhirId, _currentUserService.TenantId);
+            _logger.LogInformation("Created FHIR {ResourceType} {FhirId} for tenant {TenantId}", 
+                request.ResourceType, savedResource.Id, _currentUserService.TenantId);
 
-            return Result<Patient>.Success(savedPatient.FhirPatient);
+            return savedResource;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating FHIR Patient");
-            return Result<Patient>.Failure("Failed to create patient");
+            _logger.LogError(ex, "Error creating FHIR {ResourceType}", request.ResourceType);
+            throw;
         }
     }
 }
 
-public class GetPatientQueryHandler : IRequestHandler<GetPatientQuery, Result<Patient>>
+public class GetFhirResourceQueryHandler : IRequestHandler<GetFhirResourceQuery, Resource?>
 {
-    private readonly IPatientRepository _repository;
+    private readonly IFhirResourceRepository _repository;
     private readonly ICurrentUserService _currentUserService;
-    private readonly ILogger<GetPatientQueryHandler> _logger;
+    private readonly ILogger<GetFhirResourceQueryHandler> _logger;
 
-    public GetPatientQueryHandler(
-        IPatientRepository repository,
+    public GetFhirResourceQueryHandler(
+        IFhirResourceRepository repository,
         ICurrentUserService currentUserService,
-        ILogger<GetPatientQueryHandler> logger)
+        ILogger<GetFhirResourceQueryHandler> logger)
     {
         _repository = repository;
         _currentUserService = currentUserService;
         _logger = logger;
     }
 
-    public async Task<Result<Patient>> Handle(GetPatientQuery request, CancellationToken cancellationToken)
+    public async Task<Resource?> Handle(GetFhirResourceQuery request, CancellationToken cancellationToken)
     {
         try
         {
-            var patient = await _repository.GetByFhirIdAsync(request.FhirId, cancellationToken);
+            var resource = await _repository.GetByFhirIdAsync(request.ResourceType, request.FhirId, cancellationToken);
             
-            if (patient == null)
+            if (resource == null)
             {
-                return Result<Patient>.Failure("Patient not found");
+                return null;
             }
 
-            // Check tenant access
-            if (patient.TenantId != _currentUserService.TenantId)
-            {
-                _logger.LogWarning("User {UserId} attempted to access patient {FhirId} from different tenant {TenantId}", 
-                    _currentUserService.UserId, request.FhirId, patient.TenantId);
-                return Result<Patient>.Failure("Access denied");
-            }
+            _logger.LogInformation("Retrieved FHIR {ResourceType} {FhirId} for tenant {TenantId}", 
+                request.ResourceType, request.FhirId, _currentUserService.TenantId);
 
-            return Result<Patient>.Success(patient.FhirPatient);
+            return resource;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving FHIR Patient {FhirId}", request.FhirId);
-            return Result<Patient>.Failure("Failed to retrieve patient");
+            _logger.LogError(ex, "Error retrieving FHIR {ResourceType} {FhirId}", request.ResourceType, request.FhirId);
+            throw;
+        }
+    }
+}
+
+public class SearchFhirResourcesQueryHandler : IRequestHandler<SearchFhirResourcesQuery, Bundle>
+{
+    private readonly IFhirResourceRepository _repository;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<SearchFhirResourcesQueryHandler> _logger;
+
+    public SearchFhirResourcesQueryHandler(
+        IFhirResourceRepository repository,
+        ICurrentUserService currentUserService,
+        ILogger<SearchFhirResourcesQueryHandler> logger)
+    {
+        _repository = repository;
+        _currentUserService = currentUserService;
+        _logger = logger;
+    }
+
+    public async Task<Bundle> Handle(SearchFhirResourcesQuery request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var bundle = await _repository.SearchAsync(
+                request.ResourceType, 
+                request.SearchParameters, 
+                request.Skip, 
+                request.Take, 
+                cancellationToken);
+
+            _logger.LogInformation("Searched FHIR {ResourceType} for tenant {TenantId}, found {Count} resources", 
+                request.ResourceType, _currentUserService.TenantId, bundle.Entry?.Count ?? 0);
+
+            return bundle;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching FHIR {ResourceType}", request.ResourceType);
+            throw;
         }
     }
 }
@@ -1019,6 +1185,27 @@ HealthTech.Domain/
 
 HealthTech.Application/
 ├── FhirResources/
+│   ├── Commands/
+│   │   ├── CreateFhirResourceCommand.cs
+│   │   ├── UpdateFhirResourceCommand.cs
+│   │   ├── DeleteFhirResourceCommand.cs
+│   │   ├── CreateFhirResourceCommandHandler.cs
+│   │   ├── UpdateFhirResourceCommandHandler.cs
+│   │   ├── DeleteFhirResourceCommandHandler.cs
+│   │   ├── CreateFhirResourceCommandValidator.cs
+│   │   └── UpdateFhirResourceCommandValidator.cs
+│   ├── Queries/
+│   │   ├── GetFhirResourceQuery.cs
+│   │   ├── SearchFhirResourcesQuery.cs
+│   │   ├── GetFhirResourceHistoryQuery.cs
+│   │   ├── GetFhirResourceQueryHandler.cs
+│   │   ├── SearchFhirResourcesQueryHandler.cs
+│   │   └── GetFhirResourceHistoryQueryHandler.cs
+│   └── Operations/
+│       ├── ImportFhirBundleCommand.cs
+│       ├── ExportFhirBundleQuery.cs
+│       ├── ImportFhirBundleCommandHandler.cs
+│       └── ExportFhirBundleQueryHandler.cs
 └── Common/
     ├── FhirValidation/
     │   ├── FhirValidator.cs          # FHIR R4B validator
@@ -1029,7 +1216,7 @@ HealthTech.Application/
 
 HealthTech.API/
 ├── Endpoints/
-│   └── FhirEndpoints.cs              # FHIR endpoints
+│   └── FhirEndpoints.cs              # FHIR standard endpoints (generic)
 └── Middleware/
     ├── FhirExceptionMiddleware.cs    # FHIR error handling
     └── FhirSecurityMiddleware.cs     # FHIR security middleware
@@ -1077,6 +1264,14 @@ HealthTech.API/
 - **Search Parameters**: Implement FHIR standard search parameters
 - **Versioning**: Support FHIR resource versioning
 - **History**: Support FHIR resource history endpoints
+
+### 7. FHIR Route Standards (Immutable Rule)
+- **Base Path**: All FHIR endpoints must start with `/fhir`
+- **Resource Endpoints**: `/fhir/{resourceType}` for resource operations
+- **Instance Endpoints**: `/fhir/{resourceType}/{id}` for specific resource instances
+- **History Endpoints**: `/fhir/{resourceType}/{id}/_history` for resource version history
+- **System Endpoints**: `/fhir/$operation` for system-wide operations
+- **Resource Type Endpoints**: `/fhir/{resourceType}/$operation` for resource-type specific operations
 
 ## Anti-Patterns to Avoid (Never Allowed)
 
