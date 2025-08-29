@@ -1,6 +1,6 @@
 using Moq;
 using FluentAssertions;
-using HealthTech.Application.Authentication.Commands;
+using HealthTech.Application.Authentication.Commands.Login;
 using HealthTech.Application.Common.Interfaces;
 using HealthTech.Domain.Entities;
 using HealthTech.Domain.Enums;

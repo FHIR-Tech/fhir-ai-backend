@@ -269,6 +269,12 @@ app.MapFhirEndpoints();
 // Map authentication endpoints
 app.MapAuthenticationEndpoints();
 
+// Map debug endpoints (only in development)
+if (app.Environment.IsDevelopment())
+{
+    app.MapDebugEndpoints();
+}
+
 // Map health check
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }))
     .WithName("HealthCheck")

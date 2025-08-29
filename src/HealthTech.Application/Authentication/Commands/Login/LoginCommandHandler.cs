@@ -1,53 +1,11 @@
 using MediatR;
-using FluentValidation;
 using HealthTech.Application.Common.Interfaces;
 using HealthTech.Domain.Entities;
 using HealthTech.Domain.Enums;
-using System.Text.Json;
+using HealthTech.Application.Authentication.Commands.Login;
+using HealthTech.Application.Authentication.DTOs;
 
-namespace HealthTech.Application.Authentication.Commands;
-
-public record LoginCommand : IRequest<LoginResponse>
-{
-    public string Username { get; init; } = string.Empty;
-    public string Password { get; init; } = string.Empty;
-    public string? TenantId { get; init; }
-}
-
-public record LoginResponse
-{
-    public bool Success { get; init; }
-    public string? AccessToken { get; init; }
-    public string? RefreshToken { get; init; }
-    public UserInfo? User { get; init; }
-    public string? ErrorMessage { get; init; }
-}
-
-public record UserInfo
-{
-    public string Id { get; init; } = string.Empty;
-    public string Username { get; init; } = string.Empty;
-    public string Email { get; init; } = string.Empty;
-    public string FullName { get; init; } = string.Empty;
-    public UserRole Role { get; init; }
-    public string? PractitionerId { get; init; }
-    public string TenantId { get; init; } = string.Empty;
-    public List<string> Scopes { get; init; } = new();
-}
-
-public class LoginCommandValidator : AbstractValidator<LoginCommand>
-{
-    public LoginCommandValidator()
-    {
-        RuleFor(x => x.Username)
-            .NotEmpty().WithMessage("Username is required")
-            .MaximumLength(100).WithMessage("Username cannot exceed 100 characters");
-
-        RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Password is required")
-            .MinimumLength(8).WithMessage("Password must be at least 8 characters");
-    }
-}
+namespace HealthTech.Application.Authentication.Commands.Login;
 
 public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 {

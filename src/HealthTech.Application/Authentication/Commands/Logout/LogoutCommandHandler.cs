@@ -1,28 +1,9 @@
 using MediatR;
-using FluentValidation;
 using HealthTech.Application.Common.Interfaces;
+using HealthTech.Application.Authentication.Commands.Logout;
+using HealthTech.Application.Authentication.DTOs;
 
-namespace HealthTech.Application.Authentication.Commands;
-
-public record LogoutCommand : IRequest<LogoutResponse>
-{
-    public string SessionToken { get; init; } = string.Empty;
-}
-
-public record LogoutResponse
-{
-    public bool Success { get; init; }
-    public string? ErrorMessage { get; init; }
-}
-
-public class LogoutCommandValidator : AbstractValidator<LogoutCommand>
-{
-    public LogoutCommandValidator()
-    {
-        RuleFor(x => x.SessionToken)
-            .NotEmpty().WithMessage("Session token is required");
-    }
-}
+namespace HealthTech.Application.Authentication.Commands.Logout;
 
 public class LogoutCommandHandler : IRequestHandler<LogoutCommand, LogoutResponse>
 {

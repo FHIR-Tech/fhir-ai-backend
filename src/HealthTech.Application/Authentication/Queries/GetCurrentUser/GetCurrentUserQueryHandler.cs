@@ -1,29 +1,10 @@
 using MediatR;
 using HealthTech.Application.Common.Interfaces;
 using HealthTech.Domain.Enums;
+using HealthTech.Application.Authentication.Queries.GetCurrentUser;
+using HealthTech.Application.Authentication.DTOs;
 
-namespace HealthTech.Application.Authentication.Queries;
-
-public record GetCurrentUserQuery : IRequest<GetCurrentUserResponse>;
-
-public record GetCurrentUserResponse
-{
-    public bool Success { get; init; }
-    public UserInfo? User { get; init; }
-    public string? ErrorMessage { get; init; }
-}
-
-public record UserInfo
-{
-    public string Id { get; init; } = string.Empty;
-    public string Username { get; init; } = string.Empty;
-    public string Email { get; init; } = string.Empty;
-    public string FullName { get; init; } = string.Empty;
-    public UserRole Role { get; init; }
-    public string? PractitionerId { get; init; }
-    public string TenantId { get; init; } = string.Empty;
-    public List<string> Scopes { get; init; } = new();
-}
+namespace HealthTech.Application.Authentication.Queries.GetCurrentUser;
 
 public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, GetCurrentUserResponse>
 {

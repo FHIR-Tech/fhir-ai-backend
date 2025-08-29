@@ -1,6 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using HealthTech.Application.Authentication.Commands;
+using HealthTech.Application.Authentication.Commands.Login;
+using HealthTech.Application.Authentication.Commands.Logout;
+using HealthTech.Application.Authentication.Commands.RefreshToken;
+using HealthTech.Application.Authentication.DTOs;
 using HealthTech.Application.PatientAccess.Queries;
 using HealthTech.Application.PatientAccess.Commands;
 using HealthTech.Domain.Enums;

@@ -1,31 +1,10 @@
 using MediatR;
-using FluentValidation;
 using HealthTech.Application.Common.Interfaces;
 using HealthTech.Domain.Entities;
+using HealthTech.Application.Authentication.Commands.RefreshToken;
+using HealthTech.Application.Authentication.DTOs;
 
-namespace HealthTech.Application.Authentication.Commands;
-
-public record RefreshTokenCommand : IRequest<RefreshTokenResponse>
-{
-    public string RefreshToken { get; init; } = string.Empty;
-}
-
-public record RefreshTokenResponse
-{
-    public bool Success { get; init; }
-    public string? AccessToken { get; init; }
-    public string? RefreshToken { get; init; }
-    public string? ErrorMessage { get; init; }
-}
-
-public class RefreshTokenCommandValidator : AbstractValidator<RefreshTokenCommand>
-{
-    public RefreshTokenCommandValidator()
-    {
-        RuleFor(x => x.RefreshToken)
-            .NotEmpty().WithMessage("Refresh token is required");
-    }
-}
+namespace HealthTech.Application.Authentication.Commands.RefreshToken;
 
 public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, RefreshTokenResponse>
 {
