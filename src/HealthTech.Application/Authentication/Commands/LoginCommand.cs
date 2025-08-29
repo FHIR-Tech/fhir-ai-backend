@@ -142,10 +142,16 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         }
         catch (Exception ex)
         {
+            // Log the actual exception for debugging
+            Console.WriteLine($"Login Exception: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            Console.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
+            Console.WriteLine($"Exception Type: {ex.GetType().Name}");
+            
             return new LoginResponse
             {
                 Success = false,
-                ErrorMessage = "An error occurred during login. Please try again."
+                ErrorMessage = $"An error occurred during login: {ex.Message}"
             };
         }
     }

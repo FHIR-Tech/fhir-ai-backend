@@ -1,7 +1,7 @@
 using Hl7.Fhir.Model;
 using System.Text.Json;
 
-namespace HealthTech.Application.FhirResources.Commands.ImportFhirBundle;
+namespace HealthTech.Application.FhirResources.Commands;
 
 /// <summary>
 /// Helper class for handling FHIR resource references in bundles

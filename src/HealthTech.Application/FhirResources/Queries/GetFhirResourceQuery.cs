@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace HealthTech.Application.FhirResources.Queries.GetFhirResource;
+namespace HealthTech.Application.FhirResources.Queries;
 
 /// <summary>
 /// Query to get a FHIR resource by type and ID

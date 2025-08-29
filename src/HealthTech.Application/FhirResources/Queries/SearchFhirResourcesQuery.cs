@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace HealthTech.Application.FhirResources.Queries.SearchFhirResources;
+namespace HealthTech.Application.FhirResources.Queries;
 
 /// <summary>
 /// Query to search FHIR resources

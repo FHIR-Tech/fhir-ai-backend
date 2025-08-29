@@ -1,28 +1,36 @@
 using MediatR;
 using HealthTech.Application.Common.Interfaces;
 using HealthTech.Domain.Entities;
+using HealthTech.Domain.Repositories;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
-namespace HealthTech.Application.FhirResources.Commands.CreateFhirResource;
+namespace HealthTech.Application.FhirResources.Commands;
 
 /// <summary>
-/// Handler for CreateFhirResourceCommand
+/// Handler for UpdateFhirResourceCommand
 /// </summary>
-public class CreateFhirResourceCommandHandler : IRequestHandler<CreateFhirResourceCommand, CreateFhirResourceResponse>
+public class UpdateFhirResourceCommandHandler : IRequestHandler<UpdateFhirResourceCommand, UpdateFhirResourceResponse>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IFhirResourceRepository _fhirResourceRepository;
     private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="context">Application database context</param>
+    /// <param name="fhirResourceRepository">FHIR resource repository</param>
     /// <param name="currentUserService">Current user service</param>
-    public CreateFhirResourceCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
+    public UpdateFhirResourceCommandHandler(
+        IApplicationDbContext context,
+        IFhirResourceRepository fhirResourceRepository,
+        ICurrentUserService currentUserService)
     {
         _context = context;
+        _fhirResourceRepository = fhirResourceRepository;
         _currentUserService = currentUserService;
     }
 
@@ -32,41 +40,61 @@ public class CreateFhirResourceCommandHandler : IRequestHandler<CreateFhirResour
     /// <param name="request">Command request</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Response</returns>
-    public async Task<CreateFhirResourceResponse> Handle(CreateFhirResourceCommand request, CancellationToken cancellationToken)
+    public async Task<UpdateFhirResourceResponse> Handle(UpdateFhirResourceCommand request, CancellationToken cancellationToken)
     {
         // Parse FHIR resource
         var parser = new FhirJsonParser();
         var resource = parser.Parse<Resource>(request.ResourceJson);
 
-        // Generate FHIR ID if not provided
-        var fhirId = request.FhirId ?? Guid.NewGuid().ToString();
+        // Get existing resource
+        var existingResource = await _fhirResourceRepository.GetByFhirIdAsync(
+            request.ResourceType, 
+            request.FhirId, 
+            _currentUserService.TenantId ?? string.Empty);
 
-        // Create FHIR resource entity
-        var fhirResource = new FhirResource
+        if (existingResource == null)
+        {
+            throw new InvalidOperationException($"Resource {request.ResourceType}/{request.FhirId} not found");
+        }
+
+        // Create new version
+        existingResource.VersionId++;
+        existingResource.ResourceJson = request.ResourceJson;
+        existingResource.LastUpdated = DateTime.UtcNow;
+        existingResource.ModifiedBy = _currentUserService.UserId ?? "system";
+        existingResource.ModifiedAt = DateTime.UtcNow;
+        existingResource.SearchParameters = ExtractSearchParameters(resource);
+        existingResource.Tags = ExtractTags(resource);
+        existingResource.SecurityLabels = ExtractSecurityLabels(resource);
+
+        // Add audit trail
+        var auditEvent = new Domain.Entities.AuditEvent
         {
             Id = Guid.NewGuid(),
             TenantId = _currentUserService.TenantId ?? string.Empty,
+            EventType = "resource-update",
             ResourceType = request.ResourceType,
-            FhirId = fhirId,
-            VersionId = 1,
-            ResourceJson = request.ResourceJson,
-            Status = "active",
-            LastUpdated = DateTime.UtcNow,
+            ResourceId = request.FhirId,
+            UserId = _currentUserService.UserId ?? "system",
             CreatedAt = DateTime.UtcNow,
             CreatedBy = _currentUserService.UserId ?? "system",
-            SearchParameters = ExtractSearchParameters(resource),
-            Tags = ExtractTags(resource),
-            SecurityLabels = ExtractSecurityLabels(resource)
+            EventData = JsonSerializer.Serialize(new
+            {
+                PreviousVersion = existingResource.VersionId - 1,
+                NewVersion = existingResource.VersionId,
+                Changes = "Resource updated"
+            })
         };
 
-        // Add to database
-        _context.FhirResources.Add(fhirResource);
+        _context.AuditEvents.Add(auditEvent);
+
+        // Save changes
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new CreateFhirResourceResponse
+        return new UpdateFhirResourceResponse
         {
-            FhirId = fhirId,
-            VersionId = fhirResource.VersionId,
+            FhirId = request.FhirId,
+            VersionId = existingResource.VersionId,
             ResourceJson = request.ResourceJson
         };
     }
