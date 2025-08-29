@@ -1,25 +1,28 @@
 const axios = require('axios');
 
+// Configure axios to ignore SSL certificate verification for development
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 // Configuration
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'https://localhost:5001';
 const API_KEY = 'dev-api-key-12345';
 
 // Test data
 const testUsers = {
     admin: {
         username: 'admin',
-        password: 'admin123',
-        tenantId: 'test-tenant-1'
+        password: 'password',
+        tenantId: 'default'
     },
     doctor: {
         username: 'doctor',
         password: 'doctor123',
-        tenantId: 'test-tenant-1'
+        tenantId: 'default'
     },
     nurse: {
         username: 'nurse',
         password: 'nurse123',
-        tenantId: 'test-tenant-1'
+        tenantId: 'default'
     }
 };
 
