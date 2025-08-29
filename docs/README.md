@@ -81,6 +81,8 @@ HealthTech.API/          # HTTP endpoints (depends on Application + Infrastructu
 
 **For complete AutoMapper Pattern implementation details, see `/architecture/AUTOMAPPER_PATTERN_REFERENCE.md`**
 
+**For complete Healthcare Data Pattern implementation details, see `/architecture/HEALTHCARE_DATA_PATTERN_REFERENCE.md`**
+
 ## Documentation Standards
 
 ### File Naming

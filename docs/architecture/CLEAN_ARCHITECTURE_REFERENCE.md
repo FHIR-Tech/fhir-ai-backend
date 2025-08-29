@@ -468,6 +468,7 @@ HealthTech.API.Tests/
 - **No Shared State**: Commands and Queries don't share models
 - **For complete CQRS implementation details, see `CQRS_PATTERN_REFERENCE.md`**
 - **For complete AutoMapper implementation details, see `AUTOMAPPER_PATTERN_REFERENCE.md`**
+- **For complete Healthcare Data implementation details, see `HEALTHCARE_DATA_PATTERN_REFERENCE.md`**
 
 ### 9. Validation Strategy (Immutable Rule)
 - **Input Validation**: At Application layer boundaries

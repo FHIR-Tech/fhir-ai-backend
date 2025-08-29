@@ -20,7 +20,8 @@ docs/
 ├── architecture/               # Tài liệu kiến trúc
 │   ├── CLEAN_ARCHITECTURE_REFERENCE.md
 │   ├── CQRS_PATTERN_REFERENCE.md
-│   └── AUTOMAPPER_PATTERN_REFERENCE.md
+│   ├── AUTOMAPPER_PATTERN_REFERENCE.md
+│   └── HEALTHCARE_DATA_PATTERN_REFERENCE.md
 ├── cursor-agent/               # Báo cáo Cursor Agent
 │   ├── README.md              # Hướng dẫn Cursor Agent
 │   ├── reports/               # Báo cáo thực hiện
@@ -56,6 +57,7 @@ docs/
 - [Clean Architecture Reference](architecture/CLEAN_ARCHITECTURE_REFERENCE.md)
 - [CQRS Pattern Reference](architecture/CQRS_PATTERN_REFERENCE.md)
 - [AutoMapper Pattern Reference](architecture/AUTOMAPPER_PATTERN_REFERENCE.md)
+- [Healthcare Data Pattern Reference](architecture/HEALTHCARE_DATA_PATTERN_REFERENCE.md)
 
 ### Deployment
 - [Security Checklist](deployment/SECURITY_CHECKLIST.md)
@@ -77,6 +79,7 @@ Khi thêm tài liệu mới:
 - **2025-08-28**: Thêm Clean Architecture Reference Guide với các tiêu chuẩn bất biến
 - **2025-08-28**: Thêm CQRS Pattern Reference Guide với các tiêu chuẩn bất biến
 - **2025-08-28**: Thêm AutoMapper Pattern Reference Guide với các tiêu chuẩn bất biến
+- **2025-08-28**: Thêm Healthcare Data Pattern Reference Guide với các tiêu chuẩn bất biến
 
 ---
 
