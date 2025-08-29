@@ -2,7 +2,7 @@ using HealthTech.Domain.Enums;
 
 namespace HealthTech.Application.Authentication.DTOs;
 
-public record UserInfo
+public record UserInfoDto
 {
     public string Id { get; init; } = string.Empty;
     public string Username { get; init; } = string.Empty;

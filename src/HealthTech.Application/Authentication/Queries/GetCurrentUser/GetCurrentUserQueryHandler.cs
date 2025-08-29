@@ -48,7 +48,7 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, G
             return new GetCurrentUserResponse
             {
                 Success = true,
-                User = new UserInfo
+                User = new UserInfoDto
                 {
                     Id = user.Id.ToString(),
                     Username = user.Username,

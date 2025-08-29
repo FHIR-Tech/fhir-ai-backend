@@ -85,7 +85,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 Success = true,
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                User = new UserInfo
+                User = new UserInfoDto
                 {
                     Id = user.Id.ToString(),
                     Username = user.Username,

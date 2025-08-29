@@ -24,7 +24,7 @@ Authentication/
 │       ├── GetCurrentUserQuery.cs
 │       └── GetCurrentUserQueryHandler.cs
 ├── DTOs/                       # Data Transfer Objects
-│   ├── UserInfo.cs
+│   ├── UserInfoDto.cs
 │   ├── LoginResponse.cs
 │   ├── LogoutResponse.cs
 │   ├── RefreshTokenResponse.cs
@@ -60,7 +60,7 @@ Each query is organized in its own directory containing the query and handler:
 - **GetCurrentUserQueryHandler**: Retrieves current user information
 
 ### DTOs (Data Transfer Objects)
-- **UserInfo**: Shared user information structure
+- **UserInfoDto**: Shared user information structure (follows {Entity}Dto naming convention)
 - **LoginResponse**: Authentication response with tokens and user info
 - **LogoutResponse**: Session termination response
 - **RefreshTokenResponse**: Token refresh response
