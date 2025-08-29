@@ -80,6 +80,10 @@ Khi thêm tài liệu mới:
 - **2025-08-28**: Thêm CQRS Pattern Reference Guide với các tiêu chuẩn bất biến
 - **2025-08-28**: Thêm AutoMapper Pattern Reference Guide với các tiêu chuẩn bất biến
 - **2025-08-28**: Thêm Healthcare Data Pattern Reference Guide với các tiêu chuẩn bất biến
+- **2025-08-28**: Enhanced Cursor AI Rules với Pattern Recognition System
+  - **API Layer Pattern Recognition**: FHIR → Minimal API, Business → Controller
+  - **Automatic Pattern Application**: Dựa trên trigger keywords
+  - **Quality Gates Enhancement**: Pattern validation và FHIR compliance
 
 ---
 

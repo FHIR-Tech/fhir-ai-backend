@@ -70,6 +70,51 @@ public string FieldName { get; set; }
 
 ### Clean Architecture Pattern - Comprehensive Implementation Guide
 
+#### API Layer Pattern Recognition (Critical Decision Matrix)
+Cursor AI MUST automatically determine the correct API pattern based on the feature type:
+
+**1. FHIR Healthcare Resources → Minimal API (MANDATORY)**
+- **Trigger Keywords**: `Patient`, `Observation`, `Medication`, `Condition`, `Encounter`, `FHIR`, `healthcare`, `medical`, `clinical`
+- **Pattern**: Minimal API Endpoints
+- **Location**: `HealthTech.API/Endpoints/FhirEndpoints.cs`
+- **Routes**: `/fhir/{resourceType}`, `/fhir/{resourceType}/{id}`
+- **Reason**: FHIR standards require specific route patterns and response formats
+
+**2. Business/System Resources → Controller (RECOMMENDED)**
+- **Trigger Keywords**: `tenant`, `user`, `news`, `notification`, `report`, `audit`, `configuration`, `system`, `admin`
+- **Pattern**: Traditional Controller
+- **Location**: `HealthTech.API/Controllers/{Entity}Controller.cs`
+- **Routes**: `/api/{entity}`, `/api/{entity}/{id}`
+- **Reason**: Standard RESTful patterns, easier CRUD operations
+
+**3. Special Operations → Minimal API (FLEXIBLE)**
+- **Trigger Keywords**: `authentication`, `health`, `export`, `import`, `batch`, `bulk`
+- **Pattern**: Minimal API Endpoints
+- **Location**: `HealthTech.API/Endpoints/{Feature}Endpoints.cs`
+- **Routes**: `/auth/*`, `/health/*`, `/export/*`
+- **Reason**: Specialized operations with custom logic
+
+**File Organization Structure**:
+```
+HealthTech.API/
+├── Controllers/                    # Business/System Controllers
+│   ├── TenantController.cs        # Tenant management
+│   ├── UserController.cs          # User management  
+│   ├── NewsController.cs          # News/Content management
+│   ├── ReportController.cs        # Reports/Analytics
+│   ├── ConfigurationController.cs # System configuration
+│   └── AuditController.cs         # Audit/Logging
+├── Endpoints/                     # FHIR & Special Endpoints
+│   ├── FhirEndpoints.cs          # FHIR resources (Minimal API)
+│   ├── AuthenticationEndpoints.cs # Auth flows (Minimal API)
+│   ├── HealthEndpoints.cs        # Health checks (Minimal API)
+│   └── ExportEndpoints.cs        # Export operations (Minimal API)
+└── Middleware/                    # Cross-cutting concerns
+    ├── ExceptionMiddleware.cs     # Global exception handling
+    ├── ValidationMiddleware.cs    # Request validation
+    └── SecurityMiddleware.cs      # Security & authentication
+```
+
 #### Core Principles (Immutable Standards)
 1. **Dependency Rule**: Dependencies point inward only
 2. **Abstraction Rule**: Inner layers define abstractions, outer layers implement them
@@ -293,6 +338,11 @@ services.AddAuthorization();
 
 **For complete CQRS implementation details, see `/architecture/CQRS_PATTERN_REFERENCE.md`**
 
+**Pattern Recognition**: Cursor AI automatically applies CQRS for:
+- **Business Entities**: `tenant`, `user`, `news`, `notification`, `report`
+- **FHIR Resources**: `patient`, `observation`, `medication`, `condition`
+- **System Operations**: `audit`, `configuration`, `export`, `import`
+
 **Commands** (Write Operations):
 ```csharp
 public record CreatePatientCommand : IRequest<Result<PatientDto>>
@@ -374,6 +424,11 @@ public class Result<T>
 
 **For complete AutoMapper implementation details, see `/architecture/AUTOMAPPER_PATTERN_REFERENCE.md`**
 
+**Pattern Recognition**: Cursor AI automatically applies AutoMapper for:
+- **Business Entities**: `tenant`, `user`, `news`, `notification`, `report` (Entity ↔ DTO)
+- **FHIR Resources**: `patient`, `observation`, `medication`, `condition` (Entity ↔ FHIR Resource)
+- **System Operations**: `audit`, `configuration`, `export`, `import` (Entity ↔ DTO)
+
 **Profile Structure**:
 ```csharp
 public class PatientMappingProfile : Profile
@@ -413,6 +468,25 @@ public interface IMapperService
     IQueryable<TDestination> ProjectTo<TSource, TDestination>(IQueryable<TSource> source);
 }
 ```
+
+#### Healthcare Data Implementation Pattern
+
+**For complete Healthcare Data implementation details, see `/architecture/HEALTHCARE_DATA_PATTERN_REFERENCE.md`**
+
+**Pattern Recognition**: Cursor AI automatically applies Healthcare Data Pattern for:
+- **Trigger Keywords**: `Patient`, `Observation`, `Medication`, `Condition`, `Encounter`, `FHIR`, `healthcare`, `medical`, `clinical`
+- **API Pattern**: Minimal API Endpoints (MANDATORY)
+- **Data Format**: FHIR R4B Resources (MANDATORY)
+- **SDK**: Local Hl7.Fhir.R4B SDK (MANDATORY)
+- **Routes**: `/fhir/{resourceType}` (MANDATORY)
+- **Validation**: FHIR R4B Validation (MANDATORY)
+
+**Example**: When user requests "Create Patient API", Cursor AI automatically:
+1. Uses Minimal API Endpoints (not Controller)
+2. Implements FHIR R4B Patient resource
+3. Uses local Hl7.Fhir.R4B SDK
+4. Creates routes `/fhir/Patient`
+5. Implements FHIR R4B validation
 
 #### Cross-Cutting Concerns
 
@@ -826,6 +900,9 @@ Use proper visual separators and XML documentation. Include appropriate validati
 - XML documentation complete
 - Naming conventions followed
 - No compiler warnings
+- **Pattern Recognition**: Correct API pattern applied (Controller vs Minimal API)
+- **Architecture Compliance**: Clean Architecture layers respected
+- **FHIR Compliance**: Healthcare data follows FHIR R4B standards
 
 ### Testing
 - Unit test coverage > 80%
@@ -843,18 +920,27 @@ Use proper visual separators and XML documentation. Include appropriate validati
 
 ### Automatic Application
 Cursor AI must automatically:
-1. Apply field organization pattern to new entities
-2. Use correct section headers with proper formatting
-3. Group related fields according to defined categories
-4. Apply validation attributes based on field type
-5. Include XML documentation for all fields
-6. Follow naming conventions consistently
+1. **Pattern Recognition**: Identify feature type and apply correct pattern
+   - Healthcare/FHIR → Minimal API + FHIR R4B
+   - Business/System → Controller + CQRS + AutoMapper
+   - Special Operations → Minimal API + Custom Logic
+2. Apply field organization pattern to new entities
+3. Use correct section headers with proper formatting
+4. Group related fields according to defined categories
+5. Apply validation attributes based on field type
+6. Include XML documentation for all fields
+7. Follow naming conventions consistently
+8. **Architecture Compliance**: Respect Clean Architecture layers
+9. **FHIR Compliance**: Apply FHIR R4B standards for healthcare data
 
 ### Validation
 - All new code must pass quality gates
 - Documentation must be complete
 - Tests must cover all functionality
 - Architecture principles must be followed
+- **Pattern Validation**: Correct API pattern applied for feature type
+- **FHIR Validation**: Healthcare data follows FHIR R4B standards
+- **Route Validation**: FHIR routes follow HL7 FHIR specification
 
 ## Integration with Development Tools
 
