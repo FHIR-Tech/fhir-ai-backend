@@ -1,85 +1,41 @@
-# Cursor AI Development Rules
+# Clean Architecture Reference Guide
 
 ## Overview
 
-This document defines the mandatory rules and standards that Cursor AI must follow when working on the FHIR-AI Backend project. These rules ensure consistency, quality, and maintainability across all development activities.
+This document defines the **immutable Clean Architecture standards** for the FHIR-AI Backend project. These standards should **NEVER change**, regardless of Microsoft's framework updates or new patterns. They ensure consistency, maintainability, and proper separation of concerns.
 
-## Domain Entity Standards
+## Core Principles (Immutable)
 
-### Mandatory Field Organization
+### 1. Dependency Rule
+**Dependencies point inward only**
+- Domain layer has zero external dependencies
+- Application layer depends only on Domain
+- Infrastructure layer depends on Application and Domain
+- API layer depends on Application and Infrastructure
 
-When creating or modifying domain entities, Cursor AI MUST follow this exact field ordering pattern:
+### 2. Abstraction Rule
+**Inner layers define abstractions, outer layers implement them**
+- Domain defines repository interfaces
+- Infrastructure implements repository interfaces
+- Domain defines service interfaces
+- Infrastructure implements service interfaces
 
-```csharp
-public class EntityName : BaseEntity
-{
-    // ========================================
-    // FOREIGN KEY FIELDS
-    // ========================================
-    
-    // ========================================
-    // CORE IDENTITY FIELDS
-    // ========================================
-    
-    // ========================================
-    // BASIC INFORMATION FIELDS
-    // ========================================
-    
-    // ========================================
-    // STATUS & CONFIGURATION FIELDS
-    // ========================================
-    
-    // ========================================
-    // SECURITY & ACCESS FIELDS
-    // ========================================
-    
-    // ========================================
-    // TIMING FIELDS
-    // ========================================
-    
-    // ========================================
-    // ADDITIONAL DATA FIELDS
-    // ========================================
-    
-    // ========================================
-    // COMPUTED PROPERTIES
-    // ========================================
-    
-    // ========================================
-    // NAVIGATION PROPERTIES
-    // ========================================
-}
-```
+### 3. Independence Rule
+**Domain layer has zero dependencies on external concerns**
+- No framework dependencies (EF Core, NHapi, etc.)
+- No external library dependencies
+- Pure business logic only
+- Framework-agnostic
 
-### Visual Separators Format
-- Use exactly 39 equals signs (`=`) on each line
-- Section name in UPPERCASE
-- One blank line before and after each section
-- Consistent 4-space indentation
+### 4. Framework Independence
+**Domain and Application layers are framework-agnostic**
+- Can be tested without any framework
+- Can be used with any framework
+- No framework-specific code
 
-### Field Documentation
-Every field MUST have XML documentation:
-```csharp
-/// <summary>
-/// Brief description of the field
-/// </summary>
-public string FieldName { get; set; }
-```
+## Layer Structure & Responsibilities
 
-## Architecture Principles
-
-### Clean Architecture Pattern - Comprehensive Implementation Guide
-
-#### Core Principles (Immutable Standards)
-1. **Dependency Rule**: Dependencies point inward only
-2. **Abstraction Rule**: Inner layers define abstractions, outer layers implement them
-3. **Independence Rule**: Domain layer has zero dependencies on external concerns
-4. **Framework Independence**: Domain and Application layers are framework-agnostic
-
-#### Layer Structure & Responsibilities
-
-##### 1. Domain Layer (Innermost - No Dependencies)
-**Purpose**: Core business logic and enterprise rules
+### Domain Layer (Innermost)
 **Location**: `HealthTech.Domain/`
 **Dependencies**: None (zero external dependencies)
 
@@ -93,7 +49,6 @@ public string FieldName { get; set; }
 - **Enums**: Business enumerations
 - **Exceptions**: Domain-specific exceptions
 
-**Naming Pattern**: `HealthTech.Domain.{Feature}`
 **File Structure**:
 ```
 HealthTech.Domain/
@@ -124,8 +79,7 @@ HealthTech.Domain/
     └── {ExceptionName}.cs
 ```
 
-##### 2. Application Layer (Business Use Cases)
-**Purpose**: Application-specific business rules and orchestration
+### Application Layer (Business Use Cases)
 **Location**: `HealthTech.Application/`
 **Dependencies**: Domain layer only
 
@@ -139,7 +93,6 @@ HealthTech.Domain/
 - **Services**: Application-specific business logic
 - **Behaviors**: Cross-cutting concerns (logging, validation, caching)
 
-**Naming Pattern**: `HealthTech.Application.{Feature}`
 **File Structure**:
 ```
 HealthTech.Application/
@@ -177,8 +130,7 @@ HealthTech.Application/
 └── DependencyInjection.cs
 ```
 
-##### 3. Infrastructure Layer (External Concerns)
-**Purpose**: External system interactions and data persistence
+### Infrastructure Layer (External Concerns)
 **Location**: `HealthTech.Infrastructure/`
 **Dependencies**: Application and Domain layers
 
@@ -192,7 +144,6 @@ HealthTech.Application/
 - **File Storage**: File system or cloud storage implementations
 - **Message Brokers**: Event bus implementations
 
-**Naming Pattern**: `HealthTech.Infrastructure.{Concern}`
 **File Structure**:
 ```
 HealthTech.Infrastructure/
@@ -222,8 +173,7 @@ HealthTech.Infrastructure/
 └── DependencyInjection.cs
 ```
 
-##### 4. API Layer (Presentation)
-**Purpose**: HTTP API endpoints and request/response handling
+### API Layer (Presentation)
 **Location**: `HealthTech.API/`
 **Dependencies**: Application and Infrastructure layers
 
@@ -236,7 +186,6 @@ HealthTech.Infrastructure/
 - **Configuration**: API-specific configuration
 - **Documentation**: OpenAPI/Swagger documentation
 
-**Naming Pattern**: `HealthTech.API.{Feature}`
 **File Structure**:
 ```
 HealthTech.API/
@@ -262,34 +211,9 @@ HealthTech.API/
 └── Program.cs
 ```
 
-#### Dependency Injection Configuration
+## Implementation Patterns
 
-**Domain Layer**: No DI configuration (no dependencies)
-**Application Layer**: Register handlers, validators, behaviors
-**Infrastructure Layer**: Register concrete implementations
-**API Layer**: Register API-specific services
-
-```csharp
-// Application Layer DI
-services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
-services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-
-// Infrastructure Layer DI
-services.AddDbContext<ApplicationDbContext>(options => 
-    options.UseNpgsql(connectionString));
-services.AddScoped<IPatientRepository, PatientRepository>();
-services.AddScoped<ICurrentUserService, CurrentUserService>();
-
-// API Layer DI
-services.AddEndpointsApiExplorer();
-services.AddSwaggerGen();
-services.AddAuthentication();
-services.AddAuthorization();
-```
-
-#### CQRS Pattern Implementation
+### CQRS Pattern
 
 **Commands** (Write Operations):
 ```csharp
@@ -330,7 +254,41 @@ public class GetPatientQueryHandler : IRequestHandler<GetPatientQuery, Result<Pa
 }
 ```
 
-#### Validation Pattern
+### Repository Pattern
+
+**Domain Interface**:
+```csharp
+public interface IPatientRepository
+{
+    Task<Patient> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Patient>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<Patient> AddAsync(Patient patient, CancellationToken cancellationToken = default);
+    Task<Patient> UpdateAsync(Patient patient, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+}
+```
+
+**Infrastructure Implementation**:
+```csharp
+public class PatientRepository : IPatientRepository
+{
+    private readonly ApplicationDbContext _context;
+
+    public PatientRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Patient> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Patients.FindAsync(new object[] { id }, cancellationToken);
+    }
+
+    // Other implementations...
+}
+```
+
+### Validation Pattern
 
 ```csharp
 public class CreatePatientCommandValidator : AbstractValidator<CreatePatientCommand>
@@ -352,7 +310,7 @@ public class CreatePatientCommandValidator : AbstractValidator<CreatePatientComm
 }
 ```
 
-#### Result Pattern
+### Result Pattern
 
 ```csharp
 public class Result<T>
@@ -368,7 +326,7 @@ public class Result<T>
 }
 ```
 
-#### Cross-Cutting Concerns
+### Cross-Cutting Concerns
 
 **Logging Behavior**:
 ```csharp
@@ -410,7 +368,29 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 }
 ```
 
-#### Testing Structure
+## Dependency Injection Configuration
+
+```csharp
+// Application Layer DI
+services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+
+// Infrastructure Layer DI
+services.AddDbContext<ApplicationDbContext>(options => 
+    options.UseNpgsql(connectionString));
+services.AddScoped<IPatientRepository, PatientRepository>();
+services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// API Layer DI
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen();
+services.AddAuthentication();
+services.AddAuthorization();
+```
+
+## Testing Structure
 
 **Unit Tests**:
 ```
@@ -438,127 +418,98 @@ HealthTech.API.Tests/
 └── TestBase.cs
 ```
 
-#### Architecture Validation Rules
+## Immutable Standards (Never Change)
 
-1. **No Circular Dependencies**: Use dependency direction validation
-2. **Layer Isolation**: Domain layer must have zero external dependencies
-3. **Interface Segregation**: Repositories and services must be interface-based
-4. **Single Responsibility**: Each class has one reason to change
-5. **Open/Closed Principle**: Open for extension, closed for modification
-6. **Dependency Inversion**: High-level modules don't depend on low-level modules
-
-#### Performance Considerations
-
-1. **Async/Await**: Use throughout for I/O operations
-2. **Caching**: Implement at appropriate layers
-3. **Pagination**: For large data sets
-4. **Projection**: Use DTOs to limit data transfer
-5. **Indexing**: Proper database indexing strategy
-6. **Connection Pooling**: Database connection management
-
-#### Security Implementation
-
-1. **Authentication**: JWT tokens with proper validation
-2. **Authorization**: Role-based and claim-based authorization
-3. **Input Validation**: Comprehensive validation at all layers
-4. **Audit Logging**: Track all data modifications
-5. **Data Encryption**: Sensitive data encryption at rest and in transit
-6. **Rate Limiting**: API rate limiting implementation
-
-#### Immutable Clean Architecture Standards (Never Change)
-
-These standards are fundamental to Clean Architecture and should NEVER be modified, regardless of Microsoft's framework updates or new patterns:
-
-##### 1. Dependency Direction (Immutable Rule)
+### 1. Dependency Direction (Immutable Rule)
 - **Domain Layer**: Zero external dependencies
 - **Application Layer**: Depends only on Domain
 - **Infrastructure Layer**: Depends on Application and Domain
 - **API Layer**: Depends on Application and Infrastructure
 - **Violation**: Any outer layer dependency on inner layers is forbidden
 
-##### 2. Layer Responsibilities (Immutable Rule)
+### 2. Layer Responsibilities (Immutable Rule)
 - **Domain**: Pure business logic, no framework code
 - **Application**: Use cases and orchestration, no infrastructure concerns
 - **Infrastructure**: External system interactions only
 - **API**: HTTP concerns only, no business logic
 
-##### 3. Framework Independence (Immutable Rule)
+### 3. Framework Independence (Immutable Rule)
 - **Domain Layer**: Must be framework-agnostic
 - **Application Layer**: Must be framework-agnostic
 - **Infrastructure Layer**: Can use framework-specific code
 - **API Layer**: Can use framework-specific code
 
-##### 4. Interface Segregation (Immutable Rule)
+### 4. Interface Segregation (Immutable Rule)
 - **Repository Pattern**: Domain defines interfaces, Infrastructure implements
 - **Service Pattern**: Domain defines interfaces, Infrastructure implements
 - **No Direct Dependencies**: Application never depends on concrete implementations
 
-##### 5. Single Responsibility (Immutable Rule)
+### 5. Single Responsibility (Immutable Rule)
 - **Entities**: Business objects with identity
 - **Value Objects**: Immutable business concepts
 - **Services**: Business logic that doesn't belong to entities
 - **Repositories**: Data access abstractions
 - **Handlers**: Single use case implementation
 
-##### 6. Open/Closed Principle (Immutable Rule)
+### 6. Open/Closed Principle (Immutable Rule)
 - **Open for Extension**: New features via new classes
 - **Closed for Modification**: Existing code unchanged
 - **Plugin Architecture**: New implementations via interfaces
 
-##### 7. Dependency Inversion (Immutable Rule)
+### 7. Dependency Inversion (Immutable Rule)
 - **High-Level Modules**: Don't depend on low-level modules
 - **Abstractions**: Don't depend on details
 - **Details**: Depend on abstractions
 
-##### 8. CQRS Separation (Immutable Rule)
+### 8. CQRS Separation (Immutable Rule)
 - **Commands**: Write operations only
 - **Queries**: Read operations only
 - **Separate Models**: Command and Query models are distinct
 - **No Shared State**: Commands and Queries don't share models
 
-##### 9. Validation Strategy (Immutable Rule)
+### 9. Validation Strategy (Immutable Rule)
 - **Input Validation**: At Application layer boundaries
 - **Domain Validation**: Business rule validation in Domain
 - **Infrastructure Validation**: Data integrity validation
 - **API Validation**: Request format validation
 
-##### 10. Error Handling Strategy (Immutable Rule)
+### 10. Error Handling Strategy (Immutable Rule)
 - **Domain Exceptions**: Business rule violations
 - **Application Exceptions**: Use case failures
 - **Infrastructure Exceptions**: Technical failures
 - **API Exceptions**: HTTP-specific errors
 
-##### 11. Testing Strategy (Immutable Rule)
+### 11. Testing Strategy (Immutable Rule)
 - **Unit Tests**: Test business logic in isolation
 - **Integration Tests**: Test layer interactions
 - **End-to-End Tests**: Test complete workflows
 - **Test Independence**: Tests don't depend on each other
 
-##### 12. Configuration Strategy (Immutable Rule)
+### 12. Configuration Strategy (Immutable Rule)
 - **Domain**: No configuration dependencies
 - **Application**: Minimal configuration for use cases
 - **Infrastructure**: Framework and external system configuration
 - **API**: HTTP and presentation configuration
 
-##### 13. Logging Strategy (Immutable Rule)
+### 13. Logging Strategy (Immutable Rule)
 - **Domain**: No logging (pure business logic)
 - **Application**: Business event logging
 - **Infrastructure**: Technical event logging
 - **API**: Request/response logging
 
-##### 14. Caching Strategy (Immutable Rule)
+### 14. Caching Strategy (Immutable Rule)
 - **Domain**: No caching (pure business logic)
 - **Application**: Business result caching
 - **Infrastructure**: Technical caching (database, external APIs)
 - **API**: Response caching
 
-##### 15. Security Strategy (Immutable Rule)
+### 15. Security Strategy (Immutable Rule)
 - **Domain**: Business security rules
 - **Application**: Authorization logic
 - **Infrastructure**: Authentication implementation
 - **API**: Security headers and tokens
 
-#### Anti-Patterns to Avoid (Never Allowed)
+## Anti-Patterns to Avoid (Never Allowed)
 
 1. **Anemic Domain Model**: Entities with no behavior
 2. **Fat Controllers**: Business logic in API layer
@@ -571,7 +522,7 @@ These standards are fundamental to Clean Architecture and should NEVER be modifi
 9. **God Objects**: Classes with too many responsibilities
 10. **Data Transfer Objects in Domain**: DTOs should be in Application layer only
 
-#### Validation Checklist (Must Pass Always)
+## Validation Checklist (Must Pass Always)
 
 - [ ] Domain layer has zero external dependencies
 - [ ] Application layer depends only on Domain
@@ -584,260 +535,24 @@ These standards are fundamental to Clean Architecture and should NEVER be modifi
 - [ ] Testing covers all business logic
 - [ ] Configuration is layer-appropriate
 
-### Clean Architecture Compliance
-- **Domain Layer**: No external dependencies
-- **Application Layer**: Business logic and use cases
-- **Infrastructure Layer**: External concerns (database, APIs)
-- **API Layer**: Controllers and endpoints only
+## Performance Considerations
 
-### FHIR Compliance
-- All FHIR resources stored as JSONB
-- Proper versioning support
-- Search parameters and security labels
-- Audit trail following FHIR AuditEvent structure
+1. **Async/Await**: Use throughout for I/O operations
+2. **Caching**: Implement at appropriate layers
+3. **Pagination**: For large data sets
+4. **Projection**: Use DTOs to limit data transfer
+5. **Indexing**: Proper database indexing strategy
+6. **Connection Pooling**: Database connection management
 
-### Security Standards
-- Multi-tenancy with TenantId
-- Row-Level Security ready
-- Comprehensive audit logging
-- Soft delete functionality
-- Optimistic concurrency control
+## Security Implementation
 
-## Code Quality Standards
-
-### Naming Conventions
-- **Classes**: PascalCase
-- **Properties**: PascalCase
-- **Methods**: PascalCase
-- **Variables**: camelCase
-- **Constants**: UPPER_CASE
-- **Enums**: PascalCase
-
-### Validation Attributes
-```csharp
-[Required]
-[MaxLength(255)]
-[EmailAddress]
-[Column(TypeName = "jsonb")]
-[NotMapped]
-```
-
-### Type Usage
-- **Primary Keys**: `Guid` with `uuid_generate_v4()` default
-- **Foreign Keys**: `Guid` for entity relationships
-- **Strings**: Use `string` with appropriate `MaxLength`
-- **Dates**: Use `DateTime` or `DateTime?`
-- **Booleans**: Use `bool` with descriptive names
-- **Enums**: Use strongly-typed enums
-
-## Database Standards
-
-### Table Naming
-- Use snake_case for table names
-- Use snake_case for column names
-- Include proper indexes and constraints
-
-### Configuration Standards
-```csharp
-builder.ToTable("table_name");
-builder.Property(e => e.PropertyName).HasColumnName("column_name");
-builder.HasIndex(e => e.PropertyName).HasDatabaseName("idx_table_property");
-```
-
-### JSONB Usage
-- Use for complex data structures
-- Include GIN indexes for performance
-- Document complex data structures
-
-## API Design Standards
-
-### Minimal APIs
-- Use Minimal API pattern
-- Include proper error handling
-- Return ProblemDetails for errors
-- Include OpenAPI documentation
-
-### FHIR Endpoints
-- All FHIR endpoints under `/fhir/...`
-- Proper HTTP status codes
-- Consistent error responses
-- FHIR resource validation
-
-## Testing Standards
-
-### Unit Tests
-- Test all handlers and business logic
-- Test computed properties
-- Test validation attributes
-- Test enum values
-
-### Integration Tests
-- Test database operations
-- Test entity configurations
-- Test foreign key relationships
-- Test unique constraints
-
-## Documentation Standards
-
-### XML Documentation
-- All public APIs must have XML documentation
-- Include parameter descriptions
-- Include return value descriptions
-- Include exception documentation
-
-### README Files
-- Comprehensive setup instructions
-- Architecture documentation
-- API documentation
-- Deployment guides
-
-## File Organization
-
-### Project Structure
-```
-src/
-├── HealthTech.API/           # API Layer
-├── HealthTech.Application/   # Application Layer
-├── HealthTech.Domain/        # Domain Layer
-└── HealthTech.Infrastructure/ # Infrastructure Layer
-```
-
-### Documentation Structure
-```
-docs/
-├── api/                      # API Documentation
-├── architecture/             # Architecture Documentation
-├── cursor-agent/             # Cursor Agent Documentation
-└── deployment/               # Deployment Documentation
-```
-
-## Development Workflow
-
-### Entity Creation Process
-1. **Create Domain Entity** following field organization pattern
-2. **Create Persistence Configuration** with proper mappings
-3. **Create Application Handlers** (Commands/Queries)
-4. **Create API Endpoints** with proper documentation
-5. **Create Unit Tests** for all components
-6. **Create Integration Tests** for database operations
-7. **Update Documentation** with new features
-
-### Code Review Checklist
-- [ ] Field organization follows pattern
-- [ ] Visual separators properly formatted
-- [ ] XML documentation complete
-- [ ] Validation attributes appropriate
-- [ ] Navigation properties configured
-- [ ] Computed properties marked with `[NotMapped]`
-- [ ] Tests cover all functionality
-- [ ] Documentation updated
-
-## Prompt Templates
-
-### Entity Creation Prompt
-```
-"Create a new domain entity following the FHIR-AI Backend field organization pattern:
-1. Foreign Key Fields
-2. Core Identity Fields  
-3. Basic Information Fields
-4. Status & Configuration Fields
-5. Security & Access Fields
-6. Timing Fields
-7. Additional Data Fields
-8. Computed Properties
-9. Navigation Properties
-
-Use proper visual separators and XML documentation. Include appropriate validation attributes and follow naming conventions."
-```
-
-### API Endpoint Prompt
-```
-"Create a Minimal API endpoint following FHIR-AI Backend standards:
-- Use proper HTTP status codes
-- Include error handling with ProblemDetails
-- Add OpenAPI documentation
-- Follow FHIR compliance guidelines
-- Include proper validation
-- Add comprehensive XML documentation"
-```
-
-### Test Creation Prompt
-```
-"Create comprehensive tests following FHIR-AI Backend standards:
-- Unit tests for all business logic
-- Integration tests for database operations
-- Test all validation attributes
-- Test computed properties
-- Test enum values and conversions
-- Include proper test data setup"
-```
-
-## Quality Gates
-
-### Code Quality
-- All entities follow field organization pattern
-- Proper validation attributes applied
-- XML documentation complete
-- Naming conventions followed
-- No compiler warnings
-
-### Testing
-- Unit test coverage > 80%
-- Integration tests for database operations
-- All validation attributes tested
-- Computed properties tested
-
-### Documentation
-- XML documentation for all public APIs
-- README files updated
-- Architecture documentation current
-- API documentation complete
-
-## Enforcement
-
-### Automatic Application
-Cursor AI must automatically:
-1. Apply field organization pattern to new entities
-2. Use correct section headers with proper formatting
-3. Group related fields according to defined categories
-4. Apply validation attributes based on field type
-5. Include XML documentation for all fields
-6. Follow naming conventions consistently
-
-### Validation
-- All new code must pass quality gates
-- Documentation must be complete
-- Tests must cover all functionality
-- Architecture principles must be followed
-
-## Integration with Development Tools
-
-### IDE Configuration
-- Enable XML documentation warnings
-- Configure code formatting rules
-- Enable naming convention checks
-- Set up test coverage reporting
-
-### CI/CD Integration
-- Automated code quality checks
-- Test coverage validation
-- Documentation completeness checks
-- Architecture compliance validation
-
-## Troubleshooting
-
-### Common Issues
-1. **Field organization**: Ensure all entities follow the pattern
-2. **Documentation**: Check XML documentation completeness
-3. **Validation**: Verify validation attributes are appropriate
-4. **Testing**: Ensure adequate test coverage
-
-### Resolution Steps
-1. Review the standards document
-2. Check existing entity examples
-3. Validate against quality gates
-4. Update documentation as needed
+1. **Authentication**: JWT tokens with proper validation
+2. **Authorization**: Role-based and claim-based authorization
+3. **Input Validation**: Comprehensive validation at all layers
+4. **Audit Logging**: Track all data modifications
+5. **Data Encryption**: Sensitive data encryption at rest and in transit
+6. **Rate Limiting**: API rate limiting implementation
 
 ---
 
-*These rules ensure consistent, high-quality development across the FHIR-AI Backend project while maintaining Clean Architecture principles and FHIR compliance.*
+**This document defines the immutable Clean Architecture standards that should NEVER change, ensuring consistency and maintainability across the FHIR-AI Backend project.**

@@ -18,6 +18,7 @@ docs/
 │   └── reports/                # Báo cáo API
 │       └── ENDPOINT_VERIFICATION_REPORT.md
 ├── architecture/               # Tài liệu kiến trúc
+│   └── CLEAN_ARCHITECTURE_REFERENCE.md
 ├── cursor-agent/               # Báo cáo Cursor Agent
 │   ├── README.md              # Hướng dẫn Cursor Agent
 │   ├── reports/               # Báo cáo thực hiện
@@ -49,6 +50,9 @@ docs/
 - [GitHub Actions Workflows](cursor-agent/workflows/README.md)
 - [Workflow Fixes](cursor-agent/workflows/FIXES.md)
 
+### Architecture
+- [Clean Architecture Reference](architecture/CLEAN_ARCHITECTURE_REFERENCE.md)
+
 ### Deployment
 - [Security Checklist](deployment/SECURITY_CHECKLIST.md)
 
@@ -66,6 +70,7 @@ Khi thêm tài liệu mới:
 - **2024-12-28**: Tổ chức lại GitHub Actions workflows documentation
 - **2025-08-28**: Dọn dẹp documentation - xóa các reports cũ và tài liệu dư thừa
 - **2025-08-28**: Đơn giản hóa cấu trúc, chỉ giữ lại tài liệu cần thiết
+- **2025-08-28**: Thêm Clean Architecture Reference Guide với các tiêu chuẩn bất biến
 
 ---
 

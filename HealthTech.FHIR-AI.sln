@@ -25,6 +25,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sdk", "sdk", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hl7.Fhir", "Hl7.Fhir", "{C6945F30-3CF1-4BBF-AC04-ADB1923CD756}"
+	ProjectSection(SolutionItems) = preProject
+		sdk\Hl7.Fhir\FhirNetApi.publickey = sdk\Hl7.Fhir\FhirNetApi.publickey
+		sdk\Hl7.Fhir\firely-net-sdk.props = sdk\Hl7.Fhir\firely-net-sdk.props
+		sdk\Hl7.Fhir\platforms.props = sdk\Hl7.Fhir\platforms.props
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hl7.Fhir.Base", "sdk\Hl7.Fhir\Hl7.Fhir.Base\Hl7.Fhir.Base.csproj", "{F4F2B20B-9EE6-82B9-0AF4-9770DDF870AC}"
 EndProject

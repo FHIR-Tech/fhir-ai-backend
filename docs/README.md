@@ -14,6 +14,67 @@ This directory contains all technical documentation for the FHIR-AI Backend proj
 - Database schema documentation
 - Security architecture documentation
 
+### `/cursor-agent/` - Cursor AI Documentation
+- **`CURSOR_AI_RULES.md`** - Comprehensive development rules and Clean Architecture standards
+- **`DOMAIN_ENTITY_STANDARDS.md`** - Entity creation and organization standards
+- Implementation reports and session logs
+
+## Clean Architecture Standards (Immutable)
+
+### Core Principles
+The FHIR-AI Backend follows Clean Architecture principles with these **immutable standards** that should never change, regardless of Microsoft's framework updates:
+
+#### 1. Layer Structure
+```
+HealthTech.Domain/        # Core business logic (zero dependencies)
+HealthTech.Application/   # Use cases and orchestration (depends on Domain only)
+HealthTech.Infrastructure/ # External concerns (depends on Application + Domain)
+HealthTech.API/          # HTTP endpoints (depends on Application + Infrastructure)
+```
+
+#### 2. Dependency Rules (Never Violate)
+- **Domain Layer**: Zero external dependencies
+- **Application Layer**: Depends only on Domain
+- **Infrastructure Layer**: Implements Domain interfaces
+- **API Layer**: Uses Application handlers only
+- **No Circular Dependencies**: Ever
+
+#### 3. Framework Independence
+- **Domain & Application**: Framework-agnostic
+- **Infrastructure & API**: Can use framework-specific code
+- **No Framework Coupling**: Domain never depends on EF Core, NHapi, etc.
+
+#### 4. CQRS Pattern
+- **Commands**: Write operations (Create, Update, Delete)
+- **Queries**: Read operations
+- **Separate Models**: Command and Query models are distinct
+- **MediatR**: For command/query handling
+
+#### 5. Repository Pattern
+- **Domain**: Defines repository interfaces
+- **Infrastructure**: Implements repository interfaces
+- **Application**: Uses repository interfaces only
+
+### Anti-Patterns (Never Allowed)
+1. Anemic Domain Model (entities with no behavior)
+2. Fat Controllers (business logic in API layer)
+3. Repository Leakage (infrastructure concerns in Domain)
+4. Direct Database Access (bypassing Application layer)
+5. Circular Dependencies (any circular references)
+
+### Validation Checklist
+- [ ] Domain layer has zero external dependencies
+- [ ] Application layer depends only on Domain
+- [ ] Infrastructure layer implements Domain interfaces
+- [ ] API layer uses Application handlers
+- [ ] No circular dependencies exist
+- [ ] All public APIs have proper documentation
+- [ ] Validation occurs at appropriate layers
+- [ ] Error handling follows established patterns
+- [ ] Testing covers all business logic
+
+**For complete Clean Architecture implementation details, see `/cursor-agent/CURSOR_AI_RULES.md`**
+
 ## Documentation Standards
 
 ### File Naming
@@ -62,3 +123,4 @@ When adding new documentation:
 3. Update this README if adding new categories
 4. Ensure all links are working
 5. Review for accuracy and completeness
+6. **Always follow Clean Architecture principles** as defined in the immutable standards
