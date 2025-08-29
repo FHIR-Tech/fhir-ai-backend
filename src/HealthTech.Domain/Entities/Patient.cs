@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using HealthTech.Domain.Enums;
 
 namespace HealthTech.Domain.Entities;
 
@@ -151,40 +152,4 @@ public class Patient : BaseEntity
     /// Navigation property for patient consents
     /// </summary>
     public virtual ICollection<PatientConsent> PatientConsents { get; set; } = new List<PatientConsent>();
-}
-
-/// <summary>
-/// Patient status
-/// </summary>
-public enum PatientStatus
-{
-    /// <summary>
-    /// Active patient
-    /// </summary>
-    Active,
-
-    /// <summary>
-    /// Inactive patient
-    /// </summary>
-    Inactive,
-
-    /// <summary>
-    /// Deceased patient
-    /// </summary>
-    Deceased,
-
-    /// <summary>
-    /// Unknown status
-    /// </summary>
-    Unknown,
-
-    /// <summary>
-    /// Transferred to another facility
-    /// </summary>
-    Transferred,
-
-    /// <summary>
-    /// Discharged
-    /// </summary>
-    Discharged
 }
