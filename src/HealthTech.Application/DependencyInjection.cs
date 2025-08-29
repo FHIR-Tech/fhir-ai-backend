@@ -1,7 +1,9 @@
 using System.Reflection;
+using HealthTech.Application.Common.Behaviors;
 using HealthTech.Application.Common.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using FluentValidation;
+using MediatR;
 
 namespace HealthTech.Application;
 
@@ -24,6 +26,14 @@ public static class DependencyInjection
 
         // Add FluentValidation
         services.AddValidatorsFromAssembly(assembly);
+
+        // Add Pipeline Behaviors (order matters)
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
+
+        // Add Memory Cache for CachingBehavior
+        services.AddMemoryCache();
 
         // Add AutoMapper (if needed in the future)
         // services.AddAutoMapper(assembly);

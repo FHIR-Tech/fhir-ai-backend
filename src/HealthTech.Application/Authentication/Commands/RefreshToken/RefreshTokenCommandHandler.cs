@@ -29,8 +29,9 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             {
                 return new RefreshTokenResponse
                 {
-                    Success = false,
-                    ErrorMessage = "Invalid or expired refresh token"
+                    IsSuccess = false,
+                    Message = "Invalid or expired refresh token",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -40,8 +41,9 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             {
                 return new RefreshTokenResponse
                 {
-                    Success = false,
-                    ErrorMessage = "User not found"
+                    IsSuccess = false,
+                    Message = "User not found",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -64,7 +66,9 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
 
             return new RefreshTokenResponse
             {
-                Success = true,
+                IsSuccess = true,
+                Message = "Token refreshed successfully",
+                RequestId = request.RequestId,
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken
             };
@@ -73,8 +77,9 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         {
             return new RefreshTokenResponse
             {
-                Success = false,
-                ErrorMessage = "An error occurred while refreshing token"
+                IsSuccess = false,
+                Message = "An error occurred while refreshing token",
+                RequestId = request.RequestId
             };
         }
     }

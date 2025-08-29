@@ -39,7 +39,7 @@ public static class DependencyInjection
 
         // Add services
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-        services.AddScoped<IDateTime, DateTimeService>();
+        services.AddScoped<IDateTimeService, DateTimeService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IUserService, UserService>();

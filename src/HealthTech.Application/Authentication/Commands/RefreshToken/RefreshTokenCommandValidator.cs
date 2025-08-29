@@ -1,9 +1,9 @@
 using FluentValidation;
-using HealthTech.Application.Authentication.Commands.RefreshToken;
+using HealthTech.Application.Common.Validators;
 
 namespace HealthTech.Application.Authentication.Commands.RefreshToken;
 
-public class RefreshTokenCommandValidator : AbstractValidator<RefreshTokenCommand>
+public class RefreshTokenCommandValidator : BaseValidator<RefreshTokenCommand>
 {
     public RefreshTokenCommandValidator()
     {

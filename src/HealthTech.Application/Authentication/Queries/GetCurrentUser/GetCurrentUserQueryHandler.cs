@@ -28,8 +28,9 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, G
             {
                 return new GetCurrentUserResponse
                 {
-                    Success = false,
-                    ErrorMessage = "User not authenticated"
+                    IsSuccess = false,
+                    Message = "User not authenticated",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -38,8 +39,9 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, G
             {
                 return new GetCurrentUserResponse
                 {
-                    Success = false,
-                    ErrorMessage = "User not found"
+                    IsSuccess = false,
+                    Message = "User not found",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -47,7 +49,9 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, G
 
             return new GetCurrentUserResponse
             {
-                Success = true,
+                IsSuccess = true,
+                Message = "User retrieved successfully",
+                RequestId = request.RequestId,
                 User = new UserInfoDto
                 {
                     Id = user.Id.ToString(),
@@ -65,8 +69,9 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, G
         {
             return new GetCurrentUserResponse
             {
-                Success = false,
-                ErrorMessage = $"An error occurred while getting current user: {ex.Message}"
+                IsSuccess = false,
+                Message = $"An error occurred while getting current user: {ex.Message}",
+                RequestId = request.RequestId
             };
         }
     }

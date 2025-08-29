@@ -33,8 +33,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             {
                 return new LoginResponse
                 {
-                    Success = false,
-                    ErrorMessage = "Invalid username or password"
+                    IsSuccess = false,
+                    Message = "Invalid username or password",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -43,8 +44,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             {
                 return new LoginResponse
                 {
-                    Success = false,
-                    ErrorMessage = "Account is locked. Please contact administrator."
+                    IsSuccess = false,
+                    Message = "Account is locked. Please contact administrator.",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -53,8 +55,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             {
                 return new LoginResponse
                 {
-                    Success = false,
-                    ErrorMessage = "Account is inactive. Please contact administrator."
+                    IsSuccess = false,
+                    Message = "Account is inactive. Please contact administrator.",
+                    RequestId = request.RequestId
                 };
             }
 
@@ -82,7 +85,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 
             return new LoginResponse
             {
-                Success = true,
+                IsSuccess = true,
+                Message = "Login successful",
+                RequestId = request.RequestId,
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 User = new UserInfoDto
@@ -108,8 +113,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             
             return new LoginResponse
             {
-                Success = false,
-                ErrorMessage = $"An error occurred during login: {ex.Message}"
+                IsSuccess = false,
+                Message = $"An error occurred during login: {ex.Message}",
+                RequestId = request.RequestId
             };
         }
     }

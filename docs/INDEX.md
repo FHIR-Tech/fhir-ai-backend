@@ -51,6 +51,7 @@ docs/
 - [Implementation Report Template](cursor-agent/reports/template_implementation_report.md)
 - [JWT Refresh Token Implementation Report](cursor-agent/reports/jwt_refresh_token_implementation_report.md)
 - [Service Implementation Analysis Report](cursor-agent/reports/service_implementation_analysis_report.md)
+- [Authentication Restructure Report](cursor-agent/reports/authentication_restructure_20250128_report.md)
 - [GitHub Actions Workflows](cursor-agent/workflows/README.md)
 - [Workflow Fixes](cursor-agent/workflows/FIXES.md)
 
@@ -102,7 +103,13 @@ Khi thêm tài liệu mới:
   - **Cập nhật Clean Architecture Reference**: Loại bỏ chi tiết MediatR, chỉ giữ nguyên tắc
   - **Cập nhật CQRS Pattern Reference**: Tham chiếu đến MediatR I/O Pattern document
   - **Chuẩn hóa MediatR Implementation**: BaseRequest, BaseResponse, Pipeline Behaviors
+- **2025-01-28**: Authentication Module Restructure
+  - **Base Classes Implementation**: BaseRequest, BaseResponse, BasePagedRequest, PagedResponse
+  - **Pipeline Behaviors**: ValidationBehavior, LoggingBehavior, CachingBehavior
+  - **Validator Base Classes**: BaseValidator, PaginationValidator
+  - **Authentication Restructure**: Updated all commands and queries to follow MediatR I/O Pattern
+  - **Directory Structure**: Reorganized according to established patterns
 
 ---
 
-*Cập nhật lần cuối: 2025-08-28*
+*Cập nhật lần cuối: 2025-01-28*

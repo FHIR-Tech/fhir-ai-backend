@@ -1,9 +1,9 @@
 using FluentValidation;
-using HealthTech.Application.Authentication.Commands.Logout;
+using HealthTech.Application.Common.Validators;
 
 namespace HealthTech.Application.Authentication.Commands.Logout;
 
-public class LogoutCommandValidator : AbstractValidator<LogoutCommand>
+public class LogoutCommandValidator : BaseValidator<LogoutCommand>
 {
     public LogoutCommandValidator()
     {

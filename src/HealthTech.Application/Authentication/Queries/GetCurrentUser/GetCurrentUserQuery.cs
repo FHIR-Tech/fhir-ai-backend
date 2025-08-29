@@ -1,6 +1,5 @@
-using MediatR;
-using HealthTech.Application.Authentication.DTOs;
+using HealthTech.Application.Common.Base;
 
 namespace HealthTech.Application.Authentication.Queries.GetCurrentUser;
 
-public record GetCurrentUserQuery : IRequest<GetCurrentUserResponse>;
+public record GetCurrentUserQuery : BaseRequest<GetCurrentUserResponse>;

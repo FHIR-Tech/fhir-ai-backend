@@ -23,16 +23,18 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, LogoutRespons
             
             return new LogoutResponse
             {
-                Success = success,
-                ErrorMessage = success ? null : "Session not found or already invalidated"
+                IsSuccess = success,
+                Message = success ? "Logout successful" : "Session not found or already invalidated",
+                RequestId = request.RequestId
             };
         }
         catch (Exception ex)
         {
             return new LogoutResponse
             {
-                Success = false,
-                ErrorMessage = "An error occurred during logout"
+                IsSuccess = false,
+                Message = "An error occurred during logout",
+                RequestId = request.RequestId
             };
         }
     }

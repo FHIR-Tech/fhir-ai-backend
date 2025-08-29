@@ -1,9 +1,9 @@
 using FluentValidation;
-using HealthTech.Application.Authentication.Commands.Login;
+using HealthTech.Application.Common.Validators;
 
 namespace HealthTech.Application.Authentication.Commands.Login;
 
-public class LoginCommandValidator : AbstractValidator<LoginCommand>
+public class LoginCommandValidator : BaseValidator<LoginCommand>
 {
     public LoginCommandValidator()
     {

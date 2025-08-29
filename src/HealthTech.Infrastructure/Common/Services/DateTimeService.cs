@@ -2,18 +2,10 @@ using HealthTech.Application.Common.Interfaces;
 
 namespace HealthTech.Infrastructure.Common.Services;
 
-/// <summary>
-/// DateTime service implementation
-/// </summary>
-public class DateTimeService : IDateTime
+public class DateTimeService : IDateTimeService
 {
-    /// <summary>
-    /// Current date and time in UTC
-    /// </summary>
-    public DateTime Now => DateTime.UtcNow;
-
-    /// <summary>
-    /// Current date in UTC
-    /// </summary>
-    public DateTime Today => DateTime.UtcNow.Date;
+    public DateTime Now => DateTime.Now;
+    public DateTime UtcNow => DateTime.UtcNow;
+    public DateTimeOffset NowOffset => DateTimeOffset.Now;
+    public DateTimeOffset UtcNowOffset => DateTimeOffset.UtcNow;
 }
