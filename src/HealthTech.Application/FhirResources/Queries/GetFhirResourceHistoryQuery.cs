@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace HealthTech.Application.FhirResources.Queries.GetFhirResourceHistory;
+namespace HealthTech.Application.FhirResources.Queries;
 
 /// <summary>
 /// Query to get version history of a FHIR resource

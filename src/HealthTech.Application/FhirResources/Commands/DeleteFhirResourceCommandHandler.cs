@@ -4,7 +4,7 @@ using HealthTech.Domain.Entities;
 using HealthTech.Domain.Repositories;
 using System.Text.Json;
 
-namespace HealthTech.Application.FhirResources.Commands.DeleteFhirResource;
+namespace HealthTech.Application.FhirResources.Commands;
 
 /// <summary>
 /// Handler for DeleteFhirResourceCommand

@@ -1,14 +1,11 @@
 using MediatR;
 using HealthTech.Application.Common.Interfaces;
-using HealthTech.Application.FhirResources.Commands.CreateFhirResource;
-using HealthTech.Application.FhirResources.Commands.UpdateFhirResource;
-using HealthTech.Application.FhirResources.Commands.DeleteFhirResource;
 using HealthTech.Domain.Entities;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using System.Text.Json;
 
-namespace HealthTech.Application.FhirResources.Commands.ImportFhirBundle;
+namespace HealthTech.Application.FhirResources.Commands;
 
 /// <summary>
 /// Handler for ImportFhirBundleCommand

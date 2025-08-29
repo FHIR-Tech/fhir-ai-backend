@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace HealthTech.Application.FhirResources.Queries.ExportFhirBundle;
+namespace HealthTech.Application.FhirResources.Queries;
 
 /// <summary>
 /// Query to export FHIR resources as a bundle
