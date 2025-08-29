@@ -188,6 +188,7 @@ python3 scripts/validate-all.py
 ## Related Documentation
 
 - [Workflows README](README.md) - Complete workflow documentation
+- [Domain Entity Standards](DOMAIN_ENTITY_STANDARDS.md) - Domain entity coding standards
 - [Project README](../../../README.md) - Main project documentation
 - [API Documentation](../../api/README.md) - API documentation
 - [Architecture Documentation](../../architecture/) - System architecture

@@ -8,6 +8,10 @@ namespace HealthTech.Domain.Entities;
 /// </summary>
 public class FhirResource : BaseEntity
 {
+    // ========================================
+    // CORE IDENTITY FIELDS
+    // ========================================
+    
     /// <summary>
     /// FHIR resource type (e.g., Patient, Observation, etc.)
     /// </summary>
@@ -27,6 +31,10 @@ public class FhirResource : BaseEntity
     /// </summary>
     public int VersionId { get; set; }
 
+    // ========================================
+    // FHIR DATA FIELDS
+    // ========================================
+    
     /// <summary>
     /// FHIR resource as JSONB for efficient querying
     /// </summary>
@@ -34,6 +42,10 @@ public class FhirResource : BaseEntity
     [Column(TypeName = "jsonb")]
     public string ResourceJson { get; set; } = string.Empty;
 
+    // ========================================
+    // STATUS & TIMING FIELDS
+    // ========================================
+    
     /// <summary>
     /// Status of the FHIR resource
     /// </summary>
@@ -45,6 +57,10 @@ public class FhirResource : BaseEntity
     /// </summary>
     public DateTime? LastUpdated { get; set; }
 
+    // ========================================
+    // SEARCH & SECURITY FIELDS
+    // ========================================
+    
     /// <summary>
     /// Search parameters for efficient querying
     /// </summary>
@@ -52,14 +68,18 @@ public class FhirResource : BaseEntity
     public string? SearchParameters { get; set; }
 
     /// <summary>
-    /// Tags for categorization
-    /// </summary>
-    [Column(TypeName = "jsonb")]
-    public string? Tags { get; set; }
-
-    /// <summary>
     /// Security labels for access control
     /// </summary>
     [Column(TypeName = "jsonb")]
     public string? SecurityLabels { get; set; }
+
+    // ========================================
+    // ADDITIONAL DATA FIELDS
+    // ========================================
+    
+    /// <summary>
+    /// Tags for categorization
+    /// </summary>
+    [Column(TypeName = "jsonb")]
+    public string? Tags { get; set; }
 }

@@ -8,12 +8,20 @@ namespace HealthTech.Domain.Entities;
 /// </summary>
 public class PatientConsent : BaseEntity
 {
+    // ========================================
+    // FOREIGN KEY FIELDS
+    // ========================================
+    
     /// <summary>
     /// Patient ID
     /// </summary>
     [Required]
     public Guid PatientId { get; set; }
 
+    // ========================================
+    // CORE CONSENT FIELDS
+    // ========================================
+    
     /// <summary>
     /// Type of consent
     /// </summary>
@@ -26,6 +34,10 @@ public class PatientConsent : BaseEntity
     [Required]
     public bool IsActive { get; set; } = true;
 
+    // ========================================
+    // TIMING FIELDS
+    // ========================================
+    
     /// <summary>
     /// When consent was granted
     /// </summary>
@@ -37,6 +49,10 @@ public class PatientConsent : BaseEntity
     /// </summary>
     public DateTime? ExpiresAt { get; set; }
 
+    // ========================================
+    // AUTHORIZATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// User who granted the consent
     /// </summary>
@@ -44,6 +60,10 @@ public class PatientConsent : BaseEntity
     [MaxLength(255)]
     public string GrantedBy { get; set; } = string.Empty;
 
+    // ========================================
+    // REVOCATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// User who revoked the consent (if applicable)
     /// </summary>
@@ -55,16 +75,10 @@ public class PatientConsent : BaseEntity
     /// </summary>
     public DateTime? RevokedAt { get; set; }
 
-    /// <summary>
-    /// Purpose of the consent
-    /// </summary>
-    public string? Purpose { get; set; }
-
-    /// <summary>
-    /// Additional details about the consent
-    /// </summary>
-    public string? Details { get; set; }
-
+    // ========================================
+    // ELECTRONIC CONSENT FIELDS
+    // ========================================
+    
     /// <summary>
     /// Whether consent was given electronically
     /// </summary>
@@ -81,12 +95,34 @@ public class PatientConsent : BaseEntity
     /// </summary>
     public string? UserAgent { get; set; }
 
+    // ========================================
+    // DETAILS FIELDS
+    // ========================================
+    
+    /// <summary>
+    /// Purpose of the consent
+    /// </summary>
+    public string? Purpose { get; set; }
+
+    /// <summary>
+    /// Additional details about the consent
+    /// </summary>
+    public string? Details { get; set; }
+
+    // ========================================
+    // COMPUTED PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Whether consent is currently valid
     /// </summary>
     [NotMapped]
     public bool IsValid => IsActive && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow) && RevokedAt == null;
 
+    // ========================================
+    // NAVIGATION PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Navigation property for patient
     /// </summary>

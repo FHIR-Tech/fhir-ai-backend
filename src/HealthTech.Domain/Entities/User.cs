@@ -9,6 +9,10 @@ namespace HealthTech.Domain.Entities;
 /// </summary>
 public class User : BaseEntity
 {
+    // ========================================
+    // CORE IDENTITY FIELDS
+    // ========================================
+    
     /// <summary>
     /// Username for login
     /// </summary>
@@ -25,13 +29,6 @@ public class User : BaseEntity
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// Hashed password
-    /// </summary>
-    [Required]
-    [MaxLength(255)]
-    public string PasswordHash { get; set; } = string.Empty;
-
-    /// <summary>
     /// First name
     /// </summary>
     [Required]
@@ -45,6 +42,10 @@ public class User : BaseEntity
     [MaxLength(255)]
     public string LastName { get; set; } = string.Empty;
 
+    // ========================================
+    // STATUS & CONFIGURATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// User role in the system
     /// </summary>
@@ -57,16 +58,16 @@ public class User : BaseEntity
     [Required]
     public UserStatus Status { get; set; } = UserStatus.Active;
 
+    // ========================================
+    // SECURITY & AUTHENTICATION FIELDS
+    // ========================================
+    
     /// <summary>
-    /// Last login timestamp
+    /// Hashed password
     /// </summary>
-    public DateTime? LastLoginAt { get; set; }
-
-    /// <summary>
-    /// IP address of last login
-    /// </summary>
-    [MaxLength(45)]
-    public string? LastLoginIp { get; set; }
+    [Required]
+    [MaxLength(255)]
+    public string PasswordHash { get; set; } = string.Empty;
 
     /// <summary>
     /// Number of failed login attempts
@@ -78,18 +79,45 @@ public class User : BaseEntity
     /// </summary>
     public DateTime? LockedUntil { get; set; }
 
+    // ========================================
+    // FHIR INTEGRATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// FHIR Practitioner ID reference
     /// </summary>
     [MaxLength(255)]
     public string? PractitionerId { get; set; }
 
+    // ========================================
+    // TIMING & TRACKING FIELDS
+    // ========================================
+    
+    /// <summary>
+    /// Last login timestamp
+    /// </summary>
+    public DateTime? LastLoginAt { get; set; }
+
+    /// <summary>
+    /// IP address of last login
+    /// </summary>
+    [MaxLength(45)]
+    public string? LastLoginIp { get; set; }
+
+    // ========================================
+    // COMPUTED PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// User's display name (computed property)
     /// </summary>
     [NotMapped]
     public string DisplayName => $"{FirstName} {LastName}".Trim();
 
+    // ========================================
+    // NAVIGATION PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Navigation property for user scopes
     /// </summary>

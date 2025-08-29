@@ -8,6 +8,10 @@ namespace HealthTech.Domain.Entities;
 /// </summary>
 public class Patient : BaseEntity
 {
+    // ========================================
+    // FHIR INTEGRATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// FHIR Patient ID
     /// </summary>
@@ -15,6 +19,10 @@ public class Patient : BaseEntity
     [MaxLength(255)]
     public string FhirPatientId { get; set; } = string.Empty;
 
+    // ========================================
+    // CORE IDENTITY FIELDS
+    // ========================================
+    
     /// <summary>
     /// First name
     /// </summary>
@@ -40,6 +48,10 @@ public class Patient : BaseEntity
     [MaxLength(10)]
     public string Gender { get; set; } = string.Empty;
 
+    // ========================================
+    // CONTACT INFORMATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// Email address
     /// </summary>
@@ -58,12 +70,20 @@ public class Patient : BaseEntity
     /// </summary>
     public string? Address { get; set; }
 
+    // ========================================
+    // STATUS & CONFIGURATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// Patient status
     /// </summary>
     [Required]
     public PatientStatus Status { get; set; } = PatientStatus.Active;
 
+    // ========================================
+    // CONSENT FIELDS
+    // ========================================
+    
     /// <summary>
     /// Whether patient has given consent for data sharing
     /// </summary>
@@ -80,6 +100,10 @@ public class Patient : BaseEntity
     [MaxLength(255)]
     public string? ConsentGivenBy { get; set; }
 
+    // ========================================
+    // EMERGENCY CONTACT FIELDS
+    // ========================================
+    
     /// <summary>
     /// Emergency contact name
     /// </summary>
@@ -98,6 +122,10 @@ public class Patient : BaseEntity
     [MaxLength(100)]
     public string? EmergencyContactRelationship { get; set; }
 
+    // ========================================
+    // COMPUTED PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Patient's display name (computed property)
     /// </summary>
@@ -110,6 +138,10 @@ public class Patient : BaseEntity
     [NotMapped]
     public int? Age => DateOfBirth?.Year > 0 ? DateTime.Now.Year - DateOfBirth.Value.Year : null;
 
+    // ========================================
+    // NAVIGATION PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Navigation property for patient access
     /// </summary>

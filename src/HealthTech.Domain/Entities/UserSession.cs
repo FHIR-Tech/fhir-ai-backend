@@ -8,12 +8,20 @@ namespace HealthTech.Domain.Entities;
 /// </summary>
 public class UserSession : BaseEntity
 {
+    // ========================================
+    // FOREIGN KEY FIELDS
+    // ========================================
+    
     /// <summary>
     /// User ID
     /// </summary>
     [Required]
     public Guid UserId { get; set; }
 
+    // ========================================
+    // CORE SESSION FIELDS
+    // ========================================
+    
     /// <summary>
     /// Session token
     /// </summary>
@@ -27,6 +35,10 @@ public class UserSession : BaseEntity
     [MaxLength(500)]
     public string? RefreshToken { get; set; }
 
+    // ========================================
+    // TIMING FIELDS
+    // ========================================
+    
     /// <summary>
     /// When session expires
     /// </summary>
@@ -38,6 +50,10 @@ public class UserSession : BaseEntity
     /// </summary>
     public DateTime? LastAccessedAt { get; set; }
 
+    // ========================================
+    // SECURITY & TRACKING FIELDS
+    // ========================================
+    
     /// <summary>
     /// IP address where session was created
     /// </summary>
@@ -49,12 +65,10 @@ public class UserSession : BaseEntity
     /// </summary>
     public string? UserAgent { get; set; }
 
-    /// <summary>
-    /// Whether session is currently active (computed based on IsRevoked and ExpiresAt)
-    /// </summary>
-    [NotMapped]
-    public bool IsActive => !IsRevoked && ExpiresAt > DateTime.UtcNow;
-
+    // ========================================
+    // REVOCATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// Whether session was revoked
     /// </summary>
@@ -70,6 +84,20 @@ public class UserSession : BaseEntity
     /// </summary>
     public string? RevocationReason { get; set; }
 
+    // ========================================
+    // COMPUTED PROPERTIES
+    // ========================================
+    
+    /// <summary>
+    /// Whether session is currently active (computed based on IsRevoked and ExpiresAt)
+    /// </summary>
+    [NotMapped]
+    public bool IsActive => !IsRevoked && ExpiresAt > DateTime.UtcNow;
+
+    // ========================================
+    // NAVIGATION PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Navigation property for user
     /// </summary>

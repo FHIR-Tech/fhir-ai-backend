@@ -8,6 +8,10 @@ namespace HealthTech.Domain.Entities;
 /// </summary>
 public class AuditEvent : BaseEntity
 {
+    // ========================================
+    // CORE EVENT FIELDS
+    // ========================================
+    
     /// <summary>
     /// Type of audit event
     /// </summary>
@@ -39,6 +43,10 @@ public class AuditEvent : BaseEntity
     [MaxLength(1000)]
     public string? Description { get; set; }
 
+    // ========================================
+    // USER CONTEXT FIELDS
+    // ========================================
+    
     /// <summary>
     /// User who performed the action
     /// </summary>
@@ -58,6 +66,10 @@ public class AuditEvent : BaseEntity
     [MaxLength(45)]
     public string? UserIpAddress { get; set; }
 
+    // ========================================
+    // RESOURCE CONTEXT FIELDS
+    // ========================================
+    
     /// <summary>
     /// Resource type that was affected
     /// </summary>
@@ -70,12 +82,20 @@ public class AuditEvent : BaseEntity
     [MaxLength(255)]
     public string? ResourceId { get; set; }
 
+    // ========================================
+    // ADDITIONAL DATA FIELDS
+    // ========================================
+    
     /// <summary>
     /// Additional data about the event
     /// </summary>
     [Column(TypeName = "jsonb")]
     public string? EventData { get; set; }
 
+    // ========================================
+    // TIMING FIELDS
+    // ========================================
+    
     /// <summary>
     /// Timestamp when the event occurred
     /// </summary>

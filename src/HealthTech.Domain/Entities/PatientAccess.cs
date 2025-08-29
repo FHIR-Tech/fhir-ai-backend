@@ -9,6 +9,10 @@ namespace HealthTech.Domain.Entities;
 /// </summary>
 public class PatientAccess : BaseEntity
 {
+    // ========================================
+    // FOREIGN KEY FIELDS
+    // ========================================
+    
     /// <summary>
     /// Patient ID
     /// </summary>
@@ -21,12 +25,20 @@ public class PatientAccess : BaseEntity
     [Required]
     public Guid UserId { get; set; }
 
+    // ========================================
+    // CORE ACCESS FIELDS
+    // ========================================
+    
     /// <summary>
     /// Level of access granted
     /// </summary>
     [Required]
     public PatientAccessLevel AccessLevel { get; set; }
 
+    // ========================================
+    // TIMING FIELDS
+    // ========================================
+    
     /// <summary>
     /// When access was granted
     /// </summary>
@@ -38,6 +50,10 @@ public class PatientAccess : BaseEntity
     /// </summary>
     public DateTime? ExpiresAt { get; set; }
 
+    // ========================================
+    // AUTHORIZATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// User who granted the access
     /// </summary>
@@ -50,6 +66,10 @@ public class PatientAccess : BaseEntity
     /// </summary>
     public string? Reason { get; set; }
 
+    // ========================================
+    // EMERGENCY ACCESS FIELDS
+    // ========================================
+    
     /// <summary>
     /// Whether this is an emergency access
     /// </summary>
@@ -60,17 +80,29 @@ public class PatientAccess : BaseEntity
     /// </summary>
     public string? EmergencyJustification { get; set; }
 
+    // ========================================
+    // STATUS FIELDS
+    // ========================================
+    
     /// <summary>
     /// Whether access is manually enabled/disabled
     /// </summary>
     public bool IsEnabled { get; set; } = true;
 
+    // ========================================
+    // COMPUTED PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Whether access is currently active (computed based on IsEnabled and ExpiresAt)
     /// </summary>
     [NotMapped]
     public bool IsActive => IsEnabled && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow);
 
+    // ========================================
+    // NAVIGATION PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Navigation property for patient
     /// </summary>

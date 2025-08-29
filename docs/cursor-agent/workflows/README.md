@@ -235,6 +235,7 @@ For issues with workflows:
 ## Related Documentation
 
 - [FIXES.md](FIXES.md) - Workflow fixes and troubleshooting
+- [Domain Entity Standards](DOMAIN_ENTITY_STANDARDS.md) - Domain entity coding standards
 - [Project README](../../../README.md) - Main project documentation
 - [API Documentation](../../api/README.md) - API documentation
 - [Architecture Documentation](../../architecture/) - System architecture

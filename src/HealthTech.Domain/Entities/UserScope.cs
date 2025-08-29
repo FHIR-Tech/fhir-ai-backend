@@ -8,12 +8,20 @@ namespace HealthTech.Domain.Entities;
 /// </summary>
 public class UserScope : BaseEntity
 {
+    // ========================================
+    // FOREIGN KEY FIELDS
+    // ========================================
+    
     /// <summary>
     /// User ID
     /// </summary>
     [Required]
     public Guid UserId { get; set; }
 
+    // ========================================
+    // CORE SCOPE FIELDS
+    // ========================================
+    
     /// <summary>
     /// Scope name (e.g., "patient/*", "user/*", "system/*")
     /// </summary>
@@ -21,6 +29,10 @@ public class UserScope : BaseEntity
     [MaxLength(255)]
     public string Scope { get; set; } = string.Empty;
 
+    // ========================================
+    // TIMING FIELDS
+    // ========================================
+    
     /// <summary>
     /// When scope was granted
     /// </summary>
@@ -32,6 +44,10 @@ public class UserScope : BaseEntity
     /// </summary>
     public DateTime? ExpiresAt { get; set; }
 
+    // ========================================
+    // AUTHORIZATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// User who granted the scope
     /// </summary>
@@ -39,6 +55,10 @@ public class UserScope : BaseEntity
     [MaxLength(255)]
     public string GrantedBy { get; set; } = string.Empty;
 
+    // ========================================
+    // REVOCATION FIELDS
+    // ========================================
+    
     /// <summary>
     /// Whether scope was manually revoked
     /// </summary>
@@ -49,12 +69,20 @@ public class UserScope : BaseEntity
     /// </summary>
     public DateTime? RevokedAt { get; set; }
 
+    // ========================================
+    // COMPUTED PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Whether scope is currently active (computed based on IsRevoked and ExpiresAt)
     /// </summary>
     [NotMapped]
     public bool IsActive => !IsRevoked && (ExpiresAt == null || ExpiresAt > DateTime.UtcNow);
 
+    // ========================================
+    // NAVIGATION PROPERTIES
+    // ========================================
+    
     /// <summary>
     /// Navigation property for user
     /// </summary>
