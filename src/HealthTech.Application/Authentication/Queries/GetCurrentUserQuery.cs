@@ -52,7 +52,7 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, G
                 };
             }
 
-            var user = await _userService.GetUserByIdAsync(userId);
+            var user = await _userService.GetUserByIdAsync(Guid.Parse(userId), _currentUserService.TenantId ?? "default");
             if (user == null)
             {
                 return new GetCurrentUserResponse
