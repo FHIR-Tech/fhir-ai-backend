@@ -200,82 +200,7 @@ HealthTech.API/
 
 ## Official I/O Patterns
 
-### 1. Clean Architecture I/O (Uncle Bob)
-
-**Base Request Pattern**:
-```csharp
-public abstract class BaseRequest
-{
-    public int PageNumber { get; set; } = 1;
-    public int PageSize { get; set; } = 10;
-    public string? SortBy { get; set; }
-    public string SortOrder { get; set; } = "asc";
-    public string? SearchTerm { get; set; }
-}
-```
-
-**Base Response Pattern**:
-```csharp
-public abstract class BaseResponse
-{
-    public bool IsSuccess { get; set; }
-    public string? Message { get; set; }
-    public int StatusCode { get; set; }
-    public List<string> Errors { get; set; } = new();
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-}
-```
-
-### 2. CQRS I/O (Greg Young)
-
-**Base Command Pattern**:
-```csharp
-public abstract class BaseCommand<TResponse> : IRequest<TResponse>
-{
-    public Guid CommandId { get; set; } = Guid.NewGuid();
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-    public string? CorrelationId { get; set; }
-    public string? UserId { get; set; }
-}
-```
-
-**Base Query Pattern**:
-```csharp
-public abstract class BasePagedQuery<TResponse> : BaseQuery<TResponse>
-{
-    public int PageNumber { get; set; } = 1;
-    public int PageSize { get; set; } = 10;
-    public string? SortBy { get; set; }
-    public string SortOrder { get; set; } = "asc";
-    public string? SearchTerm { get; set; }
-    public Dictionary<string, string>? Filters { get; set; }
-}
-```
-
-**CQRS Response Patterns**:
-```csharp
-public abstract class BaseCommandResponse
-{
-    public bool IsSuccess { get; set; }
-    public string? Message { get; set; }
-    public List<string> Errors { get; set; } = new();
-    public Guid CommandId { get; set; }
-    public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
-}
-
-public class PagedQueryResponse<T> : BaseQueryResponse
-{
-    public List<T> Items { get; set; } = new();
-    public int TotalCount { get; set; }
-    public int PageNumber { get; set; }
-    public int PageSize { get; set; }
-    public int TotalPages { get; set; }
-    public bool HasPreviousPage { get; set; }
-    public bool HasNextPage { get; set; }
-}
-```
-
-### 3. MediatR I/O (Jimmy Bogard)
+### MediatR I/O Pattern (Standard for FHIR-AI Backend)
 
 **Base Request Pattern**:
 ```csharp
@@ -299,7 +224,7 @@ public abstract class BasePagedRequest<TResponse> : BaseRequest<TResponse>
 }
 ```
 
-**MediatR Response Pattern**:
+**Base Response Pattern**:
 ```csharp
 public abstract class BaseResponse
 {
@@ -323,7 +248,7 @@ public class PagedResponse<T> : BaseResponse
 }
 ```
 
-### 4. FluentValidation I/O (Official)
+### FluentValidation Integration
 
 **Base Validator Pattern**:
 ```csharp
@@ -332,9 +257,9 @@ public abstract class BaseValidator<T> : AbstractValidator<T>
     protected BaseValidator()
     {
         // Common validation rules
-        When(x => x is BaseRequest request, () =>
+        When(x => x is BaseRequest<object> request, () =>
         {
-            RuleFor(x => ((BaseRequest)x).RequestId)
+            RuleFor(x => ((BaseRequest<object>)x).RequestId)
                 .NotEmpty()
                 .WithMessage("Request ID is required");
         });
@@ -360,66 +285,282 @@ public class PaginationValidator : AbstractValidator<BasePagedRequest<object>>
 }
 ```
 
-## Implementation Patterns
+## Implementation Guidelines
 
-### CQRS Pattern
+### 1. Request Implementation
 
-**Commands** (Write Operations):
-- Implement `IRequest<TResponse>`
-- Use immutable records with init-only properties
-- Include validation using FluentValidation
-- Return `Result<T>` or specific response types
+**For Simple Operations (Commands/Queries)**:
+```csharp
+// Inherit from BaseRequest<TResponse>
+public class CreatePatientCommand : BaseRequest<CreatePatientResponse>
+{
+    public string FirstName { get; init; }
+    public string LastName { get; init; }
+    public DateTime DateOfBirth { get; init; }
+    public string Gender { get; init; }
+}
 
-**Queries** (Read Operations):
-- Implement `IRequest<TResponse>`
-- Use immutable records with init-only properties
-- Include pagination, sorting, and filtering parameters
-- Return `Result<T>` or specific response types
+public class GetPatientQuery : BaseRequest<GetPatientResponse>
+{
+    public Guid PatientId { get; init; }
+}
+```
 
-### Repository Pattern
+**For Paged Operations (List Queries)**:
+```csharp
+// Inherit from BasePagedRequest<TResponse>
+public class GetPatientsQuery : BasePagedRequest<GetPatientsResponse>
+{
+    public string? SearchTerm { get; init; }
+    public string? Gender { get; init; }
+    public DateTime? DateOfBirthFrom { get; init; }
+    public DateTime? DateOfBirthTo { get; init; }
+}
+```
 
-**Domain Interface**:
-- Define in Domain layer
-- Include async methods with CancellationToken
-- Focus on business operations, not technical details
+### 2. Response Implementation
 
-**Infrastructure Implementation**:
-- Implement in Infrastructure layer
-- Use framework-specific code (EF Core, etc.)
-- Handle technical concerns (connection, transactions)
+**For Simple Operations**:
+```csharp
+// Inherit from BaseResponse
+public class CreatePatientResponse : BaseResponse
+{
+    public Guid PatientId { get; set; }
+    public string FullName { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
 
-### Validation Pattern
+public class GetPatientResponse : BaseResponse
+{
+    public PatientDto? Patient { get; set; }
+}
+```
 
-- Use FluentValidation for all input validation
-- Validate at Application layer boundaries
-- Include business rule validation in Domain layer
-- Provide clear, user-friendly error messages
+**For Paged Operations**:
+```csharp
+// Inherit from PagedResponse<T>
+public class GetPatientsResponse : PagedResponse<PatientDto>
+{
+    // Additional properties specific to patient list if needed
+    public int ActivePatientsCount { get; set; }
+    public int InactivePatientsCount { get; set; }
+}
+```
 
-### Result Pattern
+### 3. Handler Implementation
 
-- Use `Result<T>` for consistent error handling
-- Include success/failure status
-- Provide error messages and validation errors
-- Support pagination for list operations
+**Command Handler**:
+```csharp
+public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand, CreatePatientResponse>
+{
+    private readonly IPatientRepository _patientRepository;
+    private readonly ICurrentUserService _currentUserService;
 
-### Cross-Cutting Concerns
+    public CreatePatientCommandHandler(IPatientRepository patientRepository, ICurrentUserService currentUserService)
+    {
+        _patientRepository = patientRepository;
+        _currentUserService = currentUserService;
+    }
 
-**Logging Behavior**:
-- Log all requests and responses
-- Include correlation IDs for tracing
-- Avoid logging sensitive information
+    public async Task<CreatePatientResponse> Handle(CreatePatientCommand request, CancellationToken cancellationToken)
+    {
+        // Business logic implementation
+        var patient = new Patient
+        {
+            Id = Guid.NewGuid(),
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            DateOfBirth = request.DateOfBirth,
+            Gender = request.Gender,
+            TenantId = _currentUserService.TenantId ?? string.Empty,
+            CreatedAt = DateTime.UtcNow
+        };
 
-**Validation Behavior**:
-- Automatically validate all requests
-- Provide detailed validation error messages
-- Support multiple validators per request
+        await _patientRepository.AddAsync(patient);
 
-**Caching Behavior**:
-- Cache query results only
-- Use appropriate cache keys
-- Include cache invalidation strategies
+        return new CreatePatientResponse
+        {
+            IsSuccess = true,
+            Message = "Patient created successfully",
+            RequestId = request.RequestId,
+            PatientId = patient.Id,
+            FullName = $"{patient.FirstName} {patient.LastName}",
+            CreatedAt = patient.CreatedAt
+        };
+    }
+}
+```
 
-## Dependency Injection Configuration
+**Query Handler**:
+```csharp
+public class GetPatientsQueryHandler : IRequestHandler<GetPatientsQuery, GetPatientsResponse>
+{
+    private readonly IPatientRepository _patientRepository;
+    private readonly ICurrentUserService _currentUserService;
+
+    public GetPatientsQueryHandler(IPatientRepository patientRepository, ICurrentUserService currentUserService)
+    {
+        _patientRepository = patientRepository;
+        _currentUserService = currentUserService;
+    }
+
+    public async Task<GetPatientsResponse> Handle(GetPatientsQuery request, CancellationToken cancellationToken)
+    {
+        var tenantId = _currentUserService.TenantId ?? string.Empty;
+        
+        // Build query with filters
+        var query = _patientRepository.GetQueryable(tenantId);
+        
+        // Apply search filters
+        if (!string.IsNullOrEmpty(request.SearchTerm))
+        {
+            query = query.Where(p => p.FirstName.Contains(request.SearchTerm) || p.LastName.Contains(request.SearchTerm));
+        }
+
+        if (!string.IsNullOrEmpty(request.Gender))
+        {
+            query = query.Where(p => p.Gender == request.Gender);
+        }
+
+        // Get total count
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply pagination and sorting
+        var items = await query
+            .OrderBy(p => p.LastName)
+            .ThenBy(p => p.FirstName)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .Select(p => new PatientDto
+            {
+                Id = p.Id,
+                FirstName = p.FirstName,
+                LastName = p.LastName,
+                DateOfBirth = p.DateOfBirth,
+                Gender = p.Gender
+            })
+            .ToListAsync(cancellationToken);
+
+        var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
+
+        return new GetPatientsResponse
+        {
+            IsSuccess = true,
+            Message = "Patients retrieved successfully",
+            RequestId = request.RequestId,
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalPages = totalPages,
+            HasPreviousPage = request.PageNumber > 1,
+            HasNextPage = request.PageNumber < totalPages
+        };
+    }
+}
+```
+
+### 4. Validation Implementation
+
+**Command Validator**:
+```csharp
+public class CreatePatientCommandValidator : BaseValidator<CreatePatientCommand>
+{
+    public CreatePatientCommandValidator()
+    {
+        RuleFor(x => x.FirstName)
+            .NotEmpty()
+            .MaximumLength(100)
+            .WithMessage("First name is required and cannot exceed 100 characters");
+
+        RuleFor(x => x.LastName)
+            .NotEmpty()
+            .MaximumLength(100)
+            .WithMessage("Last name is required and cannot exceed 100 characters");
+
+        RuleFor(x => x.DateOfBirth)
+            .NotEmpty()
+            .LessThan(DateTime.Today)
+            .WithMessage("Date of birth must be in the past");
+
+        RuleFor(x => x.Gender)
+            .IsInEnum()
+            .WithMessage("Gender must be a valid value");
+    }
+}
+```
+
+**Query Validator**:
+```csharp
+public class GetPatientsQueryValidator : BaseValidator<GetPatientsQuery>
+{
+    public GetPatientsQueryValidator()
+    {
+        // Pagination validation is inherited from PaginationValidator
+        RuleFor(x => x.SearchTerm)
+            .MaximumLength(200)
+            .When(x => !string.IsNullOrEmpty(x.SearchTerm))
+            .WithMessage("Search term cannot exceed 200 characters");
+
+        RuleFor(x => x.Gender)
+            .IsInEnum()
+            .When(x => !string.IsNullOrEmpty(x.Gender))
+            .WithMessage("Gender must be a valid value");
+
+        RuleFor(x => x.DateOfBirthFrom)
+            .LessThanOrEqualTo(x => x.DateOfBirthTo)
+            .When(x => x.DateOfBirthFrom.HasValue && x.DateOfBirthTo.HasValue)
+            .WithMessage("Date of birth from must be less than or equal to date of birth to");
+    }
+}
+```
+
+### 5. File Structure Guidelines
+
+**Application Layer Structure**:
+```
+HealthTech.Application/
+├── Common/
+│   ├── Base/
+│   │   ├── BaseRequest.cs
+│   │   ├── BasePagedRequest.cs
+│   │   ├── BaseResponse.cs
+│   │   └── PagedResponse.cs
+│   ├── Behaviors/
+│   │   ├── ValidationBehavior.cs
+│   │   ├── LoggingBehavior.cs
+│   │   └── CachingBehavior.cs
+│   ├── Interfaces/
+│   │   ├── ICurrentUserService.cs
+│   │   └── IDateTimeService.cs
+│   └── Validators/
+│       ├── BaseValidator.cs
+│       └── PaginationValidator.cs
+├── {Feature}/
+│   ├── Commands/
+│   │   ├── Create{Entity}/
+│   │   │   ├── Create{Entity}Command.cs
+│   │   │   ├── Create{Entity}CommandHandler.cs
+│   │   │   ├── Create{Entity}CommandValidator.cs
+│   │   │   └── Create{Entity}Response.cs
+│   │   └── Update{Entity}/
+│   ├── Queries/
+│   │   ├── Get{Entity}/
+│   │   │   ├── Get{Entity}Query.cs
+│   │   │   ├── Get{Entity}QueryHandler.cs
+│   │   │   ├── Get{Entity}QueryValidator.cs
+│   │   │   └── Get{Entity}Response.cs
+│   │   └── Get{Entity}List/
+│   │       ├── Get{Entity}ListQuery.cs
+│   │       ├── Get{Entity}ListQueryHandler.cs
+│   │       ├── Get{Entity}ListQueryValidator.cs
+│   │       └── Get{Entity}ListResponse.cs
+│   └── DTOs/
+│       └── {Entity}Dto.cs
+└── DependencyInjection.cs
+```
+
+### 6. Dependency Injection Configuration
 
 ```csharp
 // Application Layer DI
@@ -427,6 +568,7 @@ services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInj
 services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 
 // Infrastructure Layer DI
 services.AddDbContext<ApplicationDbContext>(options => 
@@ -441,7 +583,59 @@ services.AddAuthentication();
 services.AddAuthorization();
 ```
 
-## Testing Structure
+### 7. Best Practices
+
+**Request Guidelines**:
+- ✅ Always inherit from `BaseRequest<TResponse>` or `BasePagedRequest<TResponse>`
+- ✅ Use `init` properties for immutability
+- ✅ Include validation attributes when needed
+- ✅ Use descriptive names: `CreatePatientCommand`, `GetPatientsQuery`
+
+**Response Guidelines**:
+- ✅ Always inherit from `BaseResponse` or `PagedResponse<T>`
+- ✅ Set `IsSuccess`, `Message`, and `RequestId` in handlers
+- ✅ Include relevant data in response
+- ✅ Use DTOs for data transfer
+
+**Handler Guidelines**:
+- ✅ Implement `IRequestHandler<TRequest, TResponse>`
+- ✅ Use dependency injection for dependencies
+- ✅ Handle exceptions appropriately
+- ✅ Return meaningful response messages
+
+**Validation Guidelines**:
+- ✅ Always inherit from `BaseValidator<T>`
+- ✅ Use FluentValidation rules
+- ✅ Provide clear error messages
+- ✅ Validate business rules, not just data format
+
+### 8. Error Handling
+
+**Success Response**:
+```csharp
+return new CreatePatientResponse
+{
+    IsSuccess = true,
+    Message = "Patient created successfully",
+    RequestId = request.RequestId,
+    StatusCode = 201,
+    PatientId = patient.Id
+};
+```
+
+**Error Response**:
+```csharp
+return new CreatePatientResponse
+{
+    IsSuccess = false,
+    Message = "Failed to create patient",
+    RequestId = request.RequestId,
+    StatusCode = 400,
+    Errors = new List<string> { "Patient with this identifier already exists" }
+};
+```
+
+### 9. Testing Structure
 
 **Unit Tests**:
 ```
@@ -468,6 +662,32 @@ HealthTech.API.Tests/
 └── TestBase.cs
 ```
 
+**Unit Test Example**:
+```csharp
+[Fact]
+public async Task Handle_ValidCreatePatientCommand_ReturnsSuccessResponse()
+{
+    // Arrange
+    var command = new CreatePatientCommand
+    {
+        FirstName = "John",
+        LastName = "Doe",
+        DateOfBirth = new DateTime(1990, 1, 1),
+        Gender = "Male"
+    };
+
+    var handler = new CreatePatientCommandHandler(mockRepository, mockUserService);
+
+    // Act
+    var result = await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(command.RequestId, result.RequestId);
+    Assert.NotEqual(Guid.Empty, result.PatientId);
+}
+```
+
 ## Immutable Standards (Never Change)
 
 ### 1. Dependency Direction (Immutable Rule)
@@ -485,7 +705,7 @@ HealthTech.API.Tests/
 
 ### 3. Framework Independence (Immutable Rule)
 - **Domain Layer**: Must be framework-agnostic
-- **Application Layer**: Must be framework-agnostic
+- **Application Layer**: Must be framework-agnostic (uses MediatR I/O pattern)
 - **Infrastructure Layer**: Can use framework-specific code
 - **API Layer**: Can use framework-specific code
 
@@ -499,7 +719,7 @@ HealthTech.API.Tests/
 - **Value Objects**: Immutable business concepts
 - **Services**: Business logic that doesn't belong to entities
 - **Repositories**: Data access abstractions
-- **Handlers**: Single use case implementation
+- **Handlers**: Single use case implementation (MediatR IRequestHandler)
 
 ### 6. Open/Closed Principle (Immutable Rule)
 - **Open for Extension**: New features via new classes
@@ -512,10 +732,11 @@ HealthTech.API.Tests/
 - **Details**: Depend on abstractions
 
 ### 8. CQRS Separation (Immutable Rule)
-- **Commands**: Write operations only
-- **Queries**: Read operations only
+- **Commands**: Write operations only (inherit from BaseRequest<TResponse>)
+- **Queries**: Read operations only (inherit from BaseRequest<TResponse> or BasePagedRequest<TResponse>)
 - **Separate Models**: Command and Query models are distinct
 - **No Shared State**: Commands and Queries don't share models
+- **MediatR I/O Pattern**: Standard implementation for all CQRS operations
 - **For complete CQRS implementation details, see `CQRS_PATTERN_REFERENCE.md`**
 - **For complete AutoMapper implementation details, see `AUTOMAPPER_PATTERN_REFERENCE.md`**
 - **For complete Healthcare Data implementation details, see `HEALTHCARE_DATA_PATTERN_REFERENCE.md`**
@@ -574,6 +795,10 @@ HealthTech.API.Tests/
 8. **Tight Coupling**: Direct instantiation of concrete classes
 9. **God Objects**: Classes with too many responsibilities
 10. **Data Transfer Objects in Domain**: DTOs should be in Application layer only
+11. **Multiple I/O Patterns**: Using different I/O patterns (only MediatR I/O allowed)
+12. **Custom Request/Response**: Not inheriting from BaseRequest/BaseResponse
+13. **Direct Handler Calls**: Bypassing MediatR pipeline
+14. **Mixed Validation**: Not using FluentValidation with BaseValidator
 
 ## Validation Checklist (Must Pass Always)
 
@@ -587,6 +812,12 @@ HealthTech.API.Tests/
 - [ ] Error handling follows established patterns
 - [ ] Testing covers all business logic
 - [ ] Configuration is layer-appropriate
+- [ ] All requests inherit from BaseRequest<TResponse> or BasePagedRequest<TResponse>
+- [ ] All responses inherit from BaseResponse or PagedResponse<T>
+- [ ] All handlers implement IRequestHandler<TRequest, TResponse>
+- [ ] All validators inherit from BaseValidator<T>
+- [ ] MediatR pipeline behaviors are properly configured
+- [ ] No direct handler calls bypassing MediatR
 
 ## Performance Considerations
 
