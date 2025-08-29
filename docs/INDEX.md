@@ -20,6 +20,7 @@ docs/
 ├── architecture/               # Tài liệu kiến trúc
 │   ├── CLEAN_ARCHITECTURE_REFERENCE.md
 │   ├── CQRS_PATTERN_REFERENCE.md
+│   ├── MEDIATR_IO_PATTERN_REFERENCE.md
 │   ├── AUTOMAPPER_PATTERN_REFERENCE.md
 │   └── HEALTHCARE_DATA_PATTERN_REFERENCE.md
 ├── cursor-agent/               # Báo cáo Cursor Agent
@@ -56,6 +57,7 @@ docs/
 ### Architecture
 - [Clean Architecture Reference](architecture/CLEAN_ARCHITECTURE_REFERENCE.md)
 - [CQRS Pattern Reference](architecture/CQRS_PATTERN_REFERENCE.md)
+- [MediatR I/O Pattern Reference](architecture/MEDIATR_IO_PATTERN_REFERENCE.md)
 - [AutoMapper Pattern Reference](architecture/AUTOMAPPER_PATTERN_REFERENCE.md)
 - [Healthcare Data Pattern Reference](architecture/HEALTHCARE_DATA_PATTERN_REFERENCE.md)
 
@@ -95,6 +97,11 @@ Khi thêm tài liệu mới:
   - **Chuẩn hóa Command/Query Patterns**: BaseCommand, BaseQuery, BasePagedQuery
   - **Cải tiến Response Patterns**: BaseCommandResponse, BaseQueryResponse, PagedQueryResponse
   - **Thêm FluentValidation Standards**: BaseValidator, PaginationValidator
+- **2025-08-28**: Tạo MediatR I/O Pattern Reference
+  - **Tách riêng MediatR I/O Pattern**: Tài liệu chuyên biệt cho MediatR implementation
+  - **Cập nhật Clean Architecture Reference**: Loại bỏ chi tiết MediatR, chỉ giữ nguyên tắc
+  - **Cập nhật CQRS Pattern Reference**: Tham chiếu đến MediatR I/O Pattern document
+  - **Chuẩn hóa MediatR Implementation**: BaseRequest, BaseResponse, Pipeline Behaviors
 
 ---
 
