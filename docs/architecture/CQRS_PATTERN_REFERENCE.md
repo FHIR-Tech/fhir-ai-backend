@@ -668,3 +668,5 @@ public class GetPatientQueryHandlerTests
 ---
 
 **This document defines the immutable CQRS Pattern standards that should NEVER change, ensuring consistency and maintainability across the FHIR-AI Backend project.**
+
+**For complete AutoMapper implementation details, see `AUTOMAPPER_PATTERN_REFERENCE.md`**

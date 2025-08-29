@@ -19,7 +19,8 @@ docs/
 │       └── ENDPOINT_VERIFICATION_REPORT.md
 ├── architecture/               # Tài liệu kiến trúc
 │   ├── CLEAN_ARCHITECTURE_REFERENCE.md
-│   └── CQRS_PATTERN_REFERENCE.md
+│   ├── CQRS_PATTERN_REFERENCE.md
+│   └── AUTOMAPPER_PATTERN_REFERENCE.md
 ├── cursor-agent/               # Báo cáo Cursor Agent
 │   ├── README.md              # Hướng dẫn Cursor Agent
 │   ├── reports/               # Báo cáo thực hiện
@@ -54,6 +55,7 @@ docs/
 ### Architecture
 - [Clean Architecture Reference](architecture/CLEAN_ARCHITECTURE_REFERENCE.md)
 - [CQRS Pattern Reference](architecture/CQRS_PATTERN_REFERENCE.md)
+- [AutoMapper Pattern Reference](architecture/AUTOMAPPER_PATTERN_REFERENCE.md)
 
 ### Deployment
 - [Security Checklist](deployment/SECURITY_CHECKLIST.md)
@@ -74,6 +76,7 @@ Khi thêm tài liệu mới:
 - **2025-08-28**: Đơn giản hóa cấu trúc, chỉ giữ lại tài liệu cần thiết
 - **2025-08-28**: Thêm Clean Architecture Reference Guide với các tiêu chuẩn bất biến
 - **2025-08-28**: Thêm CQRS Pattern Reference Guide với các tiêu chuẩn bất biến
+- **2025-08-28**: Thêm AutoMapper Pattern Reference Guide với các tiêu chuẩn bất biến
 
 ---
 

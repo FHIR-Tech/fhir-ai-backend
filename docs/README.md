@@ -79,6 +79,8 @@ HealthTech.API/          # HTTP endpoints (depends on Application + Infrastructu
 
 **For complete CQRS Pattern implementation details, see `/architecture/CQRS_PATTERN_REFERENCE.md`**
 
+**For complete AutoMapper Pattern implementation details, see `/architecture/AUTOMAPPER_PATTERN_REFERENCE.md`**
+
 ## Documentation Standards
 
 ### File Naming

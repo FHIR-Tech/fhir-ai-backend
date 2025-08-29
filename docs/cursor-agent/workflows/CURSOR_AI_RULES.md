@@ -291,6 +291,8 @@ services.AddAuthorization();
 
 #### CQRS Pattern Implementation
 
+**For complete CQRS implementation details, see `/architecture/CQRS_PATTERN_REFERENCE.md`**
+
 **Commands** (Write Operations):
 ```csharp
 public record CreatePatientCommand : IRequest<Result<PatientDto>>
@@ -365,6 +367,50 @@ public class Result<T>
     public static Result<T> Success(T value) => new(true, value, null, null);
     public static Result<T> Failure(string error) => new(false, default, error, null);
     public static Result<T> ValidationFailure(List<string> errors) => new(false, default, null, errors);
+}
+```
+
+#### AutoMapper Pattern Implementation
+
+**For complete AutoMapper implementation details, see `/architecture/AUTOMAPPER_PATTERN_REFERENCE.md`**
+
+**Profile Structure**:
+```csharp
+public class PatientMappingProfile : Profile
+{
+    public PatientMappingProfile()
+    {
+        // Domain Entity to DTO mappings
+        CreateMap<Patient, PatientDto>()
+            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
+            .ForMember(dest => dest.Age, opt => opt.MapFrom(src => CalculateAge(src.DateOfBirth)));
+
+        // DTO to Domain Entity mappings
+        CreateMap<CreatePatientRequest, Patient>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+            .ForMember(dest => dest.TenantId, opt => opt.Ignore());
+    }
+
+    private static int CalculateAge(DateTime dateOfBirth)
+    {
+        var today = DateTime.Today;
+        var age = today.Year - dateOfBirth.Year;
+        if (dateOfBirth.Date > today.AddYears(-age)) age--;
+        return age;
+    }
+}
+```
+
+**Mapper Service**:
+```csharp
+public interface IMapperService
+{
+    TDestination Map<TDestination>(object source);
+    TDestination Map<TSource, TDestination>(TSource source);
+    IEnumerable<TDestination> Map<TSource, TDestination>(IEnumerable<TSource> source);
+    IQueryable<TDestination> ProjectTo<TSource, TDestination>(IQueryable<TSource> source);
 }
 ```
 
