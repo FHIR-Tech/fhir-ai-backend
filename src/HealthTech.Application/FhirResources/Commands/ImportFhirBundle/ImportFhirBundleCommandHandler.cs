@@ -4,8 +4,11 @@ using HealthTech.Domain.Entities;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using System.Text.Json;
+using HealthTech.Application.FhirResources.Commands.UpdateFhirResource;
+using HealthTech.Application.FhirResources.Commands.DeleteFhirResource;
+using HealthTech.Application.FhirResources.Commands.CreateFhirResource;
 
-namespace HealthTech.Application.FhirResources.Commands;
+namespace HealthTech.Application.FhirResources.Commands.ImportFhirBundle;
 
 /// <summary>
 /// Handler for ImportFhirBundleCommand

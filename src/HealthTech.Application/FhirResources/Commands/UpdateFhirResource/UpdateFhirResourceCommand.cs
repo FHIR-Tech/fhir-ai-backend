@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace HealthTech.Application.FhirResources.Commands;
+namespace HealthTech.Application.FhirResources.Commands.UpdateFhirResource;
 
 /// <summary>
 /// Command to update an existing FHIR resource

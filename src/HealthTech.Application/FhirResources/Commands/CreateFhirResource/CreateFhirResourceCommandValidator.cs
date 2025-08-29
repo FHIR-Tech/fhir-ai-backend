@@ -1,7 +1,7 @@
 using FluentValidation;
 using Hl7.Fhir.Serialization;
 
-namespace HealthTech.Application.FhirResources.Commands;
+namespace HealthTech.Application.FhirResources.Commands.CreateFhirResource;
 
 /// <summary>
 /// Validator for CreateFhirResourceCommand

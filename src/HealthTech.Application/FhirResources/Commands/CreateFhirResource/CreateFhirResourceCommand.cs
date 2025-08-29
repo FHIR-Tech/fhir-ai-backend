@@ -1,7 +1,7 @@
 using MediatR;
 using HealthTech.Application.Common.Interfaces;
 
-namespace HealthTech.Application.FhirResources.Commands;
+namespace HealthTech.Application.FhirResources.Commands.CreateFhirResource;
 
 /// <summary>
 /// Command to create a new FHIR resource

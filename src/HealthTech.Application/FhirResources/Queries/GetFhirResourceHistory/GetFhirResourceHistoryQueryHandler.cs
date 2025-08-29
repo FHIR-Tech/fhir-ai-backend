@@ -3,7 +3,7 @@ using HealthTech.Application.Common.Interfaces;
 using HealthTech.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace HealthTech.Application.FhirResources.Queries;
+namespace HealthTech.Application.FhirResources.Queries.GetFhirResourceHistory;
 
 /// <summary>
 /// Handler for GetFhirResourceHistoryQuery

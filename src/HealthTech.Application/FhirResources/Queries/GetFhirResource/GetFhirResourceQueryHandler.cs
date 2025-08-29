@@ -2,7 +2,7 @@ using MediatR;
 using HealthTech.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace HealthTech.Application.FhirResources.Queries;
+namespace HealthTech.Application.FhirResources.Queries.GetFhirResource;
 
 /// <summary>
 /// Handler for GetFhirResourceQuery

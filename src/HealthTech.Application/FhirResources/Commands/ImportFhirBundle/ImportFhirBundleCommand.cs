@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace HealthTech.Application.FhirResources.Commands;
+namespace HealthTech.Application.FhirResources.Commands.ImportFhirBundle;
 
 /// <summary>
 /// Command to import FHIR resources from a FHIR Bundle

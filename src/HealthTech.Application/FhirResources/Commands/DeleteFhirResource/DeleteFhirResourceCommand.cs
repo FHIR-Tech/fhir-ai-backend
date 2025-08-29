@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace HealthTech.Application.FhirResources.Commands;
+namespace HealthTech.Application.FhirResources.Commands.DeleteFhirResource;
 
 /// <summary>
 /// Command to delete (soft delete) a FHIR resource

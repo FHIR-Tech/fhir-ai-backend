@@ -4,7 +4,7 @@ using HealthTech.Domain.Entities;
 using HealthTech.Domain.Repositories;
 using System.Text.Json;
 
-namespace HealthTech.Application.FhirResources.Commands;
+namespace HealthTech.Application.FhirResources.Commands.DeleteFhirResource;
 
 /// <summary>
 /// Handler for DeleteFhirResourceCommand
@@ -59,7 +59,7 @@ public class DeleteFhirResourceCommandHandler : IRequestHandler<DeleteFhirResour
         existingResource.DeletedBy = _currentUserService.UserId ?? "system";
 
         // Add audit trail
-        var auditEvent = new Domain.Entities.AuditEvent
+        var auditEvent = new AuditEvent
         {
             Id = Guid.NewGuid(),
             TenantId = _currentUserService.TenantId ?? string.Empty,
